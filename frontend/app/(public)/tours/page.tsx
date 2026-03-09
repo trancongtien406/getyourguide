@@ -78,7 +78,7 @@ export default function ToursListingPage() {
   useEffect(() => {
     async function fetchRefData() {
       const [catsRes, citiesRes] = await Promise.all([
-        catalogApi.listCategories({ pageSize: '50', isActive: 'true' }).catch(() => null),
+        catalogApi.listCategories({ pageSize: '50' }).catch(() => null),
         referenceDataApi.listCities({ pageSize: '50' }).catch(() => null),
       ]);
       if (catsRes?.data) setCategories(catsRes.data);

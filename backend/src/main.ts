@@ -23,7 +23,7 @@ async function bootstrap() {
   const corsOriginRaw = configService.get<string>('CORS_ORIGIN');
   const allowedOrigins = corsOriginRaw
     ? corsOriginRaw.split(',').map((origin) => origin.trim()).filter(Boolean)
-    : ['http://localhost:3000', 'http://localhost:3001'];
+    : ['https://getyourguide.trancongtien.io.vn', 'http://localhost:3001'];
 
   app.enableCors({
     origin: allowedOrigins,

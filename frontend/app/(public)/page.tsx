@@ -82,7 +82,7 @@ export default function HomePage() {
         const [toursRes, citiesRes, catsRes] = await Promise.all([
           catalogApi.listTours({ pageSize: '8', status: 'PUBLISHED' }).catch(() => null),
           referenceDataApi.listCities({ pageSize: '8' }).catch(() => null),
-          catalogApi.listCategories({ pageSize: '10', isActive: 'true' }).catch(() => null),
+          catalogApi.listCategories({ pageSize: '10' }).catch(() => null),
         ]);
         const tours = toursRes?.data ?? [];
         if (tours.length) setFeaturedTours(tours);
