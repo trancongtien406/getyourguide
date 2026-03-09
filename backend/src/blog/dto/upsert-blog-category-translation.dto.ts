@@ -1,0 +1,16 @@
+import { IsOptional, IsString, MaxLength } from 'class-validator';
+
+export class UpsertBlogCategoryTranslationDto {
+  @IsString()
+  @MaxLength(10)
+  languageCode: string;
+
+  @IsString()
+  @MaxLength(100)
+  name: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  description?: string;
+}
