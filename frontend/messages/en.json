@@ -1399,6 +1399,8 @@
     "authForgotError": "Could not send reset instructions. Please try again.",
     "authForgotResetError": "Could not reset password. Check the code and try again.",
     "authForgotResetSuccess": "Password reset successful. You can log in with your new password.",
+    "authTestLoginHint": "Quickly explore the site with a demo account.",
+    "authTestLoginBtn": "Sign in with test account",
 
     "dropdownProfile": "My Profile",
     "dropdownBookings": "My Bookings",

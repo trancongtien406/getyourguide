@@ -17,6 +17,35 @@ import {
 type Tab = 'login' | 'register' | 'forgot';
 type ForgotStep = 'request' | 'reset';
 
+// Seeded demo accounts from backend
+const DEMO_ACCOUNTS = {
+  admin: {
+    label: 'Admin',
+    email: 'admin@getyourguide.local',
+    password: 'Admin@12345',
+  },
+  operator: {
+    label: 'Operator',
+    email: 'operator@getyourguide.local',
+    password: 'Operator@12345',
+  },
+  supplierAdmin: {
+    label: 'Supplier Admin',
+    email: 'supplier.admin@getyourguide.local',
+    password: 'SupplierAdmin@12345',
+  },
+  supplierStaff: {
+    label: 'Supplier Staff',
+    email: 'supplier.staff@getyourguide.local',
+    password: 'SupplierStaff@12345',
+  },
+  customer: {
+    label: 'Customer',
+    email: 'customer@getyourguide.local',
+    password: 'Customer@12345',
+  },
+} as const;
+
 interface AuthDialogProps {
   isOpen: boolean;
   onClose: () => void;
@@ -190,6 +219,23 @@ export function AuthDialog({ isOpen, onClose, initialTab = 'login' }: AuthDialog
     }
   };
 
+  const handleTestLogin = async (email: string, password: string) => {
+    setError('');
+    setIsLoading(true);
+    try {
+      await login(email, password);
+      handleClose();
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setError(t('authInvalidCredentials'));
+      } else {
+        setError(t('authErrorGeneric'));
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <Modal isOpen={isOpen} onClose={handleClose} size="sm">
       <div className="px-1">
@@ -302,6 +348,55 @@ export function AuthDialog({ isOpen, onClose, initialTab = 'login' }: AuthDialog
             >
               {isLoading ? t('authLoading') : t('authLoginBtn')}
             </button>
+            <div className="mt-3 text-xs text-slate-500 dark:text-slate-400 text-center space-y-2">
+              <p>{t('authTestLoginHint')}</p>
+              <div className="grid grid-cols-2 gap-2 text-[11px]">
+                <button
+                  type="button"
+                  onClick={() => handleTestLogin(DEMO_ACCOUNTS.admin.email, DEMO_ACCOUNTS.admin.password)}
+                  disabled={isLoading}
+                  className="border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-100 py-2 rounded-lg font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {DEMO_ACCOUNTS.admin.label}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleTestLogin(DEMO_ACCOUNTS.operator.email, DEMO_ACCOUNTS.operator.password)}
+                  disabled={isLoading}
+                  className="border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-100 py-2 rounded-lg font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {DEMO_ACCOUNTS.operator.label}
+                </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    handleTestLogin(DEMO_ACCOUNTS.supplierAdmin.email, DEMO_ACCOUNTS.supplierAdmin.password)
+                  }
+                  disabled={isLoading}
+                  className="border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-100 py-2 rounded-lg font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {DEMO_ACCOUNTS.supplierAdmin.label}
+                </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    handleTestLogin(DEMO_ACCOUNTS.supplierStaff.email, DEMO_ACCOUNTS.supplierStaff.password)
+                  }
+                  disabled={isLoading}
+                  className="border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-100 py-2 rounded-lg font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {DEMO_ACCOUNTS.supplierStaff.label}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleTestLogin(DEMO_ACCOUNTS.customer.email, DEMO_ACCOUNTS.customer.password)}
+                  disabled={isLoading}
+                  className="col-span-2 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-100 py-2 rounded-lg font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {DEMO_ACCOUNTS.customer.label}
+                </button>
+              </div>
+            </div>
           </form>
         )}
 
