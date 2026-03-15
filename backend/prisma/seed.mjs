@@ -1,15 +1,27 @@
 import { PrismaPg } from '@prisma/adapter-pg';
 import {
   BlogPostStatus,
-  InventoryMode,
+  BookingStatus,
+  ConversationStatus,
+  ConversationType,
+  CmsPageStatus,
   MediaType,
+  MessageType,
+  NotificationChannel,
+  PayoutStatus,
+  PaymentStatus,
   PrismaClient,
+  PromoScope,
+  PromoType,
+  ReviewStatus,
   SupplierStatus,
   TourStatus,
   UserRole,
   UserStatus,
+  InventoryMode,
 } from '@prisma/client';
 import bcrypt from 'bcrypt';
+import crypto from 'crypto';
 import 'dotenv/config';
 import { Pool } from 'pg';
 
@@ -65,6 +77,51 @@ const usersSeed = [
     roles: [UserRole.CUSTOMER],
     password: process.env.SEED_CUSTOMER_PASSWORD ?? 'Customer@12345',
   },
+  {
+    email: 'maria.garcia@example.com',
+    firstName: 'Maria',
+    lastName: 'Garcia',
+    phoneE164: '+34900000006',
+    status: UserStatus.ACTIVE,
+    roles: [UserRole.CUSTOMER],
+    password: 'Customer@12345',
+  },
+  {
+    email: 'james.wilson@example.com',
+    firstName: 'James',
+    lastName: 'Wilson',
+    phoneE164: '+44900000007',
+    status: UserStatus.ACTIVE,
+    roles: [UserRole.CUSTOMER],
+    password: 'Customer@12345',
+  },
+  {
+    email: 'yuki.tanaka@example.com',
+    firstName: 'Yuki',
+    lastName: 'Tanaka',
+    phoneE164: '+81900000008',
+    status: UserStatus.ACTIVE,
+    roles: [UserRole.CUSTOMER],
+    password: 'Customer@12345',
+  },
+  {
+    email: 'sophie.martin@example.com',
+    firstName: 'Sophie',
+    lastName: 'Martin',
+    phoneE164: '+33900000009',
+    status: UserStatus.ACTIVE,
+    roles: [UserRole.CUSTOMER],
+    password: 'Customer@12345',
+  },
+  {
+    email: 'lars.weber@example.com',
+    firstName: 'Lars',
+    lastName: 'Weber',
+    phoneE164: '+49900000010',
+    status: UserStatus.ACTIVE,
+    roles: [UserRole.CUSTOMER],
+    password: 'Customer@12345',
+  },
 ];
 
 async function seedReferenceData() {
@@ -72,6 +129,13 @@ async function seedReferenceData() {
     { code: 'en', name: 'English' },
     { code: 'vi', name: 'Tiếng Việt' },
     { code: 'fr', name: 'Français' },
+    { code: 'de', name: 'Deutsch' },
+    { code: 'es', name: 'Español' },
+    { code: 'it', name: 'Italiano' },
+    { code: 'ja', name: '日本語' },
+    { code: 'ko', name: '한국어' },
+    { code: 'zh', name: '中文' },
+    { code: 'th', name: 'ไทย' },
   ];
 
   for (const item of languages) {
@@ -86,6 +150,13 @@ async function seedReferenceData() {
     { code: 'USD', name: 'US Dollar', symbol: '$', decimals: 2 },
     { code: 'VND', name: 'Vietnamese Dong', symbol: '₫', decimals: 0 },
     { code: 'EUR', name: 'Euro', symbol: '€', decimals: 2 },
+    { code: 'GBP', name: 'British Pound', symbol: '£', decimals: 2 },
+    { code: 'JPY', name: 'Japanese Yen', symbol: '¥', decimals: 0 },
+    { code: 'KRW', name: 'South Korean Won', symbol: '₩', decimals: 0 },
+    { code: 'THB', name: 'Thai Baht', symbol: '฿', decimals: 2 },
+    { code: 'AUD', name: 'Australian Dollar', symbol: 'A$', decimals: 2 },
+    { code: 'CAD', name: 'Canadian Dollar', symbol: 'C$', decimals: 2 },
+    { code: 'CHF', name: 'Swiss Franc', symbol: 'Fr', decimals: 2 },
   ];
 
   for (const item of currencies) {
@@ -101,9 +172,16 @@ async function seedReferenceData() {
   }
 
   const countries = [
-    { iso2: 'VN', iso3: 'VNM', name: 'Vietnam', currencyCode: 'VND' },
-    { iso2: 'US', iso3: 'USA', name: 'United States', currencyCode: 'USD' },
-    { iso2: 'FR', iso3: 'FRA', name: 'France', currencyCode: 'EUR' },
+    { iso2: 'VN', iso3: 'VNM', name: 'Vietnam', currencyCode: 'VND', imageUrl: 'https://flagcdn.com/w320/vn.png' },
+    { iso2: 'US', iso3: 'USA', name: 'United States', currencyCode: 'USD', imageUrl: 'https://flagcdn.com/w320/us.png' },
+    { iso2: 'FR', iso3: 'FRA', name: 'France', currencyCode: 'EUR', imageUrl: 'https://flagcdn.com/w320/fr.png' },
+    { iso2: 'GB', iso3: 'GBR', name: 'United Kingdom', currencyCode: 'GBP', imageUrl: 'https://flagcdn.com/w320/gb.png' },
+    { iso2: 'JP', iso3: 'JPN', name: 'Japan', currencyCode: 'JPY', imageUrl: 'https://flagcdn.com/w320/jp.png' },
+    { iso2: 'KR', iso3: 'KOR', name: 'South Korea', currencyCode: 'KRW', imageUrl: 'https://flagcdn.com/w320/kr.png' },
+    { iso2: 'TH', iso3: 'THA', name: 'Thailand', currencyCode: 'THB', imageUrl: 'https://flagcdn.com/w320/th.png' },
+    { iso2: 'AU', iso3: 'AUS', name: 'Australia', currencyCode: 'AUD', imageUrl: 'https://flagcdn.com/w320/au.png' },
+    { iso2: 'DE', iso3: 'DEU', name: 'Germany', currencyCode: 'EUR', imageUrl: 'https://flagcdn.com/w320/de.png' },
+    { iso2: 'ES', iso3: 'ESP', name: 'Spain', currencyCode: 'EUR', imageUrl: 'https://flagcdn.com/w320/es.png' },
   ];
 
   for (const item of countries) {
@@ -113,8 +191,15 @@ async function seedReferenceData() {
         iso3: item.iso3,
         name: item.name,
         currencyCode: item.currencyCode,
+        imageUrl: item.imageUrl ?? undefined,
       },
-      create: item,
+      create: {
+        iso2: item.iso2,
+        iso3: item.iso3,
+        name: item.name,
+        currencyCode: item.currencyCode,
+        imageUrl: item.imageUrl ?? undefined,
+      },
     });
   }
 
@@ -125,39 +210,23 @@ async function seedReferenceData() {
   );
 
   const cities = [
-    {
-      countryIso2: 'VN',
-      name: 'Hà Nội',
-      normalizedName: 'ha-noi',
-      latitude: '21.027763',
-      longitude: '105.834160',
-      timezone: 'Asia/Ho_Chi_Minh',
-    },
-    {
-      countryIso2: 'VN',
-      name: 'Hồ Chí Minh',
-      normalizedName: 'ho-chi-minh',
-      latitude: '10.823099',
-      longitude: '106.629662',
-      timezone: 'Asia/Ho_Chi_Minh',
-    },
-    {
-      countryIso2: 'US',
-      name: 'New York',
-      normalizedName: 'new-york',
-      latitude: '40.712776',
-      longitude: '-74.005974',
-      timezone: 'America/New_York',
-    },
+    { countryIso2: 'VN', name: 'Hà Nội', normalizedName: 'ha-noi', latitude: '21.027763', longitude: '105.834160', timezone: 'Asia/Ho_Chi_Minh', imageUrl: 'https://images.unsplash.com/photo-1528127269322-539801943592?w=800' },
+    { countryIso2: 'VN', name: 'Hồ Chí Minh', normalizedName: 'ho-chi-minh', latitude: '10.823099', longitude: '106.629662', timezone: 'Asia/Ho_Chi_Minh', imageUrl: 'https://images.unsplash.com/photo-1583417319070-4a69db38a482?w=800' },
+    { countryIso2: 'VN', name: 'Đà Nẵng', normalizedName: 'da-nang', latitude: '16.054407', longitude: '108.202164', timezone: 'Asia/Ho_Chi_Minh', imageUrl: 'https://images.unsplash.com/photo-1528181304800-259b08848526?w=800' },
+    { countryIso2: 'US', name: 'New York', normalizedName: 'new-york', latitude: '40.712776', longitude: '-74.005974', timezone: 'America/New_York', imageUrl: 'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=800' },
+    { countryIso2: 'US', name: 'Los Angeles', normalizedName: 'los-angeles', latitude: '34.052235', longitude: '-118.243683', timezone: 'America/Los_Angeles', imageUrl: 'https://images.unsplash.com/photo-1534190760961-74e8c1c5c3da?w=800' },
+    { countryIso2: 'FR', name: 'Paris', normalizedName: 'paris', latitude: '48.856614', longitude: '2.352222', timezone: 'Europe/Paris', imageUrl: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=800' },
+    { countryIso2: 'GB', name: 'London', normalizedName: 'london', latitude: '51.507351', longitude: '-0.127758', timezone: 'Europe/London', imageUrl: 'https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=800' },
+    { countryIso2: 'JP', name: 'Tokyo', normalizedName: 'tokyo', latitude: '35.676192', longitude: '139.650311', timezone: 'Asia/Tokyo', imageUrl: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=800' },
+    { countryIso2: 'TH', name: 'Bangkok', normalizedName: 'bangkok', latitude: '13.756331', longitude: '100.501762', timezone: 'Asia/Bangkok', imageUrl: 'https://images.unsplash.com/photo-1508009603885-027cf6ddb6e0?w=800' },
+    { countryIso2: 'AU', name: 'Sydney', normalizedName: 'sydney', latitude: '-33.868820', longitude: '151.209296', timezone: 'Australia/Sydney', imageUrl: 'https://images.unsplash.com/photo-1523482580671-f216095fbba2?w=800' },
   ];
 
+  const cityIdsByNorm = {};
   for (const item of cities) {
     const country = countryByIso2[item.countryIso2];
-    if (!country) {
-      continue;
-    }
-
-    await prisma.city.upsert({
+    if (!country) continue;
+    const city = await prisma.city.upsert({
       where: {
         countryId_normalizedName: {
           countryId: country.id,
@@ -169,6 +238,7 @@ async function seedReferenceData() {
         latitude: item.latitude,
         longitude: item.longitude,
         timezone: item.timezone,
+        imageUrl: item.imageUrl ?? undefined,
       },
       create: {
         countryId: country.id,
@@ -177,14 +247,63 @@ async function seedReferenceData() {
         latitude: item.latitude,
         longitude: item.longitude,
         timezone: item.timezone,
+        imageUrl: item.imageUrl ?? undefined,
       },
     });
+    cityIdsByNorm[item.normalizedName] = city.id;
+  }
+
+  // Country translations (en, vi, fr)
+  const countryNamesVi = { VN: 'Việt Nam', US: 'Hoa Kỳ', FR: 'Pháp', GB: 'Vương quốc Anh', JP: 'Nhật Bản', KR: 'Hàn Quốc', TH: 'Thái Lan', AU: 'Úc', DE: 'Đức', ES: 'Tây Ban Nha' };
+  const countryNamesFr = { VN: 'Vietnam', US: 'États-Unis', GB: 'Royaume-Uni', JP: 'Japon', KR: 'Corée du Sud', TH: 'Thaïlande', AU: 'Australie', DE: 'Allemagne', ES: 'Espagne' };
+  for (const c of countries) {
+    const row = await prisma.country.findUnique({ where: { iso2: c.iso2 } });
+    if (!row) continue;
+    for (const lang of ['en', 'vi', 'fr']) {
+      const name = lang === 'vi' && countryNamesVi[c.iso2] ? countryNamesVi[c.iso2] : lang === 'fr' && countryNamesFr[c.iso2] ? countryNamesFr[c.iso2] : c.name;
+      await prisma.countryTranslation.upsert({
+        where: { countryId_languageCode: { countryId: row.id, languageCode: lang } },
+        update: { name },
+        create: { countryId: row.id, languageCode: lang, name },
+      });
+    }
+  }
+
+  // City translations (en, vi, fr)
+  const cityNamesVi = {
+    'ha-noi': 'Hà Nội', 'ho-chi-minh': 'Hồ Chí Minh', 'da-nang': 'Đà Nẵng', 'new-york': 'New York',
+    'los-angeles': 'Los Angeles', 'paris': 'Paris', 'london': 'London', 'tokyo': 'Tokyo',
+    'bangkok': 'Băng Cốc', 'sydney': 'Sydney',
+  };
+  const cityNamesFr = {
+    'ha-noi': 'Hanoï', 'ho-chi-minh': 'Ho Chi Minh-Ville', 'da-nang': 'Da Nang', 'new-york': 'New York',
+    'los-angeles': 'Los Angeles', 'paris': 'Paris', 'london': 'Londres', 'tokyo': 'Tokyo',
+    'bangkok': 'Bangkok', 'sydney': 'Sydney',
+  };
+  for (const item of cities) {
+    const cityId = cityIdsByNorm[item.normalizedName];
+    if (!cityId) continue;
+    for (const lang of ['en', 'vi', 'fr']) {
+      const name = lang === 'vi' && cityNamesVi[item.normalizedName] ? cityNamesVi[item.normalizedName] : lang === 'fr' && cityNamesFr[item.normalizedName] ? cityNamesFr[item.normalizedName] : item.name;
+      await prisma.cityTranslation.upsert({
+        where: { cityId_languageCode: { cityId, languageCode: lang } },
+        update: { name },
+        create: { cityId, languageCode: lang, name },
+      });
+    }
   }
 
   const categories = [
-    { slug: 'walking-tours', name: 'Walking Tours', sortOrder: 10 },
-    { slug: 'food-drink', name: 'Food & Drink', sortOrder: 20 },
-    { slug: 'museum-tickets', name: 'Museum Tickets', sortOrder: 30 },
+    { slug: 'walking-tours', name: 'Walking Tours', sortOrder: 10, descriptionEn: 'Guided walking tours through city streets, historic districts, and landmarks.', descriptionVi: 'Tour đi bộ có hướng dẫn qua phố phường, khu phố cổ và địa danh.' },
+    { slug: 'food-drink', name: 'Food & Drink', sortOrder: 20, descriptionEn: 'Local food tours, cooking classes, and culinary experiences.', descriptionVi: 'Tour ẩm thực, lớp nấu ăn và trải nghiệm ẩm thực địa phương.' },
+    { slug: 'museum-tickets', name: 'Museum Tickets', sortOrder: 30, descriptionEn: 'Skip-the-line museum tickets and guided museum tours.', descriptionVi: 'Vé bảo tàng ưu tiên và tour bảo tàng có hướng dẫn.' },
+    { slug: 'day-trips', name: 'Day Trips', sortOrder: 40, descriptionEn: 'Full-day and half-day excursions from the city.', descriptionVi: 'Du lịch nửa ngày hoặc cả ngày từ thành phố.' },
+    { slug: 'night-tours', name: 'Night Tours', sortOrder: 50, descriptionEn: 'Evening and night tours to see the city after dark.', descriptionVi: 'Tour buổi tối và đêm khám phá thành phố về đêm.' },
+    { slug: 'cultural-experiences', name: 'Cultural Experiences', sortOrder: 60, descriptionEn: 'Traditional performances, workshops, and local culture immersion.', descriptionVi: 'Biểu diễn truyền thống, workshop và trải nghiệm văn hóa địa phương.' },
+    { slug: 'adventure', name: 'Adventure', sortOrder: 70, descriptionEn: 'Hiking, zip-lining, outdoor adventures and adrenaline activities.', descriptionVi: 'Leo núi, zipline, hoạt động ngoài trời và mạo hiểm.' },
+    { slug: 'water-activities', name: 'Water Activities', sortOrder: 80, descriptionEn: 'Boat cruises, kayaking, snorkeling, and water sports.', descriptionVi: 'Du thuyền, chèo kayak, lặn biển và thể thao dưới nước.' },
+    { slug: 'cycling', name: 'Cycling', sortOrder: 90, descriptionEn: 'Bike tours and cycling experiences in the city or countryside.', descriptionVi: 'Tour xe đạp trong thành phố hoặc vùng nông thôn.' },
+    { slug: 'cooking-classes', name: 'Cooking Classes', sortOrder: 100, descriptionEn: 'Hands-on cooking classes to learn local recipes and techniques.', descriptionVi: 'Lớp học nấu ăn thực hành học món địa phương.' },
   ];
 
   for (const item of categories) {
@@ -202,6 +321,34 @@ async function seedReferenceData() {
         sortOrder: item.sortOrder,
       },
     });
+  }
+
+  const categoryNamesVi = {
+    'walking-tours': 'Tour đi bộ',
+    'food-drink': 'Ẩm thực & Đồ uống',
+    'museum-tickets': 'Vé bảo tàng',
+    'day-trips': 'Du lịch trong ngày',
+    'night-tours': 'Tour đêm',
+    'cultural-experiences': 'Trải nghiệm văn hóa',
+    'adventure': 'Phiêu lưu',
+    'water-activities': 'Hoạt động dưới nước',
+    'cycling': 'Đạp xe',
+    'cooking-classes': 'Lớp học nấu ăn',
+  };
+  const allCats = await prisma.category.findMany();
+  for (const cat of allCats) {
+    const item = categories.find((c) => c.slug === cat.slug);
+    const descEn = item?.descriptionEn ?? null;
+    const descVi = item?.descriptionVi ?? null;
+    for (const lang of ['en', 'vi']) {
+      const name = lang === 'vi' && categoryNamesVi[cat.slug] ? categoryNamesVi[cat.slug] : cat.name;
+      const description = lang === 'en' ? descEn : descVi;
+      await prisma.categoryTranslation.upsert({
+        where: { categoryId_languageCode: { categoryId: cat.id, languageCode: lang } },
+        update: { name, description: description ?? undefined },
+        create: { categoryId: cat.id, languageCode: lang, name, description: description ?? undefined },
+      });
+    }
   }
 
   await prisma.exchangeRate.upsert({
@@ -238,6 +385,37 @@ async function seedReferenceData() {
     },
   });
 
+  const moreRates = [
+    { base: 'GBP', quote: 'USD', rate: '1.27' },
+    { base: 'USD', quote: 'JPY', rate: '149.50' },
+    { base: 'USD', quote: 'THB', rate: '35.20' },
+    { base: 'USD', quote: 'AUD', rate: '1.53' },
+    { base: 'EUR', quote: 'USD', rate: '1.08' },
+    { base: 'USD', quote: 'KRW', rate: '1320' },
+    { base: 'USD', quote: 'CAD', rate: '1.36' },
+    { base: 'USD', quote: 'CHF', rate: '0.88' },
+    { base: 'EUR', quote: 'GBP', rate: '0.85' },
+    { base: 'VND', quote: 'USD', rate: '0.00004' },
+  ];
+  for (const r of moreRates) {
+    await prisma.exchangeRate.upsert({
+      where: {
+        baseCurrency_quoteCurrency_effectiveAt: {
+          baseCurrency: r.base,
+          quoteCurrency: r.quote,
+          effectiveAt: REFERENCE_EFFECTIVE_AT,
+        },
+      },
+      update: { rate: r.rate },
+      create: {
+        baseCurrency: r.base,
+        quoteCurrency: r.quote,
+        rate: r.rate,
+        effectiveAt: REFERENCE_EFFECTIVE_AT,
+      },
+    });
+  }
+
   await prisma.systemSetting.upsert({
     where: { settingKey: 'platform.defaultCurrency' },
     update: {
@@ -271,6 +449,25 @@ async function seedReferenceData() {
       description: 'Support contact email',
     },
   });
+
+  const extraSettings = [
+    { key: 'platform.defaultLanguage', value: 'en', desc: 'Default site language' },
+    { key: 'platform.maxCartAgeHours', value: '24', desc: 'Cart expiration in hours' },
+    { key: 'platform.bookingConfirmationWindowMinutes', value: '30', desc: 'Minutes to pay before slot release' },
+    { key: 'platform.maintenanceMode', value: 'false', desc: 'Enable maintenance mode' },
+    { key: 'platform.allowGuestCheckout', value: 'true', desc: 'Allow checkout without account' },
+    { key: 'platform.reviewModeration', value: 'auto', desc: 'auto|manual review moderation' },
+    { key: 'platform.footerCopyright', value: '© 2026 GetYourGuide Demo', desc: 'Footer copyright text' },
+    { key: 'platform.socialFacebook', value: 'https://facebook.com/getyourguide', desc: 'Facebook URL' },
+    { key: 'platform.socialInstagram', value: 'https://instagram.com/getyourguide', desc: 'Instagram URL' },
+  ];
+  for (const s of extraSettings) {
+    await prisma.systemSetting.upsert({
+      where: { settingKey: s.key },
+      update: { settingValue: s.value, valueType: 'string', isPublic: true, description: s.desc },
+      create: { settingKey: s.key, settingValue: s.value, valueType: 'string', isPublic: true, description: s.desc },
+    });
+  }
 }
 
 async function seedUsersAndRoles() {
@@ -328,26 +525,46 @@ async function seedUsersAndRoles() {
 }
 
 async function seedSupplierMapping(usersByEmail) {
-  const supplier = await prisma.supplier.upsert({
-    where: { slug: 'demo-supplier' },
-    update: {
-      legalName: 'Demo Supplier LLC',
-      displayName: 'Demo Supplier',
-      status: SupplierStatus.ACTIVE,
-      email: 'supplier@getyourguide.local',
-      phoneE164: '+84900000100',
-      addressLine: '1 Demo Street',
-    },
-    create: {
-      legalName: 'Demo Supplier LLC',
-      displayName: 'Demo Supplier',
-      slug: 'demo-supplier',
-      status: SupplierStatus.ACTIVE,
-      email: 'supplier@getyourguide.local',
-      phoneE164: '+84900000100',
-      addressLine: '1 Demo Street',
-    },
-  });
+  const suppliersData = [
+    { slug: 'demo-supplier', legalName: 'Demo Supplier LLC', displayName: 'Demo Supplier', email: 'supplier@getyourguide.local', phoneE164: '+84900000100', addressLine: '1 Demo Street' },
+    { slug: 'hanoi-tours-co', legalName: 'Hanoi Tours Co.', displayName: 'Hanoi Tours', email: 'contact@hanoitours.vn', phoneE164: '+84240000001', addressLine: '12 Hoan Kiem, Hanoi' },
+    { slug: 'saigon-adventures', legalName: 'Saigon Adventures Ltd', displayName: 'Saigon Adventures', email: 'hello@saigonadventures.vn', phoneE164: '+84280000002', addressLine: '88 Nguyen Hue, District 1' },
+    { slug: 'mekong-experience', legalName: 'Mekong Experience JSC', displayName: 'Mekong Experience', email: 'info@mekongexp.com', phoneE164: '+84280000003', addressLine: 'Can Tho City' },
+    { slug: 'vietnam-food-tours', legalName: 'Vietnam Food Tours', displayName: 'Vietnam Food Tours', email: 'tours@vnfoodtours.com', phoneE164: '+84240000004', addressLine: 'Hanoi & HCMC' },
+    { slug: 'asia-discovery', legalName: 'Asia Discovery Travel', displayName: 'Asia Discovery', email: 'book@asiadiscovery.com', phoneE164: '+6620000001', addressLine: 'Bangkok, Thailand' },
+    { slug: 'europe-walks', legalName: 'Europe Walks GmbH', displayName: 'Europe Walks', email: 'info@europewalks.com', phoneE164: '+4930000001', addressLine: 'Berlin, Germany' },
+    { slug: 'city-explorers', legalName: 'City Explorers Inc', displayName: 'City Explorers', email: 'support@cityexplorers.com', phoneE164: '+12120000001', addressLine: 'New York, USA' },
+    { slug: 'cultural-journeys', legalName: 'Cultural Journeys SAS', displayName: 'Cultural Journeys', email: 'contact@culturaljourneys.fr', phoneE164: '+33100000001', addressLine: 'Paris, France' },
+    { slug: 'sunrise-tours', legalName: 'Sunrise Tours Pty Ltd', displayName: 'Sunrise Tours', email: 'hello@sunrisetours.com.au', phoneE164: '+61200000001', addressLine: 'Sydney, Australia' },
+  ];
+
+  let firstSupplierId = null;
+  for (const s of suppliersData) {
+    const supplier = await prisma.supplier.upsert({
+      where: { slug: s.slug },
+      update: {
+        legalName: s.legalName,
+        displayName: s.displayName,
+        status: SupplierStatus.ACTIVE,
+        email: s.email,
+        phoneE164: s.phoneE164,
+        addressLine: s.addressLine,
+      },
+      create: {
+        legalName: s.legalName,
+        displayName: s.displayName,
+        slug: s.slug,
+        status: SupplierStatus.ACTIVE,
+        email: s.email,
+        phoneE164: s.phoneE164,
+        addressLine: s.addressLine,
+      },
+    });
+    if (!firstSupplierId) firstSupplierId = supplier.id;
+  }
+
+  const supplier = await prisma.supplier.findUnique({ where: { slug: 'demo-supplier' } });
+  if (!supplier) return;
 
   const supplierAdmin = usersByEmail['supplier.admin@getyourguide.local'];
   const supplierStaff = usersByEmail['supplier.staff@getyourguide.local'];
@@ -400,6 +617,11 @@ async function seedFaq() {
     { slug: 'cancellation', name: 'Cancellations & Refunds', sortOrder: 30 },
     { slug: 'account', name: 'Account & Settings', sortOrder: 40 },
     { slug: 'tours-activities', name: 'Tours & Activities', sortOrder: 50 },
+    { slug: 'vouchers-tickets', name: 'Vouchers & Tickets', sortOrder: 60 },
+    { slug: 'safety-health', name: 'Safety & Health', sortOrder: 70 },
+    { slug: 'accessibility', name: 'Accessibility', sortOrder: 80 },
+    { slug: 'group-corporate', name: 'Groups & Corporate', sortOrder: 90 },
+    { slug: 'contact-support', name: 'Contact & Support', sortOrder: 100 },
   ];
 
   const categoryMap = {};
@@ -515,11 +737,18 @@ async function seedFaq() {
         'Tour languages are listed on each tour page. Many tours offer multiple language options. You can filter by language when browsing.',
       sortOrder: 20,
     },
+    { slug: 'voucher-format', categorySlug: 'vouchers-tickets', question: 'In what format will I receive my voucher?', answer: 'You receive a PDF voucher by email. You can also access it in "My Bookings" and show the digital voucher on your phone to the guide.', sortOrder: 10 },
+    { slug: 'voucher-lost', categorySlug: 'vouchers-tickets', question: 'I lost my voucher. What do I do?', answer: 'Log in to your account, go to "My Bookings", and download or view your voucher again. You can also contact support with your booking reference.', sortOrder: 20 },
+    { slug: 'safety-measures', categorySlug: 'safety-health', question: 'What safety measures do tours follow?', answer: 'All our suppliers follow local health and safety guidelines. Equipment is regularly maintained. Your guide will brief you on any specific safety rules.', sortOrder: 10 },
+    { slug: 'accessibility-options', categorySlug: 'accessibility', question: 'Do you have tours for guests with reduced mobility?', answer: 'Many tours are wheelchair-friendly or can be adapted. Check the "Important information" section on each tour page or contact us to confirm.', sortOrder: 10 },
+    { slug: 'group-booking', categorySlug: 'group-corporate', question: 'How do I book for a large group?', answer: 'For groups of 10 or more, use the group enquiry form or contact our team. We can arrange private tours and group discounts.', sortOrder: 10 },
+    { slug: 'contact-hours', categorySlug: 'contact-support', question: 'What are your support opening hours?', answer: 'Our support team is available 24/7 by email. Live chat is available during business hours in your timezone.', sortOrder: 10 },
+    { slug: 'change-booking-date', categorySlug: 'booking', question: 'Can I change my tour date?', answer: 'Date changes depend on the tour\'s policy. Go to "My Bookings" and use "Change date" if available, or contact support.', sortOrder: 40 },
   ];
 
   for (const item of faqItems) {
     const categoryId = categoryMap[item.categorySlug] || null;
-    await prisma.supportFaqItem.upsert({
+    const faqRecord = await prisma.supportFaqItem.upsert({
       where: { slug: item.slug },
       update: {
         categoryId,
@@ -539,6 +768,26 @@ async function seedFaq() {
     });
   }
 
+  for (const cat of faqCategories) {
+    const rec = await prisma.supportFaqCategory.findUnique({ where: { slug: cat.slug } });
+    if (rec) {
+      await prisma.supportFaqCategoryTranslation.upsert({
+        where: { categoryId_languageCode: { categoryId: rec.id, languageCode: 'vi' } },
+        update: { name: cat.name },
+        create: { categoryId: rec.id, languageCode: 'vi', name: cat.name },
+      });
+    }
+  }
+
+  const faqItemList = await prisma.supportFaqItem.findMany({ take: 5 });
+  for (const item of faqItemList) {
+    await prisma.supportFaqItemTranslation.upsert({
+      where: { itemId_languageCode: { itemId: item.id, languageCode: 'vi' } },
+      update: { question: item.question, answer: item.answer },
+      create: { itemId: item.id, languageCode: 'vi', question: item.question, answer: item.answer },
+    });
+  }
+
   console.log(`  ✓ FAQ: ${faqCategories.length} categories, ${faqItems.length} items`);
 }
 
@@ -555,6 +804,12 @@ async function seedBlog(usersByEmail) {
     { slug: 'destination-guides', name: 'Destination Guides', description: 'In-depth guides to popular destinations', sortOrder: 20 },
     { slug: 'food-culture', name: 'Food & Culture', description: 'Explore local cuisine and cultural experiences', sortOrder: 30 },
     { slug: 'adventure', name: 'Adventure', description: 'Outdoor activities, hiking, and extreme sports', sortOrder: 40 },
+    { slug: 'family-travel', name: 'Family Travel', description: 'Trips and tips for traveling with kids', sortOrder: 50 },
+    { slug: 'solo-travel', name: 'Solo Travel', description: 'Stories and advice for solo explorers', sortOrder: 60 },
+    { slug: 'luxury-experiences', name: 'Luxury Experiences', description: 'Premium tours and exclusive experiences', sortOrder: 70 },
+    { slug: 'sustainable-travel', name: 'Sustainable Travel', description: 'Eco-friendly and responsible tourism', sortOrder: 80 },
+    { slug: 'seasonal-guides', name: 'Seasonal Guides', description: 'Best times to visit and seasonal events', sortOrder: 90 },
+    { slug: 'travel-tech', name: 'Travel & Tech', description: 'Apps, gear, and digital nomad tips', sortOrder: 100 },
   ];
 
   const blogCategoryMap = {};
@@ -566,6 +821,11 @@ async function seedBlog(usersByEmail) {
       create: { slug: cat.slug, name: cat.name, description: cat.description, sortOrder: cat.sortOrder, isActive: true },
     });
     blogCategoryMap[cat.slug] = record.id;
+    await prisma.blogCategoryTranslation.upsert({
+      where: { categoryId_languageCode: { categoryId: record.id, languageCode: 'vi' } },
+      update: { name: cat.name, description: cat.description },
+      create: { categoryId: record.id, languageCode: 'vi', name: cat.name, description: cat.description },
+    }).catch(() => {});
   }
 
   // Blog tags
@@ -578,6 +838,8 @@ async function seedBlog(usersByEmail) {
     { slug: 'first-time', name: 'First Time Visitor' },
     { slug: 'photography', name: 'Photography' },
     { slug: 'family', name: 'Family Travel' },
+    { slug: 'southeast-asia', name: 'Southeast Asia' },
+    { slug: 'weekend-getaway', name: 'Weekend Getaway' },
   ];
 
   const blogTagMap = {};
@@ -589,6 +851,11 @@ async function seedBlog(usersByEmail) {
       create: { slug: tag.slug, name: tag.name },
     });
     blogTagMap[tag.slug] = record.id;
+    await prisma.blogTagTranslation.upsert({
+      where: { tagId_languageCode: { tagId: record.id, languageCode: 'vi' } },
+      update: { name: tag.name },
+      create: { tagId: record.id, languageCode: 'vi', name: tag.name },
+    }).catch(() => {});
   }
 
   // Blog posts
@@ -793,6 +1060,71 @@ Great travel photos don't require expensive gear. Here's how to level up your tr
       seoDescription: 'Improve your travel photography with 10 simple tips on composition, lighting, and editing for phone and camera.',
       readTimeMinutes: 4,
     },
+    {
+      slug: 'solo-travel-vietnam-guide',
+      title: 'Solo Travel in Vietnam: A Complete Guide',
+      excerpt: 'Everything you need to know for a safe, fun, and rewarding solo trip across Vietnam.',
+      content: `# Solo Travel in Vietnam: A Complete Guide\n\nVietnam is one of the best destinations for solo travelers. Friendly locals, affordable transport, and a well-trodden backpacker trail make it easy and rewarding.\n\n## Safety tips\n- Keep valuables in a money belt or locked bag.\n- Use Grab for transport; avoid unlicensed taxis.\n- Stay in well-reviewed hostels and guesthouses.\n\n## Best routes\n- North to south (or vice versa) over 2–3 weeks.\n- Hanoi → Ha Long → Ninh Binh → Hue → Hoi An → Da Lat → HCMC.\n\n## Making friends\n- Join group tours and food tours.\n- Hostel common areas and overnight buses are great for meeting other travelers.\n\n*Book small-group tours for the perfect balance of independence and company.*`,
+      categorySlug: 'solo-travel',
+      tagSlugs: ['vietnam', 'first-time'],
+      status: BlogPostStatus.PUBLISHED,
+      isFeatured: false,
+      seoTitle: 'Solo Travel Vietnam Guide 2026',
+      seoDescription: 'Solo travel in Vietnam: safety, routes, and how to meet other travelers.',
+      readTimeMinutes: 5,
+    },
+    {
+      slug: 'best-time-visit-southeast-asia',
+      title: 'Best Time to Visit Southeast Asia',
+      excerpt: 'Weather, crowds, and festivals: when to go to Vietnam, Thailand, and beyond.',
+      content: `# Best Time to Visit Southeast Asia\n\nSoutheast Asia has two main seasons: dry and wet. Timing your trip can save money and improve your experience.\n\n## Vietnam\n- **North:** Oct–Apr cool/dry; May–Sep hot and rainy.\n- **South:** Dec–Apr dry; May–Nov rainy (short, heavy showers).\n\n## Thailand\n- **Nov–Feb:** Cool and dry, peak season.\n- **Mar–May:** Very hot.\n- **Jun–Oct:** Rainy season, fewer tourists.\n\n## General tips\n- Shoulder season (Apr–May, Sep–Oct) often has good weather and lower prices.\n- Check local festivals (Tet, Songkran) for culture or to avoid peak demand.\n\n*Browse tours by month to see what\'s available when you travel.*`,
+      categorySlug: 'seasonal-guides',
+      tagSlugs: ['southeast-asia'],
+      status: BlogPostStatus.PUBLISHED,
+      isFeatured: false,
+      seoTitle: 'Best Time to Visit Southeast Asia 2026',
+      seoDescription: 'When to go to Vietnam, Thailand, and more: weather and seasons.',
+      readTimeMinutes: 4,
+    },
+    {
+      slug: 'eco-friendly-tours-how-to-choose',
+      title: 'How to Choose Eco-Friendly Tours',
+      excerpt: 'What to look for when booking sustainable and responsible tours.',
+      content: `# How to Choose Eco-Friendly Tours\n\nMore travelers want to minimize their impact. Here\'s how to pick tours that walk the talk.\n\n## What to look for\n- Small groups (less impact, better experience).\n- Local guides and operators (money stays in the community).\n- Clear policies on waste, wildlife, and resources.\n- Certifications (e.g. Green Globe, local eco labels) where available.\n\n## Questions to ask\n- Is single-use plastic avoided?\n- How are wildlife interactions managed?\n- Does the operator support local conservation or community projects?\n\n## Our commitment\nWe work with suppliers who follow responsible practices and highlight eco-friendly options where possible.\n\n*Filter by "Eco-friendly" or "Small group" to find better options.*`,
+      categorySlug: 'sustainable-travel',
+      tagSlugs: ['southeast-asia'],
+      status: BlogPostStatus.PUBLISHED,
+      isFeatured: false,
+      seoTitle: 'How to Choose Eco-Friendly Tours 2026',
+      seoDescription: 'Tips for choosing sustainable and responsible tours.',
+      readTimeMinutes: 4,
+    },
+    {
+      slug: 'luxury-experiences-vietnam',
+      title: 'Luxury Experiences in Vietnam',
+      excerpt: 'Private cruises, top hotels, and exclusive experiences for a premium Vietnam trip.',
+      content: `# Luxury Experiences in Vietnam\n\nVietnam offers world-class luxury without the European price tag. From Ha Long Bay cruises to private food tours.\n\n## Ha Long Bay\n- Overnight cruises on boutique junks with suites and fine dining.\n- Kayaking and cave visits with fewer crowds on premium boats.\n\n## Food & culture\n- Private cooking classes in restored villas.\n- Street food tours in a vintage car or with a dedicated chef.\n\n## Accommodation\n- Heritage hotels in Hanoi and Hoi An.\n- Beach resorts in Da Nang and Nha Trang.\n\n*Filter by "Private" or "Luxury" to see premium options.*`,
+      categorySlug: 'luxury-experiences',
+      tagSlugs: ['vietnam'],
+      status: BlogPostStatus.PUBLISHED,
+      isFeatured: false,
+      seoTitle: 'Luxury Experiences Vietnam 2026',
+      seoDescription: 'Luxury tours and experiences in Vietnam: cruises, food, and stays.',
+      readTimeMinutes: 4,
+    },
+    {
+      slug: 'apps-tools-every-traveler-needs',
+      title: '10 Apps and Tools Every Traveler Needs',
+      excerpt: 'From booking to navigation and translation: the best apps for your next trip.',
+      content: `# 10 Apps and Tools Every Traveler Needs\n\n1. **Booking & tours** — GetYourGuide or similar for activities and skip-the-line tickets.\n2. **Maps** — Google Maps (offline), Maps.me for hiking.\n3. **Translation** — Google Translate (offline packs).\n4. **Rides** — Grab in SEA, Uber/Lyft elsewhere.\n5. **Money** — Wise or Revolut for exchange and payments.\n6. **Flights** — Skyscanner, Google Flights.\n7. **Accommodation** — Booking.com, Hostelworld.\n8. **Communication** — WhatsApp, local SIM or eSIM.\n9. **Health** — First aid, travel insurance app.\n10. **Notes** — Notion or Google Keep for itineraries.\n\n*Book your tours in one place and keep vouchers in our app.*`,
+      categorySlug: 'travel-tech',
+      tagSlugs: ['first-time'],
+      status: BlogPostStatus.PUBLISHED,
+      isFeatured: false,
+      seoTitle: '10 Apps Every Traveler Needs 2026',
+      seoDescription: 'Best travel apps for booking, maps, translation, and more.',
+      readTimeMinutes: 3,
+    },
   ];
 
   for (const post of blogPosts) {
@@ -844,6 +1176,15 @@ Great travel photos don't require expensive gear. Here's how to level up your tr
     }
   }
 
+  const blogPostsForVi = await prisma.blogPost.findMany({ take: 3 });
+  for (const post of blogPostsForVi) {
+    await prisma.blogPostTranslation.upsert({
+      where: { postId_languageCode: { postId: post.id, languageCode: 'vi' } },
+      update: { title: post.title, excerpt: post.excerpt, content: post.content },
+      create: { postId: post.id, languageCode: 'vi', title: post.title, excerpt: post.excerpt, content: post.content },
+    }).catch(() => {});
+  }
+
   console.log(`  ✓ Blog: ${blogCategories.length} categories, ${blogTags.length} tags, ${blogPosts.length} posts`);
 }
 
@@ -873,9 +1214,8 @@ async function seedTours() {
   }
 
   // Look up categories
-  const walkingCat = await prisma.category.findUnique({ where: { slug: 'walking-tours' } });
-  const foodCat = await prisma.category.findUnique({ where: { slug: 'food-drink' } });
-  const museumCat = await prisma.category.findUnique({ where: { slug: 'museum-tickets' } });
+  const allCategories = await prisma.category.findMany();
+  const categoryBySlug = Object.fromEntries(allCategories.map((c) => [c.slug, c]));
 
   // Tour tags
   const tourTags = [
@@ -885,6 +1225,10 @@ async function seedTours() {
     { slug: 'private-tour', name: 'Private Tour' },
     { slug: 'family-friendly', name: 'Family Friendly' },
     { slug: 'local-guide', name: 'Local Guide' },
+    { slug: 'eco-friendly', name: 'Eco-Friendly' },
+    { slug: 'wheelchair-accessible', name: 'Wheelchair Accessible' },
+    { slug: 'romantic', name: 'Romantic' },
+    { slug: 'sunset', name: 'Sunset' },
   ];
 
   const tourTagMap = {};
@@ -895,6 +1239,14 @@ async function seedTours() {
       create: { slug: tag.slug, name: tag.name },
     });
     tourTagMap[tag.slug] = record.id;
+    for (const lang of ['en', 'vi']) {
+      const nameVi = { 'best-seller': 'Bán chạy', 'skip-the-line': 'Vào cửa ưu tiên', 'small-group': 'Nhóm nhỏ', 'private-tour': 'Tour riêng', 'family-friendly': 'Gia đình', 'local-guide': 'Hướng dẫn địa phương', 'eco-friendly': 'Thân thiện môi trường', 'wheelchair-accessible': 'Xe lăn', 'romantic': 'Lãng mạn', 'sunset': 'Hoàng hôn' }[tag.slug];
+      await prisma.tourTagTranslation.upsert({
+        where: { tagId_languageCode: { tagId: record.id, languageCode: lang } },
+        update: { name: lang === 'vi' && nameVi ? nameVi : tag.name },
+        create: { tagId: record.id, languageCode: lang, name: lang === 'vi' && nameVi ? nameVi : tag.name },
+      });
+    }
   }
 
   const toursData = [
@@ -1781,6 +2133,142 @@ async function seedTours() {
         },
       ],
     },
+    {
+      slug: 'da-nang-marble-mountains-tour',
+      title: 'Marble Mountains & Son Tra Peninsula Tour',
+      shortDescription: 'Explore Buddhist caves, pagodas, and the Linh Ung Pagoda with the Lady Buddha.',
+      fullDescription:
+        'Discover the five marble hills of Da Nang, each named after an element. Climb steps to caves, pagodas, and viewpoints. Then visit Son Tra Peninsula and the stunning Linh Ung Pagoda with its 67m-tall Lady Buddha overlooking the coast.',
+      cityId: cityByNorm['da-nang']?.id,
+      meetingPoint: 'Da Nang city center — hotel pickup available',
+      latitude: '15.9900',
+      longitude: '108.2520',
+      durationMinutes: 300,
+      maxGroupSize: 12,
+      status: TourStatus.PUBLISHED,
+      inventoryMode: InventoryMode.PER_DEPARTURE,
+      highlights: ['Marble Mountains caves', 'Linh Ung Pagoda', 'Lady Buddha', 'Panoramic views'],
+      includedItems: ['Transport', 'English guide', 'Entrance fees', 'Bottled water'],
+      excludedItems: ['Lunch', 'Tips'],
+      whatToBring: ['Comfortable shoes', 'Hat', 'Sunscreen'],
+      importantInfo: ['Some steep steps; moderate fitness required.'],
+      cancellationPolicy: { type: 'FREE', freeCancelHoursBefore: 24 },
+      availableLanguages: ['English', 'Vietnamese'],
+      allowPayLater: true,
+      tagSlugs: ['small-group', 'local-guide', 'eco-friendly'],
+      categorySlugs: ['day-trips', 'cultural-experiences'],
+      itineraryStops: [
+        { stopOrder: 1, title: 'Marble Mountains', description: 'Explore caves and pagodas in the five hills.', durationMinutes: 120, latitude: '15.9950', longitude: '108.2650' },
+        { stopOrder: 2, title: 'Son Tra Peninsula', description: 'Drive to Son Tra and visit Linh Ung Pagoda.', durationMinutes: 90, latitude: '16.0900', longitude: '108.2800' },
+      ],
+      media: [
+        { url: 'https://images.unsplash.com/photo-1528181304800-259b08848526', altText: 'Marble Mountains view', sortOrder: 1, isCover: true },
+        { url: 'https://images.unsplash.com/photo-1548013146-72479768bada', altText: 'Buddhist pagoda', sortOrder: 2, isCover: false },
+      ],
+      options: [{ code: 'group', title: 'Group Tour', description: 'Shared tour', isDefault: true, priceAdult: 35, priceChild: 20 }],
+    },
+    {
+      slug: 'bangkok-temples-grand-palace',
+      title: 'Bangkok Temples & Grand Palace Tour',
+      shortDescription: 'Visit the Grand Palace, Wat Pho, and Wat Arun with a knowledgeable guide.',
+      fullDescription:
+        'Experience Bangkok\'s most iconic temples in one day. See the Grand Palace and Emerald Buddha, Wat Pho with the Reclining Buddha, and cross the river to Wat Arun. Your guide explains history, dress codes, and Buddhist customs.',
+      cityId: cityByNorm['bangkok']?.id,
+      meetingPoint: 'Grand Palace main entrance',
+      latitude: '13.7500',
+      longitude: '100.4915',
+      durationMinutes: 360,
+      maxGroupSize: 15,
+      status: TourStatus.PUBLISHED,
+      inventoryMode: InventoryMode.PER_DEPARTURE,
+      highlights: ['Grand Palace', 'Wat Pho', 'Wat Arun', 'Skip-the-line access'],
+      includedItems: ['English guide', 'Entrance fees', 'Bottled water'],
+      excludedItems: ['Lunch', 'Tips', 'Transport to meeting point'],
+      whatToBring: ['Modest clothing (long pants, covered shoulders)', 'Comfortable shoes'],
+      importantInfo: ['Strict dress code at temples. Sarongs available for rent.'],
+      cancellationPolicy: { type: 'FREE', freeCancelHoursBefore: 24 },
+      availableLanguages: ['English', 'Thai'],
+      allowPayLater: true,
+      tagSlugs: ['best-seller', 'skip-the-line', 'local-guide'],
+      categorySlugs: ['walking-tours', 'cultural-experiences'],
+      itineraryStops: [
+        { stopOrder: 1, title: 'Grand Palace & Emerald Buddha', description: 'Tour the palace complex and temple.', durationMinutes: 120, latitude: '13.7500', longitude: '100.4915' },
+        { stopOrder: 2, title: 'Wat Pho', description: 'See the Reclining Buddha and traditional massage school.', durationMinutes: 60, latitude: '13.7464', longitude: '100.4934' },
+        { stopOrder: 3, title: 'Wat Arun', description: 'Cross Chao Phraya and climb the Temple of Dawn.', durationMinutes: 60, latitude: '13.7438', longitude: '100.4888' },
+      ],
+      media: [
+        { url: 'https://images.unsplash.com/photo-1508009603885-027cf6ddb6e0', altText: 'Grand Palace Bangkok', sortOrder: 1, isCover: true },
+        { url: 'https://images.unsplash.com/photo-1563492065599-3520f775eeed', altText: 'Wat Arun temple', sortOrder: 2, isCover: false },
+      ],
+      options: [{ code: 'group', title: 'Group Tour', description: 'Shared tour', isDefault: true, priceAdult: 45, priceChild: 25 }],
+    },
+    {
+      slug: 'paris-seine-river-cruise',
+      title: 'Seine River Cruise with Eiffel Tower Views',
+      shortDescription: 'One-hour cruise past the Eiffel Tower, Notre-Dame, and major Paris landmarks.',
+      fullDescription:
+        'Glide along the Seine on a glass-topped boat. See the Eiffel Tower, Notre-Dame, Louvre, and bridges from the water. Commentary in multiple languages. Perfect for first-time visitors and photo opportunities.',
+      cityId: cityByNorm['paris']?.id,
+      meetingPoint: 'Port de la Bourdonnais, near Eiffel Tower',
+      latitude: '48.8584',
+      longitude: '2.2945',
+      durationMinutes: 60,
+      maxGroupSize: 200,
+      status: TourStatus.PUBLISHED,
+      inventoryMode: InventoryMode.PER_DEPARTURE,
+      highlights: ['Eiffel Tower views', 'Notre-Dame', 'Louvre', 'Commentary'],
+      includedItems: ['1-hour cruise', 'Audio guide'],
+      excludedItems: ['Food and drinks', 'Hotel pickup'],
+      whatToBring: ['Camera', 'Warm layer in winter'],
+      importantInfo: ['Boats are wheelchair-accessible. Runs in all weather.'],
+      cancellationPolicy: { type: 'FREE', freeCancelHoursBefore: 24 },
+      availableLanguages: ['English', 'French', 'Spanish', 'German'],
+      allowPayLater: true,
+      tagSlugs: ['family-friendly', 'romantic', 'wheelchair-accessible'],
+      categorySlugs: ['water-activities', 'cultural-experiences'],
+      itineraryStops: [
+        { stopOrder: 1, title: 'Seine Cruise', description: 'Full loop from Eiffel Tower area with landmark commentary.', durationMinutes: 60, latitude: '48.8584', longitude: '2.2945' },
+      ],
+      media: [
+        { url: 'https://images.unsplash.com/photo-1511739001486-6bfe10ce785f', altText: 'Seine cruise Paris', sortOrder: 1, isCover: true },
+        { url: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34', altText: 'Eiffel Tower from Seine', sortOrder: 2, isCover: false },
+      ],
+      options: [{ code: 'standard', title: 'Day Cruise', description: '1-hour cruise', isDefault: true, priceAdult: 18, priceChild: 10 }],
+    },
+    {
+      slug: 'london-tower-bridge-walking-tour',
+      title: 'London Tower Bridge & South Bank Walking Tour',
+      shortDescription: 'Walk from Tower Bridge along the South Bank to Big Ben with a local guide.',
+      fullDescription:
+        'Meet at Tower Bridge and walk along the Thames past HMS Belfast, Shakespeare\'s Globe, Tate Modern, and the London Eye to Parliament and Big Ben. Stories of history, film locations, and modern London.',
+      cityId: cityByNorm['london']?.id,
+      meetingPoint: 'Tower Bridge — north side',
+      latitude: '51.5055',
+      longitude: '-0.0754',
+      durationMinutes: 180,
+      maxGroupSize: 15,
+      status: TourStatus.PUBLISHED,
+      inventoryMode: InventoryMode.PER_DEPARTURE,
+      highlights: ['Tower Bridge', 'South Bank', 'Big Ben', 'Photo stops'],
+      includedItems: ['English-speaking guide'],
+      excludedItems: ['Entrance to attractions', 'Food and drinks'],
+      whatToBring: ['Comfortable shoes', 'Weather-appropriate clothing'],
+      importantInfo: ['Tour is outdoors; dress for the weather.'],
+      cancellationPolicy: { type: 'FREE', freeCancelHoursBefore: 24 },
+      availableLanguages: ['English'],
+      allowPayLater: true,
+      tagSlugs: ['small-group', 'local-guide', 'family-friendly'],
+      categorySlugs: ['walking-tours'],
+      itineraryStops: [
+        { stopOrder: 1, title: 'Tower Bridge to Borough Market', description: 'Cross the Thames and hear bridge history.', durationMinutes: 45, latitude: '51.5055', longitude: '-0.0754' },
+        { stopOrder: 2, title: 'South Bank to Big Ben', description: 'Walk past Globe, Tate, Eye to Parliament.', durationMinutes: 105, latitude: '51.5007', longitude: '-0.1246' },
+      ],
+      media: [
+        { url: 'https://images.unsplash.com/photo-1513635269975-59663e0ac1ad', altText: 'Tower Bridge London', sortOrder: 1, isCover: true },
+        { url: 'https://images.unsplash.com/photo-1505761671935-60b3a7427bad', altText: 'London South Bank', sortOrder: 2, isCover: false },
+      ],
+      options: [{ code: 'group', title: 'Group Walking Tour', description: 'Shared tour', isDefault: true, priceAdult: 28, priceChild: 15 }],
+    },
   ];
 
   // Date helpers for departure slots
@@ -1857,7 +2345,7 @@ async function seedTours() {
 
     // Attach tour categories
     for (const catSlug of td.categorySlugs || []) {
-      const cat = { 'walking-tours': walkingCat, 'food-drink': foodCat, 'museum-tickets': museumCat }[catSlug];
+      const cat = categoryBySlug[catSlug];
       if (cat) {
         await prisma.tourCategory.upsert({
           where: { tourId_categoryId: { tourId: tour.id, categoryId: cat.id } },
@@ -2016,6 +2504,367 @@ async function seedTours() {
   console.log(`  ✓ Tours: ${tourCount} tours with options, pricing, and ${slotDays * 2} departure slots each`);
 }
 
+async function seedSupplierSettlements() {
+  const supplier = await prisma.supplier.findUnique({ where: { slug: 'demo-supplier' } });
+  if (!supplier) return;
+  const count = await prisma.supplierSettlement.count({ where: { supplierId: supplier.id } });
+  if (count >= 10) {
+    console.log('  ✓ Supplier settlements: already 10');
+    return;
+  }
+  const now = new Date();
+  for (let i = count; i < 10; i++) {
+    const periodEnd = new Date(now.getFullYear(), now.getMonth() - i, 0);
+    const periodStart = new Date(periodEnd.getFullYear(), periodEnd.getMonth() - 1, 1);
+    await prisma.supplierSettlement.create({
+      data: {
+        supplierId: supplier.id,
+        currencyCode: 'USD',
+        periodStart,
+        periodEnd,
+        grossAmount: 5000 + i * 300,
+        platformFeeAmount: 500 + i * 30,
+        netAmount: 4500 + i * 270,
+        payoutStatus: i < 2 ? (i === 0 ? 'PENDING' : 'PAID') : 'PENDING',
+        paidAt: i === 1 ? new Date() : null,
+      },
+    });
+  }
+  console.log('  ✓ Supplier settlements: 10');
+}
+
+async function seedPromotions() {
+  const startsAt = new Date();
+  const endsAt = new Date();
+  endsAt.setFullYear(endsAt.getFullYear() + 1);
+  const promos = [
+    { code: 'WELCOME10', name: 'Welcome 10%', promoType: PromoType.PERCENT, value: 10, minOrderAmount: 50, usageLimitPerUser: 1, promoScope: PromoScope.GLOBAL },
+    { code: 'SAVE20', name: 'Save $20', promoType: PromoType.FIXED_AMOUNT, value: 20, minOrderAmount: 100, maxDiscountAmount: 20, promoScope: PromoScope.GLOBAL },
+    { code: 'SUMMER25', name: 'Summer 25%', promoType: PromoType.PERCENT, value: 25, minOrderAmount: 80, promoScope: PromoScope.GLOBAL },
+    { code: 'FIRST5', name: 'First booking $5 off', promoType: PromoType.FIXED_AMOUNT, value: 5, minOrderAmount: 30, usageLimitPerUser: 1, promoScope: PromoScope.GLOBAL },
+    { code: 'VIP15', name: 'VIP 15%', promoType: PromoType.PERCENT, value: 15, minOrderAmount: 200, promoScope: PromoScope.GLOBAL },
+    { code: 'WEEKEND10', name: 'Weekend 10%', promoType: PromoType.PERCENT, value: 10, minOrderAmount: 40, promoScope: PromoScope.GLOBAL },
+    { code: 'FLASH30', name: 'Flash 30%', promoType: PromoType.PERCENT, value: 30, minOrderAmount: 60, usageLimitTotal: 100, promoScope: PromoScope.GLOBAL },
+    { code: 'FAMILY20', name: 'Family $20 off', promoType: PromoType.FIXED_AMOUNT, value: 20, minOrderAmount: 150, promoScope: PromoScope.GLOBAL },
+    { code: 'NEWYEAR50', name: 'New Year $50', promoType: PromoType.FIXED_AMOUNT, value: 50, minOrderAmount: 200, maxDiscountAmount: 50, promoScope: PromoScope.GLOBAL },
+    { code: 'LOCAL5', name: 'Local $5', promoType: PromoType.FIXED_AMOUNT, value: 5, minOrderAmount: 25, promoScope: PromoScope.GLOBAL },
+  ];
+  for (const p of promos) {
+    await prisma.promotion.upsert({
+      where: { code: p.code },
+      update: { name: p.name, promoType: p.promoType, value: p.value, minOrderAmount: p.minOrderAmount ?? 0, maxDiscountAmount: p.maxDiscountAmount ?? null, usageLimitTotal: p.usageLimitTotal ?? null, usageLimitPerUser: p.usageLimitPerUser ?? null, startsAt, endsAt, isActive: true },
+      create: { code: p.code, name: p.name, promoType: p.promoType, promoScope: p.promoScope, value: p.value, minOrderAmount: p.minOrderAmount ?? 0, maxDiscountAmount: p.maxDiscountAmount ?? null, usageLimitTotal: p.usageLimitTotal ?? null, usageLimitPerUser: p.usageLimitPerUser ?? null, startsAt, endsAt, isActive: true },
+    });
+  }
+  console.log('  ✓ Promotions: 10');
+}
+
+async function seedNotificationTemplates() {
+  const templates = [
+    { eventKey: 'booking_confirmed', channel: NotificationChannel.EMAIL, subject: 'Booking confirmed – {{bookingRef}}', body: 'Hi {{guestName}}, your booking {{bookingRef}} is confirmed. Total: {{totalAmount}}.' },
+    { eventKey: 'booking_reminder', channel: NotificationChannel.EMAIL, subject: 'Reminder: your tour tomorrow', body: 'Your tour {{tourTitle}} is tomorrow at {{startsAt}}. Meeting point: {{meetingPoint}}.' },
+    { eventKey: 'payment_received', channel: NotificationChannel.EMAIL, subject: 'Payment received', body: 'We received your payment of {{amount}} for booking {{bookingRef}}.' },
+    { eventKey: 'voucher_issued', channel: NotificationChannel.EMAIL, subject: 'Your voucher – {{bookingRef}}', body: 'Your voucher code: {{voucherCode}}. Show this at the meeting point.' },
+    { eventKey: 'booking_cancelled', channel: NotificationChannel.EMAIL, subject: 'Booking cancelled', body: 'Your booking {{bookingRef}} has been cancelled. Refund will be processed if applicable.' },
+    { eventKey: 'password_reset', channel: NotificationChannel.EMAIL, subject: 'Reset your password', body: 'Click here to reset: {{resetUrl}}. Expires in 1 hour.' },
+    { eventKey: 'welcome', channel: NotificationChannel.EMAIL, subject: 'Welcome to GetYourGuide', body: 'Thanks for signing up! Explore tours and book with confidence.' },
+    { eventKey: 'review_request', channel: NotificationChannel.EMAIL, subject: 'How was your tour?', body: 'We\'d love your feedback for {{tourTitle}}. Leave a review here: {{reviewUrl}}.' },
+    { eventKey: 'booking_confirmed', channel: NotificationChannel.IN_APP, subject: null, body: 'Booking {{bookingRef}} confirmed.' },
+    { eventKey: 'promo_reminder', channel: NotificationChannel.EMAIL, subject: 'Your promo {{code}} expires soon', body: 'Use {{code}} before {{endsAt}} for {{value}} off.' },
+  ];
+  for (const t of templates) {
+    try {
+      await prisma.notificationTemplate.upsert({
+        where: { eventKey_channel_languageCode: { eventKey: t.eventKey, channel: t.channel, languageCode: null } },
+        update: { subject: t.subject, body: t.body, isActive: true },
+        create: { eventKey: t.eventKey, channel: t.channel, languageCode: null, subject: t.subject, body: t.body, isActive: true },
+      });
+    } catch {
+      await prisma.notificationTemplate.create({
+        data: { eventKey: t.eventKey, channel: t.channel, languageCode: null, subject: t.subject, body: t.body, isActive: true },
+      });
+    }
+  }
+  console.log('  ✓ Notification templates: 10');
+}
+
+async function seedCmsPages(usersByEmail) {
+  const adminId = usersByEmail['admin@getyourguide.local']?.id;
+  const pages = [
+    { slug: 'about', title: 'About Us', content: 'We connect travelers with the best tours and activities worldwide.', pageGroup: 'general', status: CmsPageStatus.PUBLISHED },
+    { slug: 'terms', title: 'Terms of Service', content: 'By using our platform you agree to these terms.', pageGroup: 'legal', status: CmsPageStatus.PUBLISHED },
+    { slug: 'privacy', title: 'Privacy Policy', content: 'We respect your privacy. This policy explains how we use your data.', pageGroup: 'legal', status: CmsPageStatus.PUBLISHED },
+    { slug: 'contact', title: 'Contact', content: 'Email: support@getyourguide.local. We reply within 24 hours.', pageGroup: 'general', status: CmsPageStatus.PUBLISHED },
+    { slug: 'faq', title: 'Frequently Asked Questions', content: 'See our FAQ section for common questions.', pageGroup: 'general', status: CmsPageStatus.PUBLISHED },
+    { slug: 'cancellation-policy', title: 'Cancellation Policy', content: 'Free cancellation up to 24–48h before depending on the tour. See each tour for details.', pageGroup: 'legal', status: CmsPageStatus.PUBLISHED },
+    { slug: 'cookie-policy', title: 'Cookie Policy', content: 'We use cookies to improve your experience.', pageGroup: 'legal', status: CmsPageStatus.PUBLISHED },
+    { slug: 'how-it-works', title: 'How It Works', content: 'Browse, book, and enjoy. Pay securely. Get your voucher by email.', pageGroup: 'general', status: CmsPageStatus.PUBLISHED },
+    { slug: 'safety', title: 'Safety & Trust', content: 'We verify suppliers and support you before, during, and after your trip.', pageGroup: 'general', status: CmsPageStatus.PUBLISHED },
+    { slug: 'careers', title: 'Careers', content: 'Join our team. Send your CV to jobs@getyourguide.local.', pageGroup: 'general', status: CmsPageStatus.DRAFT },
+  ];
+  for (const p of pages) {
+    const page = await prisma.cmsPage.upsert({
+      where: { slug: p.slug },
+      update: { title: p.title, content: p.content, pageGroup: p.pageGroup, status: p.status, publishedAt: p.status === CmsPageStatus.PUBLISHED ? new Date() : null, updatedBy: adminId },
+      create: { slug: p.slug, title: p.title, content: p.content, pageGroup: p.pageGroup, status: p.status, publishedAt: p.status === CmsPageStatus.PUBLISHED ? new Date() : null, createdBy: adminId, updatedBy: adminId },
+    });
+    await prisma.cmsPageTranslation.upsert({
+      where: { pageId_languageCode: { pageId: page.id, languageCode: 'vi' } },
+      update: { title: p.title, content: p.content },
+      create: { pageId: page.id, languageCode: 'vi', title: p.title, content: p.content },
+    }).catch(() => {});
+  }
+  console.log('  ✓ CMS pages: 10');
+}
+
+async function seedReviews(usersByEmail) {
+  const customerIds = [
+    usersByEmail['customer@getyourguide.local']?.id,
+    usersByEmail['maria.garcia@example.com']?.id,
+    usersByEmail['james.wilson@example.com']?.id,
+  ].filter(Boolean);
+  const tours = await prisma.tour.findMany({ where: { status: 'PUBLISHED' }, take: 10 });
+  if (customerIds.length === 0 || tours.length === 0) return;
+  const reviews = [
+    { rating: 5, title: 'Amazing experience!', body: 'Our guide was knowledgeable and fun. Highly recommend.' },
+    { rating: 4, title: 'Great tour', body: 'Good value. A bit rushed at the end.' },
+    { rating: 5, title: 'Perfect for first-timers', body: 'Saw all the highlights. Would do again.' },
+    { rating: 4, title: 'Enjoyable', body: 'Weather was great. Guide spoke clear English.' },
+    { rating: 5, title: 'Best food tour ever', body: 'So much food! Hidden gems only locals know.' },
+    { rating: 4, title: 'Worth it', body: 'Interesting history. Comfortable transport.' },
+    { rating: 5, title: 'Exceeded expectations', body: 'Family loved it. Book this one!' },
+    { rating: 4, title: 'Good overview', body: 'Nice way to see the city in half a day.' },
+    { rating: 5, title: 'Unforgettable', body: 'The sunset view was incredible.' },
+    { rating: 4, title: 'Solid tour', body: 'Professional and on time.' },
+  ];
+  for (let i = 0; i < Math.min(10, tours.length, customerIds.length); i++) {
+    const tour = tours[i];
+    const user = customerIds[i];
+    const r = reviews[i];
+    try {
+      await prisma.review.create({
+        data: {
+          tourId: tour.id,
+          userId: user,
+          rating: r.rating,
+          title: r.title,
+          body: r.body,
+          languageCode: 'en',
+          status: ReviewStatus.PUBLISHED,
+          verifiedBooking: false,
+        },
+      });
+    } catch (_) {}
+  }
+  const count = await prisma.review.count();
+  console.log(`  ✓ Reviews: ${count}`);
+}
+
+async function seedBookings(usersByEmail) {
+  const customer = usersByEmail['customer@getyourguide.local'];
+  if (!customer) return;
+  const tour = await prisma.tour.findFirst({ where: { status: 'PUBLISHED' } });
+  if (!tour) return;
+  const option = await prisma.tourOption.findFirst({ where: { tourId: tour.id } });
+  if (!option) return;
+  const slot = await prisma.departureSlot.findFirst({ where: { tourOptionId: option.id, status: 'ACTIVE' } });
+  if (!slot) return;
+  const inv = await prisma.inventorySlot.findUnique({ where: { departureSlotId: slot.id } });
+  if (!inv || inv.totalCapacity - inv.bookedCapacity < 2) return;
+
+  const bookingRef = 'GYG-' + Date.now().toString(36).toUpperCase() + '-SEED';
+  const totalAmount = 60;
+  const booking = await prisma.booking.create({
+    data: {
+      bookingRef,
+      userId: customer.id,
+      supplierId: await prisma.tour.findUnique({ where: { id: tour.id } }).then((t) => t?.supplierId ?? null),
+      status: BookingStatus.CONFIRMED,
+      currencyCode: 'USD',
+      subtotalAmount: totalAmount,
+      discountAmount: 0,
+      feeAmount: 0,
+      taxAmount: 0,
+      totalAmount,
+      contactEmail: customer.email,
+      confirmedAt: new Date(),
+    },
+  });
+
+  await prisma.bookingItem.create({
+    data: {
+      bookingId: booking.id,
+      tourId: tour.id,
+      tourOptionId: option.id,
+      departureSlotId: slot.id,
+      inventorySlotId: inv.id,
+      titleSnapshot: 'Hanoi Old Quarter Walking Tour',
+      optionSnapshot: 'Group Tour',
+      startsAtSnapshot: slot.startsAt,
+      travelerMix: [{ type: 'adult', count: 2 }],
+      languageCode: 'en',
+      quantity: 2,
+      unitPrice: 30,
+      lineTotal: 60,
+    },
+  });
+
+  await prisma.inventorySlot.update({
+    where: { id: inv.id },
+    data: { bookedCapacity: inv.bookedCapacity + 2 },
+  });
+
+  await prisma.payment.create({
+    data: {
+      bookingId: booking.id,
+      provider: 'stripe',
+      providerPaymentId: 'pi_seed_' + booking.id,
+      status: PaymentStatus.CAPTURED,
+      currencyCode: 'USD',
+      amount: totalAmount,
+      authorizedAmount: totalAmount,
+      capturedAmount: totalAmount,
+      capturedAt: new Date(),
+    },
+  });
+
+  await prisma.invoice.create({
+    data: {
+      bookingId: booking.id,
+      invoiceNumber: 'INV-' + booking.bookingRef,
+      buyerName: customer.firstName + ' ' + customer.lastName,
+      currencyCode: 'USD',
+      subtotalAmount: totalAmount,
+      taxAmount: 0,
+      totalAmount,
+    },
+  });
+
+  await prisma.bookingVoucher.create({
+    data: {
+      bookingId: booking.id,
+      voucherCode: 'V' + booking.bookingRef.replace(/-/g, '').slice(-10),
+      qrPayload: booking.id,
+    },
+  });
+
+  await prisma.bookingEvent.create({
+    data: { bookingId: booking.id, eventType: 'booking.confirmed', payload: {} },
+  });
+
+  console.log('  ✓ Bookings: 1 confirmed (with payment, invoice, voucher)');
+}
+
+async function seedNewsletterSubscriptions() {
+  const emails = [
+    'news1@example.com', 'news2@example.com', 'news3@example.com', 'news4@example.com', 'news5@example.com',
+    'news6@example.com', 'news7@example.com', 'news8@example.com', 'news9@example.com', 'news10@example.com',
+  ];
+  for (const email of emails) {
+    await prisma.newsletterSubscription.upsert({
+      where: { email },
+      update: { isActive: true },
+      create: { email, isActive: true },
+    });
+  }
+  console.log('  ✓ Newsletter subscriptions: 10');
+}
+
+async function seedUserFavoriteTours(usersByEmail) {
+  const userIds = [usersByEmail['customer@getyourguide.local']?.id, usersByEmail['maria.garcia@example.com']?.id].filter(Boolean);
+  const tours = await prisma.tour.findMany({ where: { status: 'PUBLISHED' }, take: 5 });
+  for (const userId of userIds) {
+    for (const tour of tours) {
+      await prisma.userFavoriteTour.upsert({
+        where: { userId_tourId: { userId, tourId: tour.id } },
+        update: {},
+        create: { userId, tourId: tour.id },
+      }).catch(() => {});
+    }
+  }
+  const count = await prisma.userFavoriteTour.count();
+  console.log(`  ✓ User favorite tours: ${count}`);
+}
+
+async function seedBlogPostRelatedTours() {
+  const posts = await prisma.blogPost.findMany({ take: 5 });
+  const tours = await prisma.tour.findMany({ where: { status: 'PUBLISHED' }, take: 5 });
+  for (let i = 0; i < posts.length && i < tours.length; i++) {
+    await prisma.blogPostRelatedTour.upsert({
+      where: { postId_tourId: { postId: posts[i].id, tourId: tours[i].id } },
+      update: { sortOrder: i },
+      create: { postId: posts[i].id, tourId: tours[i].id, sortOrder: i },
+    }).catch(() => {});
+  }
+  console.log('  ✓ Blog post related tours: linked');
+}
+
+async function seedApiKeys(usersByEmail) {
+  const admin = usersByEmail['admin@getyourguide.local'];
+  if (!admin) return;
+  const keyPrefix = 'gyg_live_';
+  const keyHash = crypto.createHash('sha256').update('seed-secret-key-do-not-use').digest('hex');
+  try {
+    await prisma.apiKey.upsert({
+      where: { keyHash },
+      update: { name: 'Seed API Key', isActive: true },
+      create: {
+        ownerType: 'user',
+        ownerId: admin.id,
+        keyPrefix,
+        keyHash,
+        name: 'Seed API Key',
+        scopes: ['tours:read', 'bookings:read'],
+        isActive: true,
+      },
+    });
+  } catch {
+    await prisma.apiKey.create({
+      data: {
+        ownerType: 'user',
+        ownerId: admin.id,
+        keyPrefix,
+        keyHash,
+        name: 'Seed API Key',
+        scopes: ['tours:read', 'bookings:read'],
+        isActive: true,
+      },
+    });
+  }
+  console.log('  ✓ API keys: 1');
+}
+
+async function seedAuditLogs(usersByEmail) {
+  const adminId = usersByEmail['admin@getyourguide.local']?.id;
+  if (!adminId) return;
+  const actions = [
+    { action: 'user.login', entityType: 'User', entityId: null },
+    { action: 'tour.published', entityType: 'Tour', entityId: null },
+    { action: 'setting.updated', entityType: 'SystemSetting', entityId: null },
+    { action: 'promotion.created', entityType: 'Promotion', entityId: null },
+    { action: 'page.published', entityType: 'CmsPage', entityId: null },
+    { action: 'booking.confirmed', entityType: 'Booking', entityId: null },
+    { action: 'review.published', entityType: 'Review', entityId: null },
+    { action: 'faq.updated', entityType: 'SupportFaqItem', entityId: null },
+    { action: 'blog.post_published', entityType: 'BlogPost', entityId: null },
+    { action: 'supplier.updated', entityType: 'Supplier', entityId: null },
+  ];
+  for (const a of actions) {
+    await prisma.auditLog.create({
+      data: {
+        actorUserId: adminId,
+        actorRole: UserRole.ADMIN,
+        action: a.action,
+        entityType: a.entityType,
+        entityId: a.entityId,
+        ipAddress: '127.0.0.1',
+        userAgent: 'Seed',
+      },
+    });
+  }
+  console.log('  ✓ Audit logs: 10');
+}
+
 async function main() {
   console.log('Seeding reference data...');
   await seedReferenceData();
@@ -2026,6 +2875,9 @@ async function main() {
   console.log('Seeding supplier mapping...');
   await seedSupplierMapping(usersByEmail);
 
+  console.log('Seeding supplier settlements...');
+  await seedSupplierSettlements();
+
   console.log('Seeding FAQ...');
   await seedFaq();
 
@@ -2034,6 +2886,36 @@ async function main() {
 
   console.log('Seeding tours...');
   await seedTours();
+
+  console.log('Seeding promotions...');
+  await seedPromotions();
+
+  console.log('Seeding notification templates...');
+  await seedNotificationTemplates();
+
+  console.log('Seeding CMS pages...');
+  await seedCmsPages(usersByEmail);
+
+  console.log('Seeding reviews...');
+  await seedReviews(usersByEmail);
+
+  console.log('Seeding bookings (with payment, invoice, voucher)...');
+  await seedBookings(usersByEmail);
+
+  console.log('Seeding newsletter subscriptions...');
+  await seedNewsletterSubscriptions();
+
+  console.log('Seeding user favorite tours...');
+  await seedUserFavoriteTours(usersByEmail);
+
+  console.log('Seeding blog post related tours...');
+  await seedBlogPostRelatedTours();
+
+  console.log('Seeding API keys...');
+  await seedApiKeys(usersByEmail);
+
+  console.log('Seeding audit logs...');
+  await seedAuditLogs(usersByEmail);
 
   console.log('\nSeed completed. Demo accounts:');
   console.log('- admin@getyourguide.local');

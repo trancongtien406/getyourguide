@@ -2,6 +2,7 @@
 
 import { Badge } from '@/components/ui/badge';
 import { bookingsApi, type Booking, type BookingStatus } from '@/lib/api';
+import { useLocaleCurrency } from '@/lib/locale-currency-context';
 import { useTranslations } from 'next-intl';
 import { useParams, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
@@ -24,6 +25,7 @@ const CANCELLABLE: BookingStatus[] = ['CONFIRMED', 'PENDING_PAYMENT'];
 export default function BookingDetailPage() {
   const t = useTranslations('profile');
   const tb = useTranslations('bookings');
+  const { locale, currency } = useLocaleCurrency();
   const params = useParams();
   const router = useRouter();
   const bookingId = params.id as string;
@@ -46,7 +48,7 @@ export default function BookingDetailPage() {
 
   useEffect(() => {
     fetchBooking();
-  }, [fetchBooking]);
+  }, [fetchBooking, locale, currency]);
 
   const handleCancel = async () => {
     if (!booking) return;

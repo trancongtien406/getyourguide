@@ -50,20 +50,24 @@ export function TourHeader({ tour, reviewCount }: TourHeaderProps) {
   const { addToast } = useToast();
 
   const handleFavorite = async () => {
-    if (!isAuthenticated || favoriteLoading) return;
+    if (favoriteLoading) return;
+    if (!isAuthenticated) {
+      addToast('info', t('loginToSaveFavorites'));
+      return;
+    }
     setFavoriteLoading(true);
     try {
       if (isFavorited) {
         await favoritesApi.removeFavorite(tour.id);
         setIsFavorited(false);
-        addToast('success', 'Removed from favorites');
+        addToast('success', t('removedFromFavorites'));
       } else {
         await favoritesApi.addFavorite(tour.id);
         setIsFavorited(true);
-        addToast('success', 'Added to favorites');
+        addToast('success', t('addedToFavorites'));
       }
     } catch {
-      addToast('error', 'Failed to update favorites');
+      addToast('error', t('failedToUpdateFavorites'));
     } finally {
       setFavoriteLoading(false);
     }
@@ -112,8 +116,10 @@ export function TourHeader({ tour, reviewCount }: TourHeaderProps) {
             <span className="hidden sm:inline">{copied ? t('copied') : t('share')}</span>
           </button>
           <button
+            type="button"
             onClick={handleFavorite}
             disabled={favoriteLoading}
+            title={!isAuthenticated ? t('loginToSaveFavorites') : undefined}
             className={`flex items-center gap-2 px-4 py-2 border rounded-lg transition-colors ${
               isFavorited
                 ? 'border-red-300 bg-red-50 dark:bg-red-900/20 text-red-500'

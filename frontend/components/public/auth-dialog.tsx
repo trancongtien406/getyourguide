@@ -304,7 +304,7 @@ export function AuthDialog({ isOpen, onClose, initialTab = 'login' }: AuthDialog
                   required
                   value={loginEmail}
                   onChange={(e) => setLoginEmail(e.target.value)}
-                  placeholder="you@example.com"
+                  placeholder={t('authEmailPlaceholder')}
                   className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition"
                 />
               </div>
@@ -443,7 +443,7 @@ export function AuthDialog({ isOpen, onClose, initialTab = 'login' }: AuthDialog
                   required
                   value={regEmail}
                   onChange={(e) => setRegEmail(e.target.value)}
-                  placeholder="you@example.com"
+                  placeholder={t('authEmailPlaceholder')}
                   className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition"
                 />
               </div>
@@ -526,7 +526,7 @@ export function AuthDialog({ isOpen, onClose, initialTab = 'login' }: AuthDialog
                   required
                   value={forgotEmail}
                   onChange={(e) => setForgotEmail(e.target.value)}
-                  placeholder="you@example.com"
+                  placeholder={t('authEmailPlaceholder')}
                   className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition"
                 />
               </div>
@@ -556,7 +556,7 @@ export function AuthDialog({ isOpen, onClose, initialTab = 'login' }: AuthDialog
                   required
                   value={forgotEmail}
                   onChange={(e) => setForgotEmail(e.target.value)}
-                  placeholder="you@example.com"
+                  placeholder={t('authEmailPlaceholder')}
                   className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition"
                 />
               </div>

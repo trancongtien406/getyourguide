@@ -8,6 +8,7 @@ import { Modal } from '@/components/ui/modal';
 import { Pagination, Table } from '@/components/ui/table';
 import { ApiError, referenceDataApi, type Country } from '@/lib/api';
 import { useTranslations } from 'next-intl';
+import Image from 'next/image';
 import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 import {
@@ -79,6 +80,9 @@ export default function CountriesPage() {
   };
 
   const columns = [
+    { key: 'image', header: '', className: 'w-14', render: (c: Country) => c.imageUrl ? (
+      <Image src={c.imageUrl} alt={c.name} width={40} height={28} className="rounded object-cover" />
+    ) : <span className="text-gray-400 text-xs">—</span> },
     { key: 'code', header: t('colCode'), render: (c: Country) => (<div className="font-mono text-sm"><span className="font-medium">{c.iso2}</span><span className="text-gray-400 ml-1">/ {c.iso3}</span></div>) },
     { key: 'name', header: tc('name'), render: (c: Country) => c.name },
     { key: 'currency', header: t('colCurrency'), render: (c: Country) => <span className="font-mono text-sm">{c.currencyCode}</span> },

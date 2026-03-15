@@ -67,6 +67,7 @@ export class CatalogService {
       cityId: query.cityId,
       supplierId: query.supplierId,
       status: query.status ?? TourStatus.PUBLISHED,
+      ...(query.isFeatured !== undefined && { isFeatured: query.isFeatured }),
       ...(query.q
         ? {
             OR: [
@@ -160,32 +161,32 @@ export class CatalogService {
     ];
 
     if (query.cityId) {
-      conditions.push(Prisma.sql`t.city_id = ${query.cityId}::uuid`);
+      conditions.push(Prisma.sql`t."cityId" = ${query.cityId}::uuid`);
     }
     if (query.supplierId) {
-      conditions.push(Prisma.sql`t.supplier_id = ${query.supplierId}::uuid`);
+      conditions.push(Prisma.sql`t."supplierId" = ${query.supplierId}::uuid`);
     }
     if (query.q) {
       conditions.push(
-        Prisma.sql`(t.title ILIKE ${`%${query.q}%`} OR t.short_description ILIKE ${`%${query.q}%`})`,
+        Prisma.sql`(t.title ILIKE ${`%${query.q}%`} OR t."shortDescription" ILIKE ${`%${query.q}%`})`,
       );
     }
     if (query.minRating !== undefined) {
-      conditions.push(Prisma.sql`COALESCE(t.rating_avg, 0) >= ${query.minRating}`);
+      conditions.push(Prisma.sql`COALESCE(t."ratingAvg", 0) >= ${query.minRating}`);
     }
     if (query.maxDurationMinutes !== undefined) {
       conditions.push(
-        Prisma.sql`(t.duration_minutes IS NULL OR t.duration_minutes <= ${query.maxDurationMinutes})`,
+        Prisma.sql`(t."durationMinutes" IS NULL OR t."durationMinutes" <= ${query.maxDurationMinutes})`,
       );
     }
     if (query.categoryId) {
       conditions.push(
-        Prisma.sql`EXISTS (SELECT 1 FROM tour_categories tc WHERE tc.tour_id = t.id AND tc.category_id = ${query.categoryId}::uuid)`,
+        Prisma.sql`EXISTS (SELECT 1 FROM tour_categories tc WHERE tc."tourId" = t.id AND tc."categoryId" = ${query.categoryId}::uuid)`,
       );
     }
     if (query.tagId) {
       conditions.push(
-        Prisma.sql`EXISTS (SELECT 1 FROM tour_tag_map tm WHERE tm.tour_id = t.id AND tm.tag_id = ${query.tagId}::uuid)`,
+        Prisma.sql`EXISTS (SELECT 1 FROM tour_tag_map tm WHERE tm."tourId" = t.id AND tm."tagId" = ${query.tagId}::uuid)`,
       );
     }
 
@@ -196,10 +197,10 @@ export class CatalogService {
         Prisma.sql`EXISTS (
           SELECT 1
           FROM tour_options o
-          JOIN departure_slots ds ON ds.tour_option_id = o.id
-          WHERE o.tour_id = t.id
-            ${dateFrom ? Prisma.sql`AND ds.starts_at >= ${dateFrom}` : Prisma.empty}
-            ${dateTo ? Prisma.sql`AND ds.starts_at <= ${dateTo}` : Prisma.empty}
+          JOIN departure_slots ds ON ds."tourOptionId" = o.id
+          WHERE o."tourId" = t.id
+            ${dateFrom ? Prisma.sql`AND ds."startsAt" >= ${dateFrom}` : Prisma.empty}
+            ${dateTo ? Prisma.sql`AND ds."startsAt" <= ${dateTo}` : Prisma.empty}
             AND ds.status = 'ACTIVE'
         )`,
       );
@@ -210,22 +211,22 @@ export class CatalogService {
         Prisma.sql`EXISTS (
           SELECT 1
           FROM tour_options o
-          JOIN option_pricing_rules pr ON pr.tour_option_id = o.id
-          WHERE o.tour_id = t.id
-            AND pr.component_type = 'BASE'
+          JOIN option_pricing_rules pr ON pr."tourOptionId" = o.id
+          WHERE o."tourId" = t.id
+            AND pr."componentType" = 'BASE'
             ${query.minPrice !== undefined ? Prisma.sql`AND pr.amount >= ${query.minPrice}` : Prisma.empty}
             ${query.maxPrice !== undefined ? Prisma.sql`AND pr.amount <= ${query.maxPrice}` : Prisma.empty}
         )`,
       );
     }
 
-    let orderBy: Prisma.Sql = Prisma.sql`t.created_at DESC`;
+    let orderBy: Prisma.Sql = Prisma.sql`t."createdAt" DESC`;
     if (query.sortBy === 'price_asc') {
       orderBy = Prisma.sql`min_price ASC NULLS LAST`;
     } else if (query.sortBy === 'price_desc') {
       orderBy = Prisma.sql`min_price DESC NULLS LAST`;
     } else if (query.sortBy === 'rating_desc') {
-      orderBy = Prisma.sql`t.rating_avg DESC NULLS LAST, t.rating_count DESC`;
+      orderBy = Prisma.sql`t."ratingAvg" DESC NULLS LAST, t."ratingCount" DESC`;
     }
 
     const whereClause =
@@ -233,21 +234,14 @@ export class CatalogService {
         ? Prisma.sql`WHERE ${Prisma.join(conditions, ' AND ')}`
         : Prisma.empty;
 
-    const translationJoin = lang
-      ? Prisma.sql`LEFT JOIN tour_translations tt ON tt.tour_id = t.id AND tt.language_code = ${lang}`
-      : Prisma.empty;
+    // Use base table only for search (column names are camelCase in DB)
+    const titleCol = Prisma.sql`t.title`;
+    const shortDescCol = Prisma.sql`t."shortDescription"`;
 
-    const titleCol = lang
-      ? Prisma.sql`COALESCE(tt.title, t.title) AS title`
-      : Prisma.sql`t.title`;
-    const shortDescCol = lang
-      ? Prisma.sql`COALESCE(tt.short_description, t.short_description) AS "shortDescription"`
-      : Prisma.sql`t.short_description AS "shortDescription"`;
-
+    // Count without JOIN
     const countResult = await this.prisma.$queryRaw<[{ count: bigint }]>(Prisma.sql`
       SELECT COUNT(*)::bigint AS count
       FROM tours t
-      ${translationJoin}
       ${whereClause}
     `);
     const total = Number(countResult[0].count);
@@ -259,20 +253,26 @@ export class CatalogService {
         ${titleCol},
         ${shortDescCol},
         t.status,
-        t.city_id AS "cityId",
-        t.supplier_id AS "supplierId",
-        t.rating_avg AS "ratingAvg",
-        t.rating_count AS "ratingCount",
-        t.duration_minutes AS "durationMinutes",
-        t.published_at AS "publishedAt",
+        t."cityId",
+        t."supplierId",
+        t."ratingAvg",
+        t."ratingCount",
+        t."durationMinutes",
+        t."publishedAt",
         (
           SELECT MIN(pr.amount)
           FROM tour_options o
-          JOIN option_pricing_rules pr ON pr.tour_option_id = o.id
-          WHERE o.tour_id = t.id AND pr.component_type = 'BASE'
-        ) AS min_price
+          JOIN option_pricing_rules pr ON pr."tourOptionId" = o.id
+          WHERE o."tourId" = t.id AND pr."componentType" = 'BASE'
+        ) AS min_price,
+        (
+          SELECT m.url
+          FROM tour_media m
+          WHERE m."tourId" = t.id
+          ORDER BY m."isCover" DESC, m."sortOrder" ASC
+          LIMIT 1
+        ) AS "coverImageUrl"
       FROM tours t
-      ${translationJoin}
       ${whereClause}
       ORDER BY ${orderBy}
       LIMIT ${pageSize}
@@ -283,11 +283,12 @@ export class CatalogService {
     if (targetCurrency && rows.length > 0) {
       for (const row of rows) {
         if (row.min_price != null) {
-          row.min_price = await this.currencyConverter.convert(
+          const converted = await this.currencyConverter.convert(
             Number(row.min_price),
             'USD',
             targetCurrency,
           );
+          row.min_price = converted.amount;
         }
       }
     }

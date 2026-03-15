@@ -1,15 +1,16 @@
 'use client';
 
 import type { Review, ReviewListResponse } from '@/lib/api';
-import { reviewsApi } from '@/lib/api';
+import { ApiError, reviewsApi } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
 import { useLocaleCurrency } from '@/lib/locale-currency-context';
+import { useToast } from '@/lib/toast-context';
 import { useTranslations } from 'next-intl';
 import { useCallback, useEffect, useState } from 'react';
 
 interface TourReviewsProps {
   tourId: string;
-  initialData: ReviewListResponse;
+  initialData: ReviewListResponse | null;
 }
 
 function StarIcon({ className = 'w-4 h-4' }: { className?: string }) {
@@ -40,62 +41,90 @@ function ReviewCard({ review }: { review: Review }) {
   const t = useTranslations('tourPublic');
   const { formatDate } = useLocaleCurrency();
   const { isAuthenticated } = useAuth();
+  const { addToast } = useToast();
   const [helpfulCount, setHelpfulCount] = useState(review.helpfulCount ?? 0);
   const [voted, setVoted] = useState(false);
   const [reporting, setReporting] = useState(false);
   const colors = ['bg-primary/20 text-primary', 'bg-primary-700/20 text-primary-700', 'bg-primary-500/20 text-primary-500', 'bg-primary-800/20 text-primary-800'];
-  const colorClass = colors[review.user?.firstName?.charCodeAt(0) ? review.user.firstName.charCodeAt(0) % colors.length : 0];
+  const displayName = [review.user?.firstName, review.user?.lastName].filter(Boolean).join(' ') || t('guestName');
+  const colorClass = colors[displayName.charCodeAt(0) % colors.length];
 
   const handleHelpful = async () => {
-    if (!isAuthenticated || voted) return;
+    if (voted) return;
+    if (!isAuthenticated) {
+      addToast('info', t('loginToVoteHelpful'));
+      return;
+    }
     try {
-      await reviewsApi.voteHelpful(review.id, true);
-      setHelpfulCount((c) => c + 1);
+      const updated = await reviewsApi.voteHelpful(review.id, true);
+      setHelpfulCount(typeof updated?.helpfulCount === 'number' ? updated.helpfulCount : helpfulCount + 1);
       setVoted(true);
-    } catch { /* empty */ }
+      addToast('success', t('helpful') + ' ✓');
+    } catch (err) {
+      const msg = err instanceof ApiError && err.status === 401 ? t('loginToVoteHelpful') : t('errorTryAgain');
+      addToast('error', msg);
+    }
   };
 
   const handleReport = async () => {
-    if (!isAuthenticated) return;
+    if (!isAuthenticated) {
+      addToast('info', t('loginToReport'));
+      return;
+    }
     const reason = prompt(t('reportReason'));
-    if (!reason) return;
+    if (reason == null || !reason.trim()) return;
     setReporting(true);
     try {
-      await reviewsApi.reportReview(review.id, { reason });
-      alert(t('reportSubmitted'));
-    } catch { /* empty */ } finally {
+      await reviewsApi.reportReview(review.id, { reason: reason.trim() });
+      addToast('success', t('reportSubmitted'));
+    } catch (err) {
+      const alreadyReported =
+        err instanceof ApiError &&
+        err.status === 400 &&
+        typeof (err.data as { message?: string })?.message === 'string' &&
+        (err.data as { message: string }).message.toLowerCase().includes('already reported');
+      addToast(alreadyReported ? 'warning' : 'error', alreadyReported ? t('reportAlreadySubmitted') : t('errorTryAgain'));
+    } finally {
       setReporting(false);
     }
   };
+
+  const initial = displayName.charAt(0).toUpperCase();
 
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-start">
         <div className="flex items-center gap-3">
           <div className={`w-10 h-10 rounded-full ${colorClass} flex items-center justify-center font-bold`}>
-            {review.user?.firstName?.[0] ?? '?'}
+            {initial}
           </div>
           <div>
             <p className="font-bold text-foreground">
-              {review.user?.firstName ?? t('guestName')}
-              {review.user?.displayCountry ? ` - ${review.user.displayCountry}` : ''}
+              {displayName}
+              {review.user?.displayCountry ? ` · ${review.user.displayCountry}` : ''}
             </p>
-            <p className="text-xs text-foreground/50">
+            <p className="text-xs text-foreground/50 flex items-center gap-2">
               {formatDate(review.createdAt, { year: 'numeric', month: 'long', day: 'numeric' })}
+              {review.verifiedBooking && (
+                <span className="text-primary font-medium" title={t('verifiedBooking')}>✓ {t('verifiedBooking')}</span>
+              )}
             </p>
           </div>
         </div>
         <div className="flex items-center gap-0.5">
-          {Array.from({ length: review.rating }).map((_, i) => (
-            <StarIcon key={i} className="w-3.5 h-3.5 text-accent" />
+          {Array.from({ length: 5 }).map((_, i) => (
+            <StarIcon key={i} className={`w-3.5 h-3.5 ${i < review.rating ? 'text-accent' : 'text-foreground/20'}`} />
           ))}
         </div>
       </div>
-      <p className="text-foreground/70">{review.body}</p>
+      {review.title && <p className="font-semibold text-foreground">{review.title}</p>}
+      {(review.body && review.body.trim()) ? <p className="text-foreground/70 whitespace-pre-wrap">{review.body}</p> : null}
       <div className="flex gap-4">
         <button
+          type="button"
           onClick={handleHelpful}
           disabled={voted}
+          title={!isAuthenticated ? t('loginToVoteHelpful') : voted ? undefined : t('helpful')}
           className={`text-xs flex items-center gap-1 transition-colors ${voted ? 'text-primary' : 'text-foreground/40 hover:text-primary'}`}
         >
           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -104,8 +133,10 @@ function ReviewCard({ review }: { review: Review }) {
           {t('helpful')} {helpfulCount > 0 ? `(${helpfulCount})` : ''}
         </button>
         <button
+          type="button"
           onClick={handleReport}
           disabled={reporting}
+          title={!isAuthenticated ? t('loginToReport') : undefined}
           className="text-xs text-foreground/40 hover:text-red-500 transition-colors"
         >
           {reporting ? '...' : t('report')}
@@ -115,10 +146,23 @@ function ReviewCard({ review }: { review: Review }) {
   );
 }
 
+const emptyMeta = {
+  page: 1,
+  pageSize: 5,
+  total: 0,
+  totalPages: 0,
+  averageRating: 0,
+  averageRatingGuide: null as number | null,
+  averageRatingTransport: null as number | null,
+  averageRatingValue: null as number | null,
+  publishedCount: 0,
+};
+
 export function TourReviews({ tourId, initialData }: TourReviewsProps) {
   const t = useTranslations('tourPublic');
-  const [data, setData] = useState<ReviewListResponse>(initialData);
-  const [reviews, setReviews] = useState<Review[]>(initialData?.data ?? []);
+  const safeInitial = initialData ?? { data: [], meta: emptyMeta };
+  const [data, setData] = useState<ReviewListResponse>(safeInitial);
+  const [reviews, setReviews] = useState<Review[]>(safeInitial.data ?? []);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
 
@@ -172,9 +216,9 @@ export function TourReviews({ tourId, initialData }: TourReviewsProps) {
 
   // Sync if initialData changes (only on first load if no filters)
   useEffect(() => {
-    if (!filterRating && sortBy === 'createdat') {
+    if (!filterRating && sortBy === 'createdat' && initialData) {
       setData(initialData);
-      setReviews(initialData?.data ?? []);
+      setReviews(initialData.data ?? []);
       setPage(1);
     }
   }, [initialData, filterRating, sortBy]);
@@ -201,14 +245,14 @@ export function TourReviews({ tourId, initialData }: TourReviewsProps) {
         {/* Left: Overall rating */}
         <div className="lg:col-span-1">
           <div className="text-6xl font-black text-foreground mb-2">
-            {data.meta?.averageRating?.toFixed(1) ?? '—'}
+            {(data?.meta?.averageRating ?? 0) > 0 ? Number(data.meta.averageRating).toFixed(1) : '—'}
             <span className="text-3xl text-foreground/40 font-medium">/5</span>
           </div>
           <div className="flex items-center gap-1 mb-2">
             {Array.from({ length: 5 }).map((_, i) => (
               <StarIcon
                 key={i}
-                className={`w-5 h-5 ${i < Math.round(data.meta?.averageRating ?? 0) ? 'text-accent' : 'text-foreground/20'}`}
+                className={`w-5 h-5 ${i < Math.round(data?.meta?.averageRating ?? 0) ? 'text-accent' : 'text-foreground/20'}`}
               />
             ))}
           </div>
@@ -217,9 +261,9 @@ export function TourReviews({ tourId, initialData }: TourReviewsProps) {
           </p>
 
           <div className="space-y-4">
-            <RatingBar label={t('ratingGuide')} value={data.meta?.averageRatingGuide} />
-            <RatingBar label={t('ratingTransport')} value={data.meta?.averageRatingTransport} />
-            <RatingBar label={t('ratingValue')} value={data.meta?.averageRatingValue} />
+            <RatingBar label={t('ratingGuide')} value={data?.meta?.averageRatingGuide ?? null} />
+            <RatingBar label={t('ratingTransport')} value={data?.meta?.averageRatingTransport ?? null} />
+            <RatingBar label={t('ratingValue')} value={data?.meta?.averageRatingValue ?? null} />
           </div>
 
           {/* Star filter chips */}

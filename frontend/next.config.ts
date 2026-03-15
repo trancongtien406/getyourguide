@@ -45,25 +45,15 @@ const nextConfig: NextConfig = {
     ];
   },
 
-  // Image optimization with remote patterns
+  // Image optimization with remote patterns (country flags, city/tour images)
   images: {
     remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'images.unsplash.com',
-      },
-      {
-        protocol: 'https',
-        hostname: '*.amazonaws.com',
-      },
-      {
-        protocol: 'https',
-        hostname: 'cdn.getyourguide.com',
-      },
-      {
-        protocol: 'http',
-        hostname: 'localhost',
-      },
+      { protocol: 'https', hostname: 'images.unsplash.com' },
+      { protocol: 'https', hostname: 'flagcdn.com' },
+      { protocol: 'https', hostname: '*.amazonaws.com' },
+      { protocol: 'https', hostname: 'cdn.getyourguide.com' },
+      { protocol: 'https', hostname: '*.cdn.prismic.io' },
+      { protocol: 'http', hostname: 'localhost' },
     ],
   },
 };

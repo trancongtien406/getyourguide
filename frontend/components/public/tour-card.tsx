@@ -72,6 +72,7 @@ export function TourCard({
           </span>
         )}
         <button
+          type="button"
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();

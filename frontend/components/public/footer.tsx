@@ -80,11 +80,11 @@ export function Footer() {
               {t('footerMobile')}
             </h4>
             <div className="flex flex-row gap-3 md:flex-col md:gap-3">
-              <a href="#" aria-label="Download on the App Store" className="block transition-opacity hover:opacity-80">
-                <img src="/app-store-badge-en-us.svg" alt="Download on the App Store" className="h-10 md:h-11 w-auto" />
+              <a href="#" aria-label={t('footerAppStore')} className="block transition-opacity hover:opacity-80">
+                <img src="/app-store-badge-en-us.svg" alt={t('footerAppStore')} className="h-10 md:h-11 w-auto" />
               </a>
-              <a href="#" aria-label="Get it on Google Play" className="block transition-opacity hover:opacity-80">
-                <img src="/google-play-badge-en-us.svg" alt="Get it on Google Play" className="h-10 md:h-11 w-auto" />
+              <a href="#" aria-label={t('footerGooglePlay')} className="block transition-opacity hover:opacity-80">
+                <img src="/google-play-badge-en-us.svg" alt={t('footerGooglePlay')} className="h-10 md:h-11 w-auto" />
               </a>
             </div>
           </div>
@@ -129,14 +129,14 @@ export function Footer() {
               {nlStatus === 'error' && (
                 <p className="text-red-400 text-sm mb-3">{t('newsletterError')}</p>
               )}
-              <form onSubmit={handleNewsletterSubmit} className="flex gap-2" aria-label="Newsletter signup">
+              <form onSubmit={handleNewsletterSubmit} className="flex gap-2" aria-label={t('newsletterSignup')}>
                 <input
                   type="email"
                   required
                   value={nlEmail}
                   onChange={(e) => setNlEmail(e.target.value)}
                   placeholder={t('newsletterPlaceholder')}
-                  aria-label="Email address"
+                  aria-label={t('emailAddress')}
                   className="flex-1 bg-slate-800/60 border-none rounded-lg text-sm text-white placeholder-white/40 py-2.5 px-4 focus:ring-2 focus:ring-primary"
                 />
                 <button
@@ -158,11 +158,11 @@ export function Footer() {
             © 2008 – {new Date().getFullYear()} GetYourGuide.
           </div>
           <div className="flex items-center gap-5">
-            <a href="#" aria-label="Facebook" className="text-white/40 hover:text-primary-200 transition-colors"><FaFacebookF className="w-5 h-5" /></a>
-            <a href="#" aria-label="Instagram" className="text-white/40 hover:text-primary-200 transition-colors"><FaInstagram className="w-5 h-5" /></a>
-            <a href="#" aria-label="X (Twitter)" className="text-white/40 hover:text-primary-200 transition-colors"><FaXTwitter className="w-5 h-5" /></a>
-            <a href="#" aria-label="YouTube" className="text-white/40 hover:text-primary-200 transition-colors"><FaYoutube className="w-5 h-5" /></a>
-            <a href="#" aria-label="LinkedIn" className="text-white/40 hover:text-primary-200 transition-colors"><FaLinkedinIn className="w-5 h-5" /></a>
+            <a href="#" aria-label={t('socialFacebook')} className="text-white/40 hover:text-primary-200 transition-colors"><FaFacebookF className="w-5 h-5" /></a>
+            <a href="#" aria-label={t('socialInstagram')} className="text-white/40 hover:text-primary-200 transition-colors"><FaInstagram className="w-5 h-5" /></a>
+            <a href="#" aria-label={t('socialX')} className="text-white/40 hover:text-primary-200 transition-colors"><FaXTwitter className="w-5 h-5" /></a>
+            <a href="#" aria-label={t('socialYoutube')} className="text-white/40 hover:text-primary-200 transition-colors"><FaYoutube className="w-5 h-5" /></a>
+            <a href="#" aria-label={t('socialLinkedIn')} className="text-white/40 hover:text-primary-200 transition-colors"><FaLinkedinIn className="w-5 h-5" /></a>
           </div>
         </div>
       </div>

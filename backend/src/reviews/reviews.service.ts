@@ -91,6 +91,11 @@ export class ReviewsService {
         orderBy: this.resolveReviewOrderBy(query),
         skip: (page - 1) * pageSize,
         take: pageSize,
+        include: {
+          user: {
+            select: { firstName: true, lastName: true, displayCountry: true },
+          },
+        },
       }),
       this.prisma.review.aggregate({
         where: {

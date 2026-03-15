@@ -51,7 +51,7 @@ export default function CartPage() {
   const t = useTranslations('public');
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const guestCart = useGuestCart();
-  const { formatPrice, formatDate, formatTime } = useLocaleCurrency();
+  const { formatPrice, formatDate, formatTime, locale, currency } = useLocaleCurrency();
   const { addToast } = useToast();
   const router = useRouter();
 
@@ -114,7 +114,7 @@ export default function CartPage() {
 
   useEffect(() => {
     if (!authLoading) fetchCart();
-  }, [fetchCart, authLoading]);
+  }, [fetchCart, authLoading, locale, currency]);
 
   // Resolve tour meta for guest cart items
   useEffect(() => {
@@ -267,13 +267,14 @@ export default function CartPage() {
         currencyCode: guestCart.currencyCode!,
         contactEmail: guestEmail.trim(),
         contactPhoneE164: guestPhone.trim() || undefined,
-      }) as { id?: string; bookingRef?: string };
+      }) as { id?: string; bookingId?: string; bookingRef?: string };
 
       guestCart.clearCart();
       addToast('success', t('cartBookingCreated'));
 
-      if (result?.id) {
-        router.push(`/checkout/${result.id}`);
+      const bookingId = result?.id ?? result?.bookingId;
+      if (bookingId) {
+        router.push(`/checkout/${bookingId}`);
       } else {
         router.push('/tours');
       }

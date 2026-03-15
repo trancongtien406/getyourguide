@@ -19,7 +19,7 @@ export default function TourDetailPage() {
   const params = useParams();
   const slug = params.slug as string;
   const t = useTranslations('tourPublic');
-  const { formatDate } = useLocaleCurrency();
+  const { formatDate, locale, currency } = useLocaleCurrency();
 
   const [tour, setTour] = useState<Tour | null>(null);
   const [reviewData, setReviewData] = useState<ReviewListResponse | null>(null);
@@ -78,9 +78,25 @@ export default function TourDetailPage() {
       try {
         setLoading(true);
         const tourRes = await catalogApi.getTourBySlug(slug);
-        const reviewsRes = await reviewsApi
-          .listTourReviews(tourRes.id, { pageSize: '5' })
-          .catch(() => null);
+        let reviewsRes: ReviewListResponse | null = null;
+        try {
+          reviewsRes = await reviewsApi.listTourReviews(tourRes.id, { pageSize: '5' });
+        } catch {
+          reviewsRes = {
+            data: [],
+            meta: {
+              page: 1,
+              pageSize: 5,
+              total: 0,
+              totalPages: 0,
+              averageRating: tourRes.ratingAvg ? Number(tourRes.ratingAvg) : 0,
+              averageRatingGuide: null,
+              averageRatingTransport: null,
+              averageRatingValue: null,
+              publishedCount: tourRes.ratingCount ?? 0,
+            },
+          };
+        }
         setTour(tourRes);
         setReviewData(reviewsRes);
       } catch (err) {
@@ -91,7 +107,7 @@ export default function TourDetailPage() {
     }
 
     fetchData();
-  }, [slug]);
+  }, [slug, locale, currency]);
 
   // Update active tab on scroll
   useEffect(() => {
@@ -253,15 +269,26 @@ export default function TourDetailPage() {
           </div>
         </div>
 
-        {/* Reviews section */}
-        {reviewData && (
-          <section id="reviews">
-            <TourReviews
-              tourId={tour.id}
-              initialData={reviewData}
-            />
-          </section>
-        )}
+        {/* Reviews section – always show; use tour rating when no reviews */}
+        <section id="reviews">
+          <TourReviews
+            tourId={tour.id}
+            initialData={reviewData ?? {
+              data: [],
+              meta: {
+                page: 1,
+                pageSize: 5,
+                total: 0,
+                totalPages: 0,
+                averageRating: tour.ratingAvg ? Number(tour.ratingAvg) : 0,
+                averageRatingGuide: null,
+                averageRatingTransport: null,
+                averageRatingValue: null,
+                publishedCount: tour.ratingCount ?? 0,
+              },
+            }}
+          />
+        </section>
 
         {/* Similar tours */}
         <TourSimilar currentTourId={tour.id} cityId={tour.cityId} />

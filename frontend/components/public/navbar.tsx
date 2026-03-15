@@ -23,6 +23,7 @@ import {
     HiOutlineUserAdd,
     HiOutlineX,
 } from 'react-icons/hi';
+import { useGuestCart } from '@/lib/guest-cart-context';
 import { AuthDialog } from './auth-dialog';
 import { CitySearchDropdown } from './city-search-dropdown';
 import { ProfileDropdown } from './profile-dropdown';
@@ -30,7 +31,9 @@ import { ProfileDropdown } from './profile-dropdown';
 export function Navbar() {
   const t = useTranslations('public');
   const { user, logout, isAdmin, isLoading } = useAuth();
+  const guestCart = useGuestCart();
   const { locale, currency, locales, currencies, switchLocale, switchCurrency } = useLocaleCurrency();
+  const cartItemCount = user ? undefined : guestCart.itemCount;
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [authDialogOpen, setAuthDialogOpen] = useState(false);
   const [authDialogTab, setAuthDialogTab] = useState<'login' | 'register'>('login');
@@ -89,6 +92,11 @@ export function Navbar() {
               aria-label={t('cart')}
             >
               <HiOutlineShoppingCart className="w-5 h-5" />
+              {cartItemCount != null && cartItemCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-primary text-white text-[10px] font-bold px-1">
+                  {cartItemCount > 99 ? '99+' : cartItemCount}
+                </span>
+              )}
             </Link>
             <div className="relative" ref={globeRef}>
               <button
@@ -101,54 +109,56 @@ export function Navbar() {
                 <HiOutlineGlobeAlt className="w-5 h-5" />
               </button>
 
-              {/* Language & Currency Dropdown */}
+              {/* Language & Currency — Mega menu (wide grid, no long list) */}
               {globeOpen && (
                 <div
-                  className="absolute right-0 top-full mt-2 w-64 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl z-50 p-4 space-y-4 animate-in fade-in slide-in-from-top-1 duration-150"
+                  className="absolute right-0 top-full mt-2 min-w-[240px] max-w-[90vw] w-max bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-1 duration-150"
+                  role="dialog"
+                  aria-label={t('footerLanguage')}
                 >
-                  {/* Language */}
-                  <div>
-                    <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">{t('footerLanguage')}</p>
-                    <div className="space-y-1">
-                      {locales.map((l) => (
-                        <button
-                          key={l.code}
-                          onClick={() => { switchLocale(l.code); setGlobeOpen(false); }}
-                          className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
-                            locale === l.code
-                              ? 'bg-primary/10 text-primary font-semibold'
-                              : 'text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700'
-                          }`}
-                        >
-                          <span className="text-base">{l.flag}</span>
-                          <span className="flex-1 text-left">{l.label}</span>
-                          {locale === l.code && <HiOutlineCheck className="w-4 h-4" />}
-                        </button>
-                      ))}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-slate-200 dark:divide-slate-700">
+                    {/* Language — grid of items */}
+                    <div className="p-4">
+                      <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3">{t('footerLanguage')}</p>
+                      <div className="grid grid-cols-2 gap-1.5 max-h-[280px] overflow-y-auto pr-1">
+                        {locales.map((l) => (
+                          <button
+                            key={l.code}
+                            onClick={() => { switchLocale(l.code); setGlobeOpen(false); }}
+                            className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors text-left w-full min-w-0 ${
+                              locale === l.code
+                                ? 'bg-primary/10 text-primary font-semibold'
+                                : 'text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700'
+                            }`}
+                          >
+                            <span className="text-base shrink-0">{l.flag}</span>
+                            <span className="flex-1 min-w-0 break-words text-left">{l.label}</span>
+                            {locale === l.code && <HiOutlineCheck className="w-4 h-4 shrink-0" />}
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="h-px bg-slate-200 dark:bg-slate-700" />
-
-                  {/* Currency */}
-                  <div>
-                    <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">{t('footerCurrency')}</p>
-                    <div className="space-y-1">
-                      {currencies.map((c) => (
-                        <button
-                          key={c.code}
-                          onClick={() => { switchCurrency(c.code); setGlobeOpen(false); }}
-                          className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
-                            currency === c.code
-                              ? 'bg-primary/10 text-primary font-semibold'
-                              : 'text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700'
-                          }`}
-                        >
-                          <span className="text-base font-mono">{c.symbol}</span>
-                          <span className="flex-1 text-left">{c.code} – {c.label}</span>
-                          {currency === c.code && <HiOutlineCheck className="w-4 h-4" />}
-                        </button>
-                      ))}
+                    {/* Currency — grid of items */}
+                    <div className="p-4">
+                      <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3">{t('footerCurrency')}</p>
+                      <div className="grid grid-cols-2 gap-1.5 max-h-[280px] overflow-y-auto pr-1">
+                        {currencies.map((c) => (
+                          <button
+                            key={c.code}
+                            onClick={() => { switchCurrency(c.code); setGlobeOpen(false); }}
+                            className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors text-left w-full min-w-0 ${
+                              currency === c.code
+                                ? 'bg-primary/10 text-primary font-semibold'
+                                : 'text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700'
+                            }`}
+                          >
+                            <span className="font-mono text-sm shrink-0">{c.symbol}</span>
+                            <span className="flex-1 min-w-0 break-words text-left">{c.code}</span>
+                            {currency === c.code && <HiOutlineCheck className="w-4 h-4 shrink-0" />}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -186,7 +196,7 @@ export function Navbar() {
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             className="md:hidden p-2 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-            aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
+            aria-label={mobileMenuOpen ? t('menuClose') : t('menuOpen')}
             aria-expanded={mobileMenuOpen}
           >
             {mobileMenuOpen ? <HiOutlineX className="w-6 h-6" /> : <HiOutlineMenu className="w-6 h-6" />}
@@ -214,7 +224,14 @@ export function Navbar() {
                 className="flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                <HiOutlineShoppingCart className="w-5 h-5 text-slate-400" />
+                <span className="relative">
+                  <HiOutlineShoppingCart className="w-5 h-5 text-slate-400" />
+                  {cartItemCount != null && cartItemCount > 0 && (
+                    <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 flex items-center justify-center rounded-full bg-primary text-white text-[10px] font-bold px-1">
+                      {cartItemCount > 99 ? '99+' : cartItemCount}
+                    </span>
+                  )}
+                </span>
                 {t('cart')}
               </Link>
 

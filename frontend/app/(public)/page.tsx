@@ -5,14 +5,17 @@ import { TourCard } from '@/components/public/tour-card';
 import {
     catalogApi,
     favoritesApi,
+    newsletterApi,
     referenceDataApi,
     reviewsApi,
     type Category,
     type City,
+    type Country,
     type Review,
     type Tour,
 } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
+import { useLocaleCurrency } from '@/lib/locale-currency-context';
 import { useToast } from '@/lib/toast-context';
 import { useTranslations } from 'next-intl';
 import Image from 'next/image';
@@ -20,7 +23,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { HiOutlineChevronLeft, HiOutlineChevronRight, HiStar } from 'react-icons/hi';
 
-/* Gradient palettes for city cards (no images in API) */
+/* Fallback gradient when city has no imageUrl */
 const CITY_GRADIENTS = [
   'from-primary-400 to-primary-600',
   'from-sky-400 to-indigo-500',
@@ -35,13 +38,19 @@ const CITY_GRADIENTS = [
 export default function HomePage() {
   const t = useTranslations('public');
   const { isAuthenticated } = useAuth();
+  const { locale, currency } = useLocaleCurrency();
 
   const [featuredTours, setFeaturedTours] = useState<Tour[]>([]);
   const [cities, setCities] = useState<City[]>([]);
+  const [countries, setCountries] = useState<Country[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [recentReviews, setRecentReviews] = useState<(Review & { tourTitle?: string })[]>([]);
   const [loading, setLoading] = useState(true);
   const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
+  const [newsletterEmail, setNewsletterEmail] = useState('');
+  const [newsletterLoading, setNewsletterLoading] = useState(false);
+  const [newsletterSuccess, setNewsletterSuccess] = useState(false);
+  const [tabIndex, setTabIndex] = useState(0);
 
   // Fetch user favorites
   useEffect(() => {
@@ -56,42 +65,63 @@ export default function HomePage() {
 
   const { addToast } = useToast();
 
+  const handleNewsletterSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const email = newsletterEmail.trim();
+    if (!email) return;
+    setNewsletterLoading(true);
+    try {
+      await newsletterApi.subscribe(email);
+      setNewsletterSuccess(true);
+      setNewsletterEmail('');
+      addToast('success', t('newsletterSuccess'));
+    } catch {
+      addToast('error', t('newsletterError'));
+    } finally {
+      setNewsletterLoading(false);
+    }
+  };
+
   const handleToggleFavorite = async (tourId: string) => {
     if (!isAuthenticated) {
-      addToast('info', 'Please log in to save favorites');
+      addToast('info', t('loginToSaveFavorites'));
       return;
     }
     try {
       if (favoriteIds.has(tourId)) {
         await favoritesApi.removeFavorite(tourId);
         setFavoriteIds(prev => { const next = new Set(prev); next.delete(tourId); return next; });
-        addToast('success', 'Removed from favorites');
+        addToast('success', t('removedFromFavorites'));
       } else {
         await favoritesApi.addFavorite(tourId);
         setFavoriteIds(prev => new Set(prev).add(tourId));
-        addToast('success', 'Added to favorites');
+        addToast('success', t('addedToFavorites'));
       }
     } catch {
-      addToast('error', 'Failed to update favorites');
+      addToast('error', t('failedToUpdateFavorites'));
     }
   };
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const [toursRes, citiesRes, catsRes] = await Promise.all([
+        const [featuredRes, fallbackToursRes, citiesRes, countriesRes, catsRes] = await Promise.all([
+          catalogApi.listTours({ pageSize: '8', status: 'PUBLISHED', isFeatured: 'true' }).catch(() => null),
           catalogApi.listTours({ pageSize: '8', status: 'PUBLISHED' }).catch(() => null),
           referenceDataApi.listCities({ pageSize: '8' }).catch(() => null),
+          referenceDataApi.listCountries({ pageSize: '8' }).catch(() => null),
           catalogApi.listCategories({ pageSize: '10' }).catch(() => null),
         ]);
-        const tours = toursRes?.data ?? [];
-        if (tours.length) setFeaturedTours(tours);
+        const featured = featuredRes?.data ?? [];
+        const fallback = fallbackToursRes?.data ?? [];
+        setFeaturedTours(featured.length > 0 ? featured : fallback);
         if (citiesRes?.data) setCities(citiesRes.data);
+        if (countriesRes?.data) setCountries(countriesRes.data);
         if (catsRes?.data) setCategories(catsRes.data);
 
-        // Fetch real reviews from up to 3 featured tours
+        const tours = featured.length > 0 ? featured : fallback;
         if (tours.length) {
-          const reviewPromises = tours.slice(0, 3).map((tour) =>
+          const reviewPromises = tours.slice(0, 3).map((tour: Tour) =>
             reviewsApi
               .listTourReviews(tour.id, { pageSize: '1', status: 'PUBLISHED' })
               .then((res) =>
@@ -109,7 +139,7 @@ export default function HomePage() {
       }
     }
     fetchData();
-  }, []);
+  }, [locale, currency]);
 
   return (
     <>
@@ -161,8 +191,22 @@ export default function HomePage() {
                   href={`/tours?city=${city.id}`}
                   className="group cursor-pointer"
                 >
-                  <div className={`aspect-[4/3] rounded-xl overflow-hidden mb-3 bg-gradient-to-br ${CITY_GRADIENTS[i % CITY_GRADIENTS.length]} flex items-end p-4 shadow-sm group-hover:shadow-md transition-shadow`}>
-                    <span className="text-white font-bold text-lg drop-shadow-md">{city.name}</span>
+                  <div className="aspect-[4/3] rounded-xl overflow-hidden mb-3 relative shadow-sm group-hover:shadow-md transition-shadow">
+                    {city.imageUrl ? (
+                      <Image
+                        src={city.imageUrl}
+                        alt={city.name}
+                        fill
+                        className="object-cover group-hover:scale-105 transition-transform duration-300"
+                        sizes="(max-width: 768px) 50vw, 25vw"
+                      />
+                    ) : (
+                      <div className={`absolute inset-0 bg-gradient-to-br ${CITY_GRADIENTS[i % CITY_GRADIENTS.length]}`} />
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                    <span className="absolute bottom-0 left-0 right-0 p-4 text-white font-bold text-lg drop-shadow-md">
+                      {city.name}
+                    </span>
                   </div>
                 </Link>
               ))}
@@ -183,10 +227,13 @@ export default function HomePage() {
                   href={`/tours?category=${cat.id}`}
                   className="cursor-pointer group"
                 >
-                  <div className="aspect-video rounded-xl overflow-hidden mb-3 bg-primary-50 dark:bg-slate-800/40 flex items-center justify-center border border-primary-100 dark:border-slate-700">
+                  <div className="aspect-video rounded-xl overflow-hidden mb-3 bg-primary-50 dark:bg-slate-800/40 flex items-center justify-center border border-primary-100 dark:border-slate-700 group-hover:border-primary/50 transition-colors">
                     <span className="text-4xl">🏛️</span>
                   </div>
                   <h3 className="font-bold text-base leading-tight text-slate-900 dark:text-white group-hover:text-primary transition-colors">{cat.name}</h3>
+                  {cat.description && (
+                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">{cat.description}</p>
+                  )}
                 </Link>
               ))}
             </div>
@@ -310,15 +357,17 @@ export default function HomePage() {
         ) : null}
 
         {/* Tabbed Links Section */}
-        {categories.length > 0 && (
+        {(categories.length > 0 || cities.length > 0 || countries.length > 0) && (
           <section>
             <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-700 mb-8 overflow-x-auto no-scrollbar">
               <div className="flex gap-8">
                 {[t('tabTopAttractions'), t('tabTopDestinations'), t('tabTopCountries'), t('tabTopCategories')].map((tab, i) => (
                   <button
                     key={i}
+                    type="button"
+                    onClick={() => setTabIndex(i)}
                     className={`pb-4 whitespace-nowrap font-medium transition-colors ${
-                      i === 0
+                      i === tabIndex
                         ? 'border-b-2 border-primary text-primary font-bold'
                         : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                     }`}
@@ -328,28 +377,82 @@ export default function HomePage() {
                 ))}
               </div>
               <div className="flex gap-2 pb-4 shrink-0 ml-4">
-                <button className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full">
+                <button
+                  type="button"
+                  onClick={() => setTabIndex((prev) => (prev - 1 + 4) % 4)}
+                  aria-label="Previous tab"
+                  className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full"
+                >
                   <HiOutlineChevronLeft className="w-5 h-5 text-slate-600 dark:text-slate-400" />
                 </button>
-                <button className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full">
+                <button
+                  type="button"
+                  onClick={() => setTabIndex((prev) => (prev + 1) % 4)}
+                  aria-label="Next tab"
+                  className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full"
+                >
                   <HiOutlineChevronRight className="w-5 h-5 text-slate-600 dark:text-slate-400" />
                 </button>
               </div>
             </div>
 
-            {/* Links Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-y-6 gap-x-8">
-              {categories.slice(0, 10).map((cat) => (
-                <Link key={cat.id} href={`/tours?category=${cat.id}`} className="block group">
-                  <p className="font-medium group-hover:text-primary transition-colors text-slate-900 dark:text-white">
-                    {cat.name}
-                  </p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
-                    {t('toursAndActivities')}
-                  </p>
-                </Link>
-              ))}
-            </div>
+            {/* Tab content: 0=Attractions (categories), 1=Destinations (cities), 2=Countries, 3=Categories */}
+            {tabIndex === 0 && categories.length > 0 && (
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-y-6 gap-x-8">
+                {categories.slice(0, 10).map((cat) => (
+                  <Link key={cat.id} href={`/tours?category=${cat.id}`} className="block group">
+                    <p className="font-medium group-hover:text-primary transition-colors text-slate-900 dark:text-white">
+                      {cat.name}
+                    </p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      {t('toursAndActivities')}
+                    </p>
+                  </Link>
+                ))}
+              </div>
+            )}
+            {tabIndex === 1 && cities.length > 0 && (
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-y-6 gap-x-8">
+                {cities.slice(0, 10).map((city) => (
+                  <Link key={city.id} href={`/tours?city=${city.id}`} className="block group">
+                    <p className="font-medium group-hover:text-primary transition-colors text-slate-900 dark:text-white">
+                      {city.name}
+                    </p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      {t('toursAndActivities')}
+                    </p>
+                  </Link>
+                ))}
+              </div>
+            )}
+            {tabIndex === 2 && countries.length > 0 && (
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-y-6 gap-x-8">
+                {countries.slice(0, 10).map((country) => (
+                  <Link key={country.id} href={`/tours?country=${country.id}`} className="block group">
+                    <p className="font-medium group-hover:text-primary transition-colors text-slate-900 dark:text-white">
+                      {country.name}
+                    </p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      {t('toursAndActivities')}
+                    </p>
+                  </Link>
+                ))}
+              </div>
+            )}
+            {tabIndex === 3 && categories.length > 0 && (
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-y-6 gap-x-8">
+                {categories.slice(0, 10).map((cat) => (
+                  <Link key={cat.id} href={`/tours?category=${cat.id}`} className="block group">
+                    <p className="font-medium group-hover:text-primary transition-colors text-slate-900 dark:text-white">
+                      {cat.name}
+                    </p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      {t('toursAndActivities')}
+                    </p>
+                  </Link>
+                ))}
+              </div>
+            )}
           </section>
         )}
 
@@ -361,17 +464,22 @@ export default function HomePage() {
           <p className="text-slate-600 dark:text-slate-300 mb-8 max-w-xl mx-auto">
             {t('newsletterDesc')}
           </p>
-          <form className="flex flex-col sm:flex-row gap-4 max-w-lg mx-auto">
+          <form onSubmit={handleNewsletterSubmit} className="flex flex-col sm:flex-row gap-4 max-w-lg mx-auto">
             <input
               type="email"
-              className="flex-1 px-4 py-3 border-none rounded-lg focus:ring-2 focus:ring-primary shadow-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400"
+              required
+              value={newsletterEmail}
+              onChange={(e) => setNewsletterEmail(e.target.value)}
+              disabled={newsletterSuccess}
+              className="flex-1 px-4 py-3 border-none rounded-lg focus:ring-2 focus:ring-primary shadow-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 disabled:opacity-70"
               placeholder="Email"
             />
             <button
               type="submit"
-              className="bg-primary text-white font-bold px-8 py-3 rounded-lg hover:bg-primary-dark transition-colors"
+              disabled={newsletterLoading || newsletterSuccess}
+              className="bg-primary text-white font-bold px-8 py-3 rounded-lg hover:bg-primary-dark transition-colors disabled:opacity-70"
             >
-              {t('subscribe')}
+              {newsletterSuccess ? t('newsletterSubscribed') : newsletterLoading ? t('loading') : t('subscribe')}
             </button>
           </form>
           <p className="text-[11px] text-slate-500 mt-6 leading-relaxed max-w-md mx-auto">

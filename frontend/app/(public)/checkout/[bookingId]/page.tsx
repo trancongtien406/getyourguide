@@ -23,7 +23,7 @@ import {
 
 export default function CheckoutPage() {
   const t = useTranslations('public');
-  const { formatPrice, formatDate, formatTime } = useLocaleCurrency();
+  const { formatPrice, formatDate, formatTime, currency } = useLocaleCurrency();
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const params = useParams();
   const router = useRouter();
@@ -74,7 +74,7 @@ export default function CheckoutPage() {
     if (!authLoading) {
       fetchData();
     }
-  }, [fetchData, authLoading]);
+  }, [fetchData, authLoading, currency]);
 
   const handlePay = async () => {
     if (!booking || !selectedMethod) return;

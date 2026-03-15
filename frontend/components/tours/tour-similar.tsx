@@ -67,19 +67,22 @@ export function TourSimilar({ currentTourId, cityId }: TourSimilarProps) {
   const handleFavorite = async (e: React.MouseEvent, tourId: string) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!isAuthenticated) return;
+    if (!isAuthenticated) {
+      addToast('info', t('loginToSaveFavorites'));
+      return;
+    }
     try {
       if (favoriteIds.has(tourId)) {
         await favoritesApi.removeFavorite(tourId);
         setFavoriteIds(prev => { const next = new Set(prev); next.delete(tourId); return next; });
-        addToast('success', 'Removed from favorites');
+        addToast('success', t('removedFromFavorites'));
       } else {
         await favoritesApi.addFavorite(tourId);
         setFavoriteIds(prev => new Set(prev).add(tourId));
-        addToast('success', 'Added to favorites');
+        addToast('success', t('addedToFavorites'));
       }
     } catch {
-      addToast('error', 'Failed to update favorites');
+      addToast('error', t('failedToUpdateFavorites'));
     }
   };
 
@@ -139,7 +142,10 @@ export function TourSimilar({ currentTourId, cityId }: TourSimilarProps) {
                   </span>
                 )}
                 <button
+                  type="button"
                   onClick={(e) => handleFavorite(e, tour.id)}
+                  title={!isAuthenticated ? t('loginToSaveFavorites') : undefined}
+                  aria-label={favoriteIds.has(tour.id) ? 'Remove from favorites' : 'Add to favorites'}
                   className={`absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center shadow-md hover:scale-110 transition-transform ${
                     favoriteIds.has(tour.id)
                       ? 'bg-red-500/80 text-white'

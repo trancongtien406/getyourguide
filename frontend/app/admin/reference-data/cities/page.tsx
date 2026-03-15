@@ -9,6 +9,7 @@ import { Select } from '@/components/ui/select';
 import { Pagination, Table } from '@/components/ui/table';
 import { ApiError, referenceDataApi, type City, type Country } from '@/lib/api';
 import { useTranslations } from 'next-intl';
+import Image from 'next/image';
 import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 import {
@@ -177,6 +178,9 @@ export default function CitiesPage() {
   const countryOptions = countries.map((c) => ({ value: c.id, label: `${c.name} (${c.iso2})` }));
 
   const columns = [
+    { key: 'image', header: '', className: 'w-14', render: (c: City) => c.imageUrl ? (
+      <Image src={c.imageUrl} alt={c.name} width={40} height={30} className="rounded object-cover" />
+    ) : <span className="text-gray-400 text-xs">—</span> },
     { key: 'name', header: tc('name'), render: (c: City) => c.name },
     { key: 'country', header: t('colCountry'), render: (c: City) => getCountryName(c.countryId) },
     { key: 'timezone', header: t('colTimezone'), render: (c: City) => <span className="text-sm text-gray-500">{c.timezone || '—'}</span> },

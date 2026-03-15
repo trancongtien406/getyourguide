@@ -19,7 +19,7 @@ export default function BlogDetailPage() {
   const params = useParams();
   const slug = params.slug as string;
   const t = useTranslations('public');
-  const { formatDate } = useLocaleCurrency();
+  const { formatDate, locale } = useLocaleCurrency();
 
   const [post, setPost] = useState<BlogPost | null>(null);
   const [relatedPosts, setRelatedPosts] = useState<BlogPost[]>([]);
@@ -38,7 +38,7 @@ export default function BlogDetailPage() {
         if (postData) {
           setPost(postData);
         } else {
-          setError('Post not found');
+          setError(t('metaPostNotFound'));
         }
 
         // Fetch related posts
@@ -51,14 +51,14 @@ export default function BlogDetailPage() {
           // silently fail
         }
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load post');
+        setError(err instanceof Error ? err.message : t('metaPostLoadError'));
       } finally {
         setLoading(false);
       }
     }
 
     fetchData();
-  }, [slug]);
+  }, [slug, locale]);
 
   if (loading) {
     return (
@@ -82,8 +82,8 @@ export default function BlogDetailPage() {
       <div className="min-h-[60vh] flex items-center justify-center">
         <div className="text-center space-y-4">
           <div className="text-6xl">📝</div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Post not found</h1>
-          <p className="text-slate-500">{error || 'The blog post you\'re looking for doesn\'t exist.'}</p>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{t('metaPostNotFound')}</h1>
+          <p className="text-slate-500">{error || t('notFoundDesc')}</p>
           <Link href="/blog" className="inline-block mt-4 px-6 py-3 bg-primary text-white rounded-lg font-semibold hover:bg-primary-dark transition-colors">
             {t('backToBlog')}
           </Link>

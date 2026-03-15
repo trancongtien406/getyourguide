@@ -19,11 +19,17 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
 
-  // CORS: default to restrictive (localhost only) if not configured
+  // CORS: allow frontend origin so cookies (refresh token) can be sent
   const corsOriginRaw = configService.get<string>('CORS_ORIGIN');
   const allowedOrigins = corsOriginRaw
     ? corsOriginRaw.split(',').map((origin) => origin.trim()).filter(Boolean)
-    : ['https://getyourguide.trancongtien.io.vn', 'http://localhost:3001'];
+    : [
+        'https://getyourguide.trancongtien.io.vn',
+        'http://localhost:3000',
+        'http://localhost:3001',
+        'http://127.0.0.1:3000',
+        'http://127.0.0.1:3001',
+      ];
 
   app.enableCors({
     origin: allowedOrigins,

@@ -858,6 +858,14 @@ export const messagesApi = {
     api<{ totalUnread: number }>('/messages/conversations/unread-summary'),
 };
 
+// Newsletter APIs (public)
+export const newsletterApi = {
+  subscribe: (email: string) =>
+    api<{ message: string; subscriptionId?: string }>('/newsletter/subscribe', { method: 'POST', body: { email } }),
+  unsubscribe: (email: string) =>
+    api<{ message: string }>('/newsletter/unsubscribe', { method: 'POST', body: { email } }),
+};
+
 // Favorites APIs
 export const favoritesApi = {
   listMyFavorites: (params?: Record<string, string>) => {
@@ -1044,6 +1052,7 @@ export interface Category {
   parentId?: string;
   slug: string;
   name: string;
+  description?: string;
   isActive: boolean;
   sortOrder: number;
 }

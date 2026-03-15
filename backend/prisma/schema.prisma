@@ -273,6 +273,7 @@ model User {
   sessions        UserSession[]
   passwordResets  PasswordResetToken[]
   bookings        Booking[]
+  reviews         Review[]
 
   @@index([status])
   @@map("users")
@@ -907,7 +908,8 @@ model Review {
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
 
-  tour Tour @relation(fields: [tourId], references: [id])
+  tour Tour  @relation(fields: [tourId], references: [id])
+  user User? @relation(fields: [userId], references: [id])
 
   @@unique([bookingId, userId])
   @@index([tourId, status, createdAt(sort: Desc)])

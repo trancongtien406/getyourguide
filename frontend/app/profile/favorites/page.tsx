@@ -34,7 +34,7 @@ function getStartingPrice(tour?: Tour) {
 export default function MyFavoritesPage() {
   const t = useTranslations('profile');
   const tc = useTranslations('common');
-  const { formatPrice, formatDate } = useLocaleCurrency();
+  const { formatPrice, formatDate, locale, currency } = useLocaleCurrency();
 
   const [favorites, setFavorites] = useState<FavoriteItem[]>([]);
   const [total, setTotal] = useState(0);
@@ -58,7 +58,7 @@ export default function MyFavoritesPage() {
     }
   }, [page, search]);
 
-  useEffect(() => { fetchFavorites(); }, [fetchFavorites]);
+  useEffect(() => { fetchFavorites(); }, [fetchFavorites, locale, currency]);
 
   const handleRemove = async (tourId: string) => {
     try {

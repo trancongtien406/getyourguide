@@ -11,7 +11,7 @@ const PAGE_SIZE = 12;
 
 export default function BlogListingPage() {
   const t = useTranslations('public');
-  const { formatDate } = useLocaleCurrency();
+  const { formatDate, locale } = useLocaleCurrency();
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [categories, setCategories] = useState<BlogCategory[]>([]);
   const [loading, setLoading] = useState(true);
@@ -21,12 +21,12 @@ export default function BlogListingPage() {
   const [hasMore, setHasMore] = useState(false);
   const [totalPosts, setTotalPosts] = useState(0);
 
-  // Fetch categories once
+  // Fetch categories (refetch when locale changes for localized names)
   useEffect(() => {
     blogPublicApi.listCategories({ pageSize: '20' }).then(res => {
       if (res?.data) setCategories(res.data);
     }).catch(() => {});
-  }, []);
+  }, [locale]);
 
   const fetchPosts = useCallback(async (pageNum: number, append = false) => {
     try {
@@ -60,7 +60,7 @@ export default function BlogListingPage() {
   useEffect(() => {
     setPage(1);
     fetchPosts(1, false);
-  }, [fetchPosts]);
+  }, [fetchPosts, locale]);
 
   const handleLoadMore = () => {
     const nextPage = page + 1;

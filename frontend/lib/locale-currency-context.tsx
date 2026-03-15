@@ -182,7 +182,9 @@ export function LocaleCurrencyProvider({ children }: { children: ReactNode }) {
 
   const switchCurrency = useCallback((newCurrency: string) => {
     setCurrencyState(newCurrency);
-  }, []);
+    setCookie('currency', newCurrency);
+    router.refresh();
+  }, [router]);
 
   const formatPrice = useCallback(
     (amount: number, currencyOverride?: string) => {

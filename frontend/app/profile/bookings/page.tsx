@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import { Pagination, Table } from '@/components/ui/table';
 import { bookingsApi, type Booking, type BookingStatus } from '@/lib/api';
+import { useLocaleCurrency } from '@/lib/locale-currency-context';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
@@ -24,6 +25,7 @@ const STATUS_I18N_MAP: Record<BookingStatus, string> = {
 export default function MyBookingsPage() {
   const t = useTranslations('profile');
   const tb = useTranslations('bookings');
+  const { locale, currency } = useLocaleCurrency();
 
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [total, setTotal] = useState(0);
@@ -49,7 +51,7 @@ export default function MyBookingsPage() {
     }
   }, [page, search, statusFilter]);
 
-  useEffect(() => { fetchBookings(); }, [fetchBookings]);
+  useEffect(() => { fetchBookings(); }, [fetchBookings, locale, currency]);
 
   const statusVariant = (status: string) => {
     const map: Record<string, 'success' | 'warning' | 'danger' | 'info' | 'default'> = {
