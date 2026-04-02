@@ -176,7 +176,7 @@ export function CitySearchDropdown({ variant, className = '' }: CitySearchDropdo
   const isNavbar = variant === 'navbar';
 
   const wrapperClass = isHero
-    ? `w-full max-w-3xl ${className}`
+    ? `w-full max-w-4xl ${className}`
     : isNavbar
       ? `hidden md:block flex-1 max-w-md ${className}`
       : `w-full ${className}`;

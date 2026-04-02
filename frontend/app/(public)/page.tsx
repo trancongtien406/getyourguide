@@ -162,7 +162,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <div className="max-w-7xl mx-auto px-4 py-16 space-y-16">
+      <div className="layout-container py-16 space-y-16">
 
         {/* Destinations Section */}
         {loading ? (

@@ -8,7 +8,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
   return (
     <AuthProvider>
       <LocaleCurrencyProvider>
-        <div className="min-h-screen flex flex-col bg-white dark:bg-slate-900">
+        <div className="min-h-screen flex flex-col">
           <Navbar />
           <BottomHeader />
           <main className="flex-1">{children}</main>

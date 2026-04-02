@@ -5,6 +5,10 @@
 :root {
   --background: #ffffff;
   --foreground: #0f172a;
+  --page-background: #f6f8fb;
+  --page-panel: #ffffff;
+  --page-line: #d7e0ea;
+  --layout-max-width: 90rem;
 
   /* Blue theme palette */
   --primary: #2563eb;
@@ -59,9 +63,33 @@
 }
 
 body {
-  background: var(--background);
+  min-height: 100vh;
+  margin: 0;
+  background:
+    radial-gradient(circle at 10% 20%, rgba(13, 148, 136, 0.08), transparent 38%),
+    radial-gradient(circle at 85% 80%, rgba(249, 115, 22, 0.08), transparent 30%),
+    var(--page-background);
   color: var(--foreground);
   font-family: var(--font-jost), "Jost", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.layout-container {
+  width: 100%;
+  max-width: var(--layout-max-width);
+  margin-inline: auto;
+  padding-inline: 1rem;
+}
+
+@media (min-width: 640px) {
+  .layout-container {
+    padding-inline: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .layout-container {
+    padding-inline: 2rem;
+  }
 }
 
 /* Smooth scrollbar for admin */

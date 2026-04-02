@@ -1,6 +1,7 @@
 'use client';
 
 import { useAuth } from '@/lib/auth-context';
+import { useGuestCart } from '@/lib/guest-cart-context';
 import {
     useLocaleCurrency,
 } from '@/lib/locale-currency-context';
@@ -23,7 +24,6 @@ import {
     HiOutlineUserAdd,
     HiOutlineX,
 } from 'react-icons/hi';
-import { useGuestCart } from '@/lib/guest-cart-context';
 import { AuthDialog } from './auth-dialog';
 import { CitySearchDropdown } from './city-search-dropdown';
 import { ProfileDropdown } from './profile-dropdown';
@@ -65,8 +65,8 @@ export function Navbar() {
 
   return (
     <>
-      <nav aria-label="Main navigation" className="sticky top-0 z-50 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800 px-4 py-3 shadow-sm">
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
+      <nav aria-label="Main navigation" className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/95 px-4 py-3 shadow-sm backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/95">
+        <div className="layout-container flex items-center justify-between gap-4">
           {/* Logo + Search */}
           <div className="flex items-center gap-8 flex-1">
             <Link href="/" className="text-primary font-extrabold text-2xl tracking-tighter flex items-center shrink-0">
@@ -205,7 +205,7 @@ export function Navbar() {
 
         {/* Mobile Menu */}
         {mobileMenuOpen && (
-          <div className="md:hidden mt-3 pb-4 border-t border-slate-200 dark:border-slate-800 pt-4 space-y-2 animate-in fade-in slide-in-from-top-1 duration-150">
+          <div className="layout-container md:hidden mt-3 pb-4 border-t border-slate-200 dark:border-slate-800 pt-4 space-y-2 animate-in fade-in slide-in-from-top-1 duration-150">
             <div className="mb-3">
               <CitySearchDropdown variant="mobile" />
             </div>
