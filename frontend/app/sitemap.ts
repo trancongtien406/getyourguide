@@ -1,7 +1,8 @@
+import { API_URL, SITE_URL } from '@/lib/runtime-config';
 import type { MetadataRoute } from 'next';
 
-const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.getyourguide.com';
-const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+const baseUrl = SITE_URL;
+const apiUrl = API_URL;
 
 async function fetchAllTourSlugs(): Promise<string[]> {
   const slugs: string[] = [];

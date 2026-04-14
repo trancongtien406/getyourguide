@@ -292,7 +292,7 @@ export default function CartPage() {
       <div className="min-h-[60vh] flex items-center justify-center">
         <div className="text-center">
           <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto mb-4" />
-          <p className="text-sm text-slate-500 dark:text-slate-400">{t('loading')}</p>
+          <p className="text-sm text-[var(--color-ink-muted)]">{t('loading')}</p>
         </div>
       </div>
     );
@@ -303,11 +303,11 @@ export default function CartPage() {
     return (
       <div className="min-h-[60vh] flex items-center justify-center px-4">
         <div className="text-center max-w-md">
-          <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-            <HiOutlineShoppingCart className="w-12 h-12 text-slate-300 dark:text-slate-600" />
+          <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-[var(--color-panel-soft)] flex items-center justify-center">
+            <HiOutlineShoppingCart className="w-12 h-12 text-[var(--color-ink-muted)]" />
           </div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">{t('cartTitle')}</h1>
-          <p className="text-slate-500 dark:text-slate-400 mb-8">{t('cartEmpty')}</p>
+          <h1 className="text-2xl font-bold text-[var(--color-ink)] mb-2">{t('cartTitle')}</h1>
+          <p className="text-[var(--color-ink-muted)] mb-8">{t('cartEmpty')}</p>
           <Link
             href="/tours"
             className="inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-white px-8 py-3 rounded-full text-sm font-semibold transition-all shadow-lg shadow-primary/25 hover:shadow-primary/40"
@@ -328,16 +328,16 @@ export default function CartPage() {
         <div className="flex items-center gap-3">
           <Link
             href="/tours"
-            className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            className="p-2 rounded-lg hover:bg-[var(--color-panel-soft)] transition-colors"
           >
             <HiOutlineArrowLeft className="w-5 h-5 text-slate-500" />
           </Link>
           <div>
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{t('cartTitle')}</h1>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+            <h1 className="text-2xl font-bold text-[var(--color-ink)]">{t('cartTitle')}</h1>
+            <p className="text-sm text-[var(--color-ink-muted)] mt-0.5">
               {t('cartTotalItems', { count: displayItems.length })}
               {isGuest && (
-                <span className="ml-2 inline-flex items-center gap-1 text-amber-600 dark:text-amber-400">
+                <span className="ml-2 inline-flex items-center gap-1 text-amber-600">
                   <HiOutlineUserGroup className="w-3.5 h-3.5" />
                   {t('cartGuest')}
                 </span>
@@ -347,7 +347,7 @@ export default function CartPage() {
         </div>
         <button
           onClick={handleClearCart}
-          className="flex items-center gap-1.5 text-sm text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 font-medium transition-colors px-3 py-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20"
+          className="flex items-center gap-1.5 text-sm text-red-500 hover:text-red-700 font-medium transition-colors px-3 py-1.5 rounded-lg hover:bg-red-50"
         >
           <HiOutlineTrash className="w-4 h-4" />
           {t('cartClearAll')}
@@ -356,9 +356,9 @@ export default function CartPage() {
 
       {/* Guest notice */}
       {isGuest && !showGuestForm && (
-        <div className="mb-6 flex items-center gap-3 p-4 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50">
-          <HiOutlineUserGroup className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0" />
-          <p className="text-sm text-amber-800 dark:text-amber-300 flex-1">
+        <div className="mb-6 flex items-center gap-3 p-4 rounded-xl bg-amber-50 border border-amber-200">
+          <HiOutlineUserGroup className="w-5 h-5 text-amber-600 flex-shrink-0" />
+          <p className="text-sm text-amber-800 flex-1">
             {t('cartGuestNote')}
           </p>
           <Link
@@ -378,7 +378,7 @@ export default function CartPage() {
             return (
               <div
                 key={item.id}
-                className={`group rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm hover:shadow-md transition-all ${
+                className={`group rounded-2xl bg-[var(--color-panel)] border border-[var(--color-line)] overflow-hidden shadow-sm hover:shadow-md transition-all ${
                   updating === item.id ? 'opacity-60 pointer-events-none' : ''
                 }`}
               >
@@ -386,7 +386,7 @@ export default function CartPage() {
                   {/* Tour Image */}
                   <Link
                     href={`/tours/${meta?.slug || item.tourId}`}
-                    className="relative sm:w-44 h-36 sm:h-auto flex-shrink-0 overflow-hidden bg-slate-100 dark:bg-slate-700"
+                    className="relative sm:w-44 h-36 sm:h-auto flex-shrink-0 overflow-hidden bg-[var(--color-panel-soft)]"
                   >
                     {meta?.coverImage ? (
                       <Image
@@ -410,7 +410,7 @@ export default function CartPage() {
                       <div className="flex-1 min-w-0">
                         <Link
                           href={`/tours/${meta?.slug || item.tourId}`}
-                          className="text-base font-bold text-slate-900 dark:text-white hover:text-primary transition-colors line-clamp-2 block"
+                          className="text-base font-bold text-[var(--color-ink)] hover:text-primary transition-colors line-clamp-2 block"
                         >
                           {item.tourTitle}
                         </Link>
@@ -433,15 +433,15 @@ export default function CartPage() {
 
                     {/* Details grid */}
                     <div className="grid grid-cols-2 gap-x-4 gap-y-2 mt-3">
-                      <div className="flex items-center gap-1.5 text-sm text-slate-600 dark:text-slate-300">
+                      <div className="flex items-center gap-1.5 text-sm text-[var(--color-ink-muted)]">
                         <HiOutlineCalendar className="w-4 h-4 text-slate-400 flex-shrink-0" />
                         <span>{formatDate(item.startsAt)}</span>
                       </div>
-                      <div className="flex items-center gap-1.5 text-sm text-slate-600 dark:text-slate-300">
+                      <div className="flex items-center gap-1.5 text-sm text-[var(--color-ink-muted)]">
                         <HiOutlineClock className="w-4 h-4 text-slate-400 flex-shrink-0" />
                         <span>{formatTime(item.startsAt)}</span>
                       </div>
-                      <div className="flex items-center gap-1.5 text-sm text-slate-600 dark:text-slate-300 col-span-2">
+                      <div className="flex items-center gap-1.5 text-sm text-[var(--color-ink-muted)] col-span-2">
                         <HiOutlineUserGroup className="w-4 h-4 text-slate-400 flex-shrink-0" />
                         <span>{formatTravelerMix(item)}</span>
                       </div>
@@ -454,17 +454,17 @@ export default function CartPage() {
                         <button
                           onClick={() => handleUpdateQuantity(item, -1)}
                           disabled={item.quantity <= 1 || updating === item.id}
-                          className="w-8 h-8 rounded-lg border border-slate-200 dark:border-slate-600 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-30 transition-colors"
+                          className="w-8 h-8 rounded-lg border border-[var(--color-line)] flex items-center justify-center text-[var(--color-ink-muted)] hover:bg-[var(--color-panel-soft)] disabled:opacity-30 transition-colors"
                         >
                           <HiOutlineMinus className="w-3.5 h-3.5" />
                         </button>
-                        <span className="w-10 text-center text-sm font-bold text-slate-900 dark:text-white">
+                        <span className="w-10 text-center text-sm font-bold text-[var(--color-ink)]">
                           {item.quantity}
                         </span>
                         <button
                           onClick={() => handleUpdateQuantity(item, 1)}
                           disabled={updating === item.id}
-                          className="w-8 h-8 rounded-lg border border-slate-200 dark:border-slate-600 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-30 transition-colors"
+                          className="w-8 h-8 rounded-lg border border-[var(--color-line)] flex items-center justify-center text-[var(--color-ink-muted)] hover:bg-[var(--color-panel-soft)] disabled:opacity-30 transition-colors"
                         >
                           <HiOutlinePlus className="w-3.5 h-3.5" />
                         </button>
@@ -472,7 +472,7 @@ export default function CartPage() {
 
                       {/* Price */}
                       <div className="text-right">
-                        <p className="text-xs text-slate-400 dark:text-slate-500">
+                        <p className="text-xs text-[var(--color-ink-muted)]">
                           {formatPrice(item.unitPrice)} × {item.quantity}
                         </p>
                         <p className="text-lg font-bold text-primary">
@@ -491,22 +491,22 @@ export default function CartPage() {
         <div className="lg:col-span-2">
           <div className="sticky top-24 space-y-4">
             {/* Summary card */}
-            <div className="rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-6 shadow-sm">
-              <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-5">{t('cartSummary')}</h2>
+            <div className="rounded-2xl bg-[var(--color-panel)] border border-[var(--color-line)] p-6 shadow-sm">
+              <h2 className="text-lg font-bold text-[var(--color-ink)] mb-5">{t('cartSummary')}</h2>
 
               {/* Line items */}
               <div className="space-y-3 mb-5">
                 {displayItems.map((item) => (
                   <div key={item.id} className="flex justify-between items-start gap-2">
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm text-slate-700 dark:text-slate-200 truncate font-medium">
+                      <p className="text-sm text-[var(--color-ink)] truncate font-medium">
                         {item.tourTitle}
                       </p>
-                      <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
+                      <p className="text-xs text-[var(--color-ink-muted)] mt-0.5">
                         {item.optionTitle} · {formatTravelerMix(item)}
                       </p>
                     </div>
-                    <span className="text-sm text-slate-900 dark:text-white font-semibold whitespace-nowrap">
+                    <span className="text-sm text-[var(--color-ink)] font-semibold whitespace-nowrap">
                       {formatPrice(item.lineTotal)}
                     </span>
                   </div>
@@ -516,37 +516,37 @@ export default function CartPage() {
               {/* Subtotal */}
               <div className="space-y-2 py-4 border-t border-slate-100 dark:border-slate-700">
                 <div className="flex justify-between text-sm">
-                  <span className="text-slate-500 dark:text-slate-400">{t('cartSubtotal')}</span>
-                  <span className="text-slate-700 dark:text-slate-200 font-medium">{formatPrice(total)}</span>
+                  <span className="text-[var(--color-ink-muted)]">{t('cartSubtotal')}</span>
+                  <span className="text-[var(--color-ink)] font-medium">{formatPrice(total)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-slate-500 dark:text-slate-400">{t('cartTravelers')}</span>
-                  <span className="text-slate-700 dark:text-slate-200 font-medium">{totalTravelers}</span>
+                  <span className="text-[var(--color-ink-muted)]">{t('cartTravelers')}</span>
+                  <span className="text-[var(--color-ink)] font-medium">{totalTravelers}</span>
                 </div>
               </div>
 
               {/* Total */}
-              <div className="flex justify-between items-center pt-4 border-t border-slate-200 dark:border-slate-700">
-                <span className="text-base font-bold text-slate-900 dark:text-white">{t('cartTotal')}</span>
+              <div className="flex justify-between items-center pt-4 border-t border-[var(--color-line)]">
+                <span className="text-base font-bold text-[var(--color-ink)]">{t('cartTotal')}</span>
                 <span className="text-2xl font-bold text-primary">{formatPrice(total)}</span>
               </div>
             </div>
 
             {/* Error message */}
             {error && (
-              <div className="rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 p-4 text-sm text-red-700 dark:text-red-300">
+              <div className="rounded-xl bg-red-50 border border-red-200 p-4 text-sm text-red-700">
                 {error}
               </div>
             )}
 
             {/* Guest checkout form */}
             {isGuest && showGuestForm && (
-              <div className="rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-6 shadow-sm space-y-4">
-                <h3 className="text-base font-semibold text-slate-900 dark:text-white">
+              <div className="rounded-2xl bg-[var(--color-panel)] border border-[var(--color-line)] p-6 shadow-sm space-y-4">
+                <h3 className="text-base font-semibold text-[var(--color-ink)]">
                   {t('cartGuestContactInfo')}
                 </h3>
                 <div>
-                  <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">
+                  <label className="block text-xs font-medium text-[var(--color-ink-muted)] mb-1.5">
                     Email *
                   </label>
                   <input
@@ -554,12 +554,12 @@ export default function CartPage() {
                     placeholder={t('cartGuestEmail')}
                     value={guestEmail}
                     onChange={e => setGuestEmail(e.target.value)}
-                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700/50 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none transition-colors"
+                    className="w-full px-4 py-2.5 rounded-xl border border-[var(--color-line)] bg-[var(--color-panel-soft)] text-[var(--color-ink)] text-sm focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none transition-colors"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">
+                  <label className="block text-xs font-medium text-[var(--color-ink-muted)] mb-1.5">
                     {t('cartGuestPhone')}
                   </label>
                   <input
@@ -567,7 +567,7 @@ export default function CartPage() {
                     placeholder="+84 xxx xxx xxx"
                     value={guestPhone}
                     onChange={e => setGuestPhone(e.target.value)}
-                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700/50 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none transition-colors"
+                    className="w-full px-4 py-2.5 rounded-xl border border-[var(--color-line)] bg-[var(--color-panel-soft)] text-[var(--color-ink)] text-sm focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none transition-colors"
                   />
                 </div>
                 <button

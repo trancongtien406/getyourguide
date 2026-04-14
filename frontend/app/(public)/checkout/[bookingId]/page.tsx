@@ -122,11 +122,11 @@ export default function CheckoutPage() {
 
   const statusColor = (status: string) => {
     switch (status) {
-      case 'PENDING_PAYMENT': return 'text-amber-600 bg-amber-50 dark:text-amber-400 dark:bg-amber-900/20';
-      case 'CONFIRMED': return 'text-green-600 bg-green-50 dark:text-green-400 dark:bg-green-900/20';
+      case 'PENDING_PAYMENT': return 'text-amber-600 bg-amber-50';
+      case 'CONFIRMED': return 'text-green-600 bg-green-50';
       case 'CANCELLED_BY_CUSTOMER':
-      case 'CANCELLED_BY_OPERATOR': return 'text-red-600 bg-red-50 dark:text-red-400 dark:bg-red-900/20';
-      default: return 'text-slate-600 bg-slate-50 dark:text-slate-400 dark:bg-slate-800';
+      case 'CANCELLED_BY_OPERATOR': return 'text-red-600 bg-red-50';
+      default: return 'text-[var(--color-ink-muted)] bg-[var(--color-panel-soft)]';
     }
   };
 
@@ -136,7 +136,7 @@ export default function CheckoutPage() {
       <div className="min-h-[60vh] flex items-center justify-center">
         <div className="text-center">
           <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto mb-4" />
-          <p className="text-sm text-slate-500 dark:text-slate-400">{t('loading')}</p>
+          <p className="text-sm text-[var(--color-ink-muted)]">{t('loading')}</p>
         </div>
       </div>
     );
@@ -147,11 +147,11 @@ export default function CheckoutPage() {
     return (
       <div className="min-h-[60vh] flex items-center justify-center px-4">
         <div className="text-center max-w-md">
-          <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-red-50 dark:bg-red-900/20 flex items-center justify-center">
+          <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-red-50 flex items-center justify-center">
             <HiTicket className="w-8 h-8 text-red-400" />
           </div>
-          <h1 className="text-xl font-bold text-slate-900 dark:text-white mb-2">{t('checkoutLoadError')}</h1>
-          <p className="text-slate-500 dark:text-slate-400 mb-6 text-sm">{error}</p>
+          <h1 className="text-xl font-bold text-[var(--color-ink)] mb-2">{t('checkoutLoadError')}</h1>
+          <p className="text-[var(--color-ink-muted)] mb-6 text-sm">{error}</p>
           <div className="flex gap-3 justify-center">
             <button
               onClick={fetchData}
@@ -161,7 +161,7 @@ export default function CheckoutPage() {
             </button>
             <Link
               href="/"
-              className="inline-flex items-center gap-2 border border-slate-200 dark:border-slate-700 px-6 py-2.5 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+              className="inline-flex items-center gap-2 border border-[var(--color-line)] px-6 py-2.5 rounded-lg text-sm font-medium text-[var(--color-ink-muted)] hover:bg-[var(--color-panel-soft)] transition-colors"
             >
               {t('checkoutBackToHome')}
             </Link>
@@ -182,21 +182,21 @@ export default function CheckoutPage() {
       <div className="flex items-center gap-3 mb-6">
         <button
           onClick={() => router.back()}
-          className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+          className="p-2 rounded-lg hover:bg-[var(--color-panel-soft)] transition-colors"
         >
           <HiArrowLeft className="h-5 w-5 text-slate-500" />
         </button>
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{t('checkoutTitle')}</h1>
+        <h1 className="text-2xl font-bold text-[var(--color-ink)]">{t('checkoutTitle')}</h1>
       </div>
 
       {/* Success banner */}
-      <div className="mb-6 p-4 rounded-xl bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800/50 flex items-start gap-3">
+      <div className="mb-6 p-4 rounded-xl bg-green-50 border border-green-200 flex items-start gap-3">
         <HiCheckCircle className="w-6 h-6 text-green-500 flex-shrink-0 mt-0.5" />
         <div>
-          <h3 className="font-semibold text-green-800 dark:text-green-300">{t('checkoutBookingCreated')}</h3>
-          <p className="text-sm text-green-700 dark:text-green-400 mt-0.5">{t('checkoutBookingCreatedDesc')}</p>
+          <h3 className="font-semibold text-green-800">{t('checkoutBookingCreated')}</h3>
+          <p className="text-sm text-green-700 mt-0.5">{t('checkoutBookingCreatedDesc')}</p>
           {isGuest && (
-            <p className="text-sm text-green-600 dark:text-green-400 mt-1 font-medium">{t('checkoutGuestBookingNote')}</p>
+            <p className="text-sm text-green-600 mt-1 font-medium">{t('checkoutGuestBookingNote')}</p>
           )}
         </div>
       </div>
@@ -205,18 +205,18 @@ export default function CheckoutPage() {
         {/* Left column — Booking details */}
         <div className="lg:col-span-3 space-y-6">
           {/* Booking reference card */}
-          <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5">
+          <div className="rounded-2xl border border-[var(--color-line)] bg-[var(--color-panel)] p-5">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-base font-semibold text-slate-900 dark:text-white">{t('checkoutOrderSummary')}</h2>
+              <h2 className="text-base font-semibold text-[var(--color-ink)]">{t('checkoutOrderSummary')}</h2>
               <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${statusColor(booking.status)}`}>
                 {formatStatus(booking.status)}
               </span>
             </div>
-            <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-700/50 mb-4">
+            <div className="flex items-center gap-3 p-3 rounded-xl bg-[var(--color-panel-soft)] mb-4">
               <HiTicket className="w-5 h-5 text-primary flex-shrink-0" />
               <div className="flex-1 min-w-0">
-                <p className="text-xs text-slate-500 dark:text-slate-400">{t('checkoutBookingRef')}</p>
-                <p className="text-base font-mono font-bold text-slate-900 dark:text-white">{booking.bookingRef}</p>
+                <p className="text-xs text-[var(--color-ink-muted)]">{t('checkoutBookingRef')}</p>
+                <p className="text-base font-mono font-bold text-[var(--color-ink)]">{booking.bookingRef}</p>
               </div>
               <button
                 onClick={copyBookingRef}
@@ -233,17 +233,17 @@ export default function CheckoutPage() {
 
             {/* Contact info */}
             {(booking.contactEmail || booking.contactPhoneE164) && (
-              <div className="border-t border-slate-100 dark:border-slate-700 pt-4">
-                <h3 className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-2">{t('checkoutContactInfo')}</h3>
+              <div className="border-t border-[var(--color-line)] pt-4">
+                <h3 className="text-sm font-medium text-[var(--color-ink-muted)] mb-2">{t('checkoutContactInfo')}</h3>
                 <div className="space-y-2">
                   {booking.contactEmail && (
-                    <div className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
+                    <div className="flex items-center gap-2 text-sm text-[var(--color-ink)]">
                       <HiMail className="w-4 h-4 text-slate-400 flex-shrink-0" />
                       <span>{booking.contactEmail}</span>
                     </div>
                   )}
                   {booking.contactPhoneE164 && (
-                    <div className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
+                    <div className="flex items-center gap-2 text-sm text-[var(--color-ink)]">
                       <HiPhone className="w-4 h-4 text-slate-400 flex-shrink-0" />
                       <span>{booking.contactPhoneE164}</span>
                     </div>
@@ -255,16 +255,16 @@ export default function CheckoutPage() {
 
           {/* Booking items */}
           {items.length > 0 && (
-            <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-hidden">
-              <div className="p-5 border-b border-slate-100 dark:border-slate-700">
-                <h2 className="text-base font-semibold text-slate-900 dark:text-white">{t('checkoutBookingItems')}</h2>
+            <div className="rounded-2xl border border-[var(--color-line)] bg-[var(--color-panel)] overflow-hidden">
+              <div className="p-5 border-b border-[var(--color-line)]">
+                <h2 className="text-base font-semibold text-[var(--color-ink)]">{t('checkoutBookingItems')}</h2>
               </div>
-              <div className="divide-y divide-slate-100 dark:divide-slate-700">
+              <div className="divide-y divide-[var(--color-line)]">
                 {items.map((item: BookingItem) => (
                   <div key={item.id} className="p-5">
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-semibold text-slate-900 dark:text-white text-sm line-clamp-2">
+                        <h4 className="font-semibold text-[var(--color-ink)] text-sm line-clamp-2">
                           {item.titleSnapshot}
                         </h4>
                         {item.optionSnapshot && (
@@ -278,20 +278,20 @@ export default function CheckoutPage() {
                       </p>
                     </div>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-2 mt-3 text-sm">
-                      <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300">
+                      <div className="flex items-center gap-1.5 text-[var(--color-ink-muted)]">
                         <HiCalendar className="w-4 h-4 text-slate-400 flex-shrink-0" />
                         <span>{formatDate(item.startsAtSnapshot)}</span>
                       </div>
-                      <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300">
+                      <div className="flex items-center gap-1.5 text-[var(--color-ink-muted)]">
                         <HiClock className="w-4 h-4 text-slate-400 flex-shrink-0" />
                         <span>{formatTime(item.startsAtSnapshot)}</span>
                       </div>
-                      <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300">
+                      <div className="flex items-center gap-1.5 text-[var(--color-ink-muted)]">
                         <HiUserGroup className="w-4 h-4 text-slate-400 flex-shrink-0" />
                         <span>{t('checkoutTravelers', { count: item.quantity })}</span>
                       </div>
                     </div>
-                    <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-100 dark:border-slate-700/50 text-xs text-slate-500 dark:text-slate-400">
+                    <div className="flex items-center justify-between mt-3 pt-3 border-t border-[var(--color-line)] text-xs text-[var(--color-ink-muted)]">
                       <span>{t('checkoutUnitPrice')}: {formatPrice(Number(item.unitPrice), booking.currencyCode)}</span>
                       <span>{t('checkoutQuantity')}: {item.quantity}</span>
                     </div>
@@ -305,28 +305,28 @@ export default function CheckoutPage() {
         {/* Right column — Payment & Total */}
         <div className="lg:col-span-2 space-y-6">
           {/* Price summary */}
-          <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 sticky top-24">
-            <h2 className="text-base font-semibold text-slate-900 dark:text-white mb-4">{t('checkoutTotal')}</h2>
+          <div className="rounded-2xl border border-[var(--color-line)] bg-[var(--color-panel)] p-5 sticky top-24">
+            <h2 className="text-base font-semibold text-[var(--color-ink)] mb-4">{t('checkoutTotal')}</h2>
 
             <div className="space-y-2 mb-4">
               <div className="flex justify-between text-sm">
-                <span className="text-slate-500 dark:text-slate-400">{t('checkoutSubtotal')}</span>
-                <span className="text-slate-700 dark:text-slate-200 font-medium">
+                <span className="text-[var(--color-ink-muted)]">{t('checkoutSubtotal')}</span>
+                <span className="text-[var(--color-ink)] font-medium">
                   {formatPrice(Number(booking.subtotalAmount || booking.totalAmount), booking.currencyCode)}
                 </span>
               </div>
               {hasDiscount && (
                 <div className="flex justify-between text-sm">
-                  <span className="text-green-600 dark:text-green-400">{t('checkoutDiscount')}</span>
-                  <span className="text-green-600 dark:text-green-400 font-medium">
+                  <span className="text-green-600">{t('checkoutDiscount')}</span>
+                  <span className="text-green-600 font-medium">
                     -{formatPrice(Number(booking.discountAmount), booking.currencyCode)}
                   </span>
                 </div>
               )}
             </div>
 
-            <div className="flex justify-between items-center pt-4 border-t border-slate-200 dark:border-slate-700 mb-6">
-              <span className="text-base font-bold text-slate-900 dark:text-white">{t('checkoutTotal')}</span>
+            <div className="flex justify-between items-center pt-4 border-t border-[var(--color-line)] mb-6">
+              <span className="text-base font-bold text-[var(--color-ink)]">{t('checkoutTotal')}</span>
               <span className="text-2xl font-bold text-primary">
                 {formatPrice(Number(booking.totalAmount), booking.currencyCode)}
               </span>
@@ -334,9 +334,9 @@ export default function CheckoutPage() {
 
             {/* Payment methods */}
             <div className="mb-4">
-              <h3 className="text-sm font-medium text-slate-700 dark:text-slate-200 mb-3">{t('checkoutPaymentMethod')}</h3>
+              <h3 className="text-sm font-medium text-[var(--color-ink)] mb-3">{t('checkoutPaymentMethod')}</h3>
               {paymentOptions.length === 0 ? (
-                <p className="text-sm text-slate-500 dark:text-slate-400 p-3 rounded-xl bg-slate-50 dark:bg-slate-700/50">
+                <p className="text-sm text-[var(--color-ink-muted)] p-3 rounded-xl bg-[var(--color-panel-soft)]">
                   {t('checkoutNoMethods')}
                 </p>
               ) : (
@@ -346,8 +346,8 @@ export default function CheckoutPage() {
                       key={opt.method}
                       className={`flex items-center gap-3 p-3.5 rounded-xl border-2 cursor-pointer transition-all ${
                         selectedMethod === opt.method
-                          ? 'border-primary bg-primary/5 dark:bg-primary/10'
-                          : 'border-slate-200 dark:border-slate-700 hover:border-slate-300'
+                          ? 'border-primary bg-primary/5'
+                          : 'border-[var(--color-line)] hover:border-slate-300'
                       }`}
                     >
                       <input
@@ -359,7 +359,7 @@ export default function CheckoutPage() {
                         className="accent-primary"
                       />
                       <HiCreditCard className="h-5 w-5 text-slate-400" />
-                      <span className="font-medium text-sm text-slate-700 dark:text-slate-200">{opt.label || opt.method}</span>
+                      <span className="font-medium text-sm text-[var(--color-ink)]">{opt.label || opt.method}</span>
                     </label>
                   ))}
                 </div>
@@ -368,7 +368,7 @@ export default function CheckoutPage() {
 
             {/* Error */}
             {error && (
-              <div className="mb-4 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 p-3 text-sm text-red-600 dark:text-red-400">
+              <div className="mb-4 rounded-xl bg-red-50 border border-red-200 p-3 text-sm text-red-600">
                 {error}
               </div>
             )}
@@ -388,14 +388,14 @@ export default function CheckoutPage() {
               {!isGuest ? (
                 <Link
                   href="/profile/bookings"
-                  className="w-full py-3 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-center"
+                  className="w-full py-3 border border-[var(--color-line)] rounded-xl text-sm font-medium text-[var(--color-ink-muted)] hover:bg-[var(--color-panel-soft)] transition-colors text-center"
                 >
                   {t('checkoutViewBookings')}
                 </Link>
               ) : (
                 <Link
                   href="/"
-                  className="w-full py-3 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-center"
+                  className="w-full py-3 border border-[var(--color-line)] rounded-xl text-sm font-medium text-[var(--color-ink-muted)] hover:bg-[var(--color-panel-soft)] transition-colors text-center"
                 >
                   {t('checkoutBackToHome')}
                 </Link>

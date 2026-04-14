@@ -1296,9 +1296,12 @@
     "favorites": "Favorites",
     "cart": "Cart",
     "profile": "Profile",
+    "mainNavigationAria": "Main navigation",
+    "sectionNavigationAria": "Section navigation",
 
     "heroTitle": "Unforgettable activities around Vietnam",
     "heroSearchPlaceholder": "Where are you going?",
+    "heroImageAlt": "Travel destinations",
     "destinationsTitle": "Top Destinations",
     "attractionsTitle": "Explore Top Attractions",
     "trustTitle": "We've got you covered",
@@ -1332,6 +1335,11 @@
     "searchResultsCities": "Search results",
     "didYouMean": "Did you mean?",
     "noCitiesFound": "No cities found. Try a different name.",
+    "previousTab": "Previous tab",
+    "nextTab": "Next tab",
+    "guestLabel": "Guest",
+    "verifiedLabel": "Verified",
+    "removeSearchFilter": "Remove search",
 
     "filters": "Filters",
     "filterCity": "City",
@@ -1369,6 +1377,8 @@
     "loading": "Loading...",
     "noResults": "No results found",
     "noResultsDesc": "Try adjusting your filters or search with different keywords.",
+    "loadToursError": "We could not load tours right now. Please try again.",
+    "retry": "Retry",
 
     "navHome": "Home",
     "navTours": "Tours",
@@ -1502,6 +1512,8 @@
     "ratingExcellent": "Excellent choice",
     "ratingVeryGood": "Very good",
     "ratingGood": "Good",
+    "addToFavoritesAria": "Add to favorites",
+    "removeFromFavoritesAria": "Remove from favorites",
 
     "checkoutTitle": "Complete Payment",
     "checkoutOrderSummary": "Order Summary",

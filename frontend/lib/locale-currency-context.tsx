@@ -34,14 +34,18 @@ const FLAG_MAP: Record<string, string> = {
   th: '🇹🇭',
 };
 
+const DEFAULT_LOCALE = 'vi';
+const DEFAULT_CURRENCY = 'VND';
+const DEFAULT_INTL_LOCALE = 'en-US';
+
 /* ─── hardcoded fallbacks (used before API responds) ─── */
 const FALLBACK_LOCALES: LocaleOption[] = [
-  { code: 'vi', label: 'Tiếng Việt', flag: '🇻🇳' },
+  { code: DEFAULT_LOCALE, label: 'Tiếng Việt', flag: '🇻🇳' },
   { code: 'en', label: 'English', flag: '🇬🇧' },
 ];
 
 const FALLBACK_CURRENCIES: CurrencyOption[] = [
-  { code: 'VND', label: 'Vietnamese Dong', symbol: '₫' },
+  { code: DEFAULT_CURRENCY, label: 'Vietnamese Dong', symbol: '₫' },
   { code: 'USD', label: 'US Dollar', symbol: '$' },
   { code: 'EUR', label: 'Euro', symbol: '€' },
 ];
@@ -50,7 +54,38 @@ const FALLBACK_CURRENCIES: CurrencyOption[] = [
 const INTL_LOCALE_MAP: Record<string, string> = {
   vi: 'vi-VN',
   en: 'en-US',
+  fr: 'fr-FR',
+  de: 'de-DE',
+  ja: 'ja-JP',
+  ko: 'ko-KR',
+  zh: 'zh-CN',
+  es: 'es-ES',
+  it: 'it-IT',
+  pt: 'pt-BR',
+  ru: 'ru-RU',
+  th: 'th-TH',
 };
+
+function resolveIntlLocale(locale: string): string {
+  const normalized = locale.replace('_', '-').trim();
+  if (!normalized) return DEFAULT_INTL_LOCALE;
+
+  const lang = normalized.split('-')[0]?.toLowerCase() ?? normalized.toLowerCase();
+  const mapped = INTL_LOCALE_MAP[normalized] ?? INTL_LOCALE_MAP[lang];
+  if (mapped) return mapped;
+
+  try {
+    new Intl.DateTimeFormat(normalized);
+    return normalized;
+  } catch {
+    try {
+      new Intl.DateTimeFormat(lang);
+      return lang;
+    } catch {
+      return DEFAULT_INTL_LOCALE;
+    }
+  }
+}
 
 /* ─── cookie helpers ─── */
 function getCookie(name: string): string | undefined {
@@ -82,6 +117,18 @@ function setCachedList<T>(key: string, items: T[]) {
   } catch { /* quota exceeded — ignore */ }
 }
 
+function getInitialLocales(): LocaleOption[] {
+  return getCachedList<LocaleOption>('cachedLocales') ?? FALLBACK_LOCALES;
+}
+
+function getInitialCurrencies(): CurrencyOption[] {
+  return getCachedList<CurrencyOption>('cachedCurrencies') ?? FALLBACK_CURRENCIES;
+}
+
+function getInitialCurrencyValue(): string {
+  return getCookie('currency') ?? DEFAULT_CURRENCY;
+}
+
 /* ─── context ─── */
 interface LocaleCurrencyContextType {
   locale: string;
@@ -105,24 +152,12 @@ export function LocaleCurrencyProvider({ children }: { children: ReactNode }) {
 
   /* Dynamic lists — start with hardcoded fallbacks for SSR-safe hydration,
      then restore from cache in useEffect to avoid mismatch. */
-  const [locales, setLocales] = useState<LocaleOption[]>(FALLBACK_LOCALES);
-  const [currencies, setCurrencies] = useState<CurrencyOption[]>(FALLBACK_CURRENCIES);
-  const [currency, setCurrencyState] = useState<string>('VND');
+  const [locales, setLocales] = useState<LocaleOption[]>(() => getInitialLocales());
+  const [currencies, setCurrencies] = useState<CurrencyOption[]>(() => getInitialCurrencies());
+  const [currency, setCurrencyState] = useState<string>(getInitialCurrencyValue);
 
   const locale = nextIntlLocale;
-  const intlLocale = INTL_LOCALE_MAP[locale] ?? `${locale}`;
-
-  /* Hydrate from localStorage / cookie after mount */
-  useEffect(() => {
-    const cachedLocales = getCachedList<LocaleOption>('cachedLocales');
-    if (cachedLocales && cachedLocales.length > 0) setLocales(cachedLocales);
-
-    const cachedCurrencies = getCachedList<CurrencyOption>('cachedCurrencies');
-    if (cachedCurrencies && cachedCurrencies.length > 0) setCurrencies(cachedCurrencies);
-
-    const savedCurrency = getCookie('currency');
-    if (savedCurrency) setCurrencyState(savedCurrency);
-  }, []);
+  const intlLocale = resolveIntlLocale(locale);
 
   /* Fetch languages & currencies from CMS */
   useEffect(() => {
@@ -158,6 +193,9 @@ export function LocaleCurrencyProvider({ children }: { children: ReactNode }) {
           }));
           setCurrencies(mapped);
           setCachedList('cachedCurrencies', mapped);
+          setCurrencyState((current) =>
+            mapped.some((item) => item.code === current) ? current : mapped[0]?.code ?? DEFAULT_CURRENCY,
+          );
         }
       } catch {
         /* keep fallbacks on error */
@@ -174,17 +212,19 @@ export function LocaleCurrencyProvider({ children }: { children: ReactNode }) {
 
   const switchLocale = useCallback(
     (newLocale: string) => {
+      if (newLocale === locale) return;
       setCookie('locale', newLocale);
       router.refresh();
     },
-    [router],
+    [locale, router],
   );
 
   const switchCurrency = useCallback((newCurrency: string) => {
+    if (newCurrency === currency) return;
     setCurrencyState(newCurrency);
     setCookie('currency', newCurrency);
     router.refresh();
-  }, [router]);
+  }, [currency, router]);
 
   const formatPrice = useCallback(
     (amount: number, currencyOverride?: string) => {

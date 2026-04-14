@@ -1,4 +1,5 @@
 import { GuestCartProvider } from "@/lib/guest-cart-context";
+import { SITE_NAME, SITE_URL } from "@/lib/runtime-config";
 import { ToastProvider } from "@/lib/toast-context";
 import type { Metadata, Viewport } from "next";
 import { NextIntlClientProvider } from "next-intl";
@@ -16,8 +17,8 @@ const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
 });
 
-const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.getyourguide.com';
-const siteName = 'GetYourGuide';
+const siteUrl = SITE_URL;
+const siteName = SITE_NAME;
 const defaultTitle = 'GetYourGuide - Book Tours & Activities';
 const defaultDescription =
   'Discover and book amazing tours, attractions, and activities worldwide. Best prices guaranteed.';

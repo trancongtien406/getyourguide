@@ -1,10 +1,11 @@
+import { API_URL, SITE_NAME, SITE_URL } from '@/lib/runtime-config';
 import type { Metadata } from 'next';
-import { cache } from 'react';
 import { getTranslations } from 'next-intl/server';
+import { cache } from 'react';
 
-const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.getyourguide.com';
-const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-const siteName = 'GetYourGuide';
+const siteUrl = SITE_URL;
+const apiUrl = API_URL;
+const siteName = SITE_NAME;
 
 type Props = { children: React.ReactNode; params: Promise<{ slug: string }> };
 

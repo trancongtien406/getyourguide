@@ -78,7 +78,7 @@ export function TourCard({
             e.stopPropagation();
             onFavorite?.(id);
           }}
-          aria-label={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
+          aria-label={isFavorited ? t('removeFromFavoritesAria') : t('addToFavoritesAria')}
           className={`absolute top-2 right-2 p-1.5 backdrop-blur-md rounded-full transition-colors ${
             isFavorited
               ? 'bg-red-500/80 text-white hover:bg-red-600/80'
@@ -153,10 +153,10 @@ export function TourCard({
               <p className="text-[11px] text-slate-500 dark:text-slate-400">
                 {t('fromPrice')}
                 {originalPrice != null && originalPrice > price && (
-                  <span className="line-through decoration-red-500/50 ml-1">{formatPrice(originalPrice)}</span>
+                  <span className="line-through decoration-red-500/50 ml-1">{formatPrice(originalPrice, currency)}</span>
                 )}
               </p>
-              <p className="font-extrabold text-base text-slate-900 dark:text-white">{formatPrice(price)}</p>
+              <p className="font-extrabold text-base text-slate-900 dark:text-white">{formatPrice(price, currency)}</p>
             </div>
           )}
         </div>

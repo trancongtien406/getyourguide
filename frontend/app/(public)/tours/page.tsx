@@ -2,6 +2,7 @@
 
 import { TourCard } from '@/components/public/tour-card';
 import { ToursFilters, type ToursFiltersState } from '@/components/public/tours-filters';
+import { Pagination } from '@/components/ui/table';
 import { catalogApi, favoritesApi, newsletterApi, referenceDataApi, type Category, type City, type Tag, type Tour } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
 import { useLocaleCurrency } from '@/lib/locale-currency-context';
@@ -9,11 +10,9 @@ import { useToast } from '@/lib/toast-context';
 import { useTranslations } from 'next-intl';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Pagination } from '@/components/ui/table';
 import {
   HiOutlineAdjustments,
-  HiOutlineSortDescending,
-  HiOutlineX,
+  HiOutlineX
 } from 'react-icons/hi';
 
 const DEFAULT_FILTER_STATE: ToursFiltersState = {
@@ -74,6 +73,7 @@ export default function ToursListingPage() {
   const [tours, setTours] = useState<Tour[]>([]);
   const [totalResults, setTotalResults] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [hasFetchError, setHasFetchError] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -210,6 +210,7 @@ export default function ToursListingPage() {
   const fetchTours = useCallback(
     async (pageNum: number, append: boolean) => {
       try {
+        setHasFetchError(false);
         if (append) setLoadingMore(true);
         else setLoading(true);
 
@@ -244,7 +245,10 @@ export default function ToursListingPage() {
         setTotalResults(total);
         setHasMore(pageNum < totalPages);
       } catch {
-        if (!append) setTours([]);
+        if (!append) {
+          setTours([]);
+          setHasFetchError(true);
+        }
       } finally {
         setLoading(false);
         setLoadingMore(false);
@@ -528,8 +532,22 @@ export default function ToursListingPage() {
                   </div>
                 ))}
               </div>
+
+                 ) : hasFetchError ? (
+              <div className="rounded-2xl border border-rose-200 bg-rose-50 px-6 py-8 text-center dark:border-rose-900/40 dark:bg-rose-900/20">
+                <p className="text-sm font-medium text-rose-700 dark:text-rose-200">
+                  {t('loadToursError')}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => fetchTours(pageFromUrl, false)}
+                  className="mt-4 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white hover:bg-primary-dark transition-colors"
+                >
+                  {t('retry')}
+                </button>
+              </div>
             ) : tours.length > 0 ? (
-              <>
+               <>
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
                   {tours.map((tour) => {
                     const tourAny = tour as unknown as Record<string, unknown>;

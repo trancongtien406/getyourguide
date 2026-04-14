@@ -57,7 +57,7 @@ export default function HomePage() {
     if (!isAuthenticated) { setFavoriteIds(new Set()); return; }
     favoritesApi.listMyFavorites({ pageSize: '200' })
       .then(res => {
-        const ids = new Set((res.data || []).map((f: any) => f.tourId));
+        const ids = new Set((res.data || []).map((f: { tourId: string }) => f.tourId));
         setFavoriteIds(ids);
       })
       .catch(() => {});
@@ -147,7 +147,7 @@ export default function HomePage() {
       <section className="relative h-[480px] w-full overflow-hidden">
         <Image
           src="https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=1920&h=960&fit=crop"
-          alt="Travel destinations"
+          alt={t('heroImageAlt')}
           fill
           priority
           className="object-cover"
@@ -249,7 +249,7 @@ export default function HomePage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {recentReviews.map((review) => {
                 const displayName =
-                  review.user?.firstName ?? review.user?.lastName ?? 'Guest';
+                  review.user?.firstName ?? review.user?.lastName ?? t('guestLabel');
                 const initial = displayName.charAt(0).toUpperCase();
                 return (
                   <div
@@ -276,9 +276,9 @@ export default function HomePage() {
                       <div>
                         <p className="font-bold text-sm text-slate-900 dark:text-white">{displayName}</p>
                         <p className="text-xs text-slate-500 dark:text-slate-400">
-                          {new Date(review.createdAt).toLocaleDateString()}
+                          {new Date(review.createdAt).toLocaleDateString(locale)}
                           {review.verifiedBooking && (
-                            <span className="text-primary font-medium ml-1">• Verified</span>
+                            <span className="text-primary font-medium ml-1">• {t('verifiedLabel')}</span>
                           )}
                         </p>
                       </div>
@@ -319,13 +319,14 @@ export default function HomePage() {
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
               {featuredTours.slice(0, 8).map((tour) => {
-                const minPrice = tour.options?.reduce((min: number, opt: any) => {
-                  const baseRules = opt.pricingRules?.filter((r: any) => r.componentType === 'BASE') ?? [];
-                  const optMin = baseRules.reduce((m: number, r: any) => Math.min(m, Number(r.amount)), Infinity);
+                const minPrice = tour.options?.reduce((min: number, opt) => {
+                  const baseRules = opt.pricingRules?.filter((r) => r.componentType === 'BASE') ?? [];
+                  const optMin = baseRules.reduce((m, r) => Math.min(m, Number(r.amount)), Infinity);
                   return Math.min(min, optMin);
                 }, Infinity) ?? null;
-                const currency = tour.options?.[0]?.pricingRules?.find((r: any) => r.componentType === 'BASE')?.currencyCode ?? 'VND';
-                const coverMedia = tour.media?.find((m: any) => m.isCover) || tour.media?.[0];
+                const tourCurrency =
+                  tour.options?.[0]?.pricingRules?.find((r) => r.componentType === 'BASE')?.currencyCode ?? currency;
+                const coverMedia = tour.media?.find((m) => m.isCover) || tour.media?.[0];
                 const durationText = tour.durationMinutes
                   ? tour.durationMinutes >= 60
                     ? `${Math.floor(tour.durationMinutes / 60)}h${tour.durationMinutes % 60 > 0 ? ` ${tour.durationMinutes % 60}m` : ''}`
@@ -344,7 +345,7 @@ export default function HomePage() {
                     rating={tour.ratingAvg ? Number(tour.ratingAvg) : undefined}
                     ratingCount={tour.ratingCount}
                     price={minPrice && minPrice !== Infinity ? minPrice : undefined}
-                    currency={currency}
+                    currency={tourCurrency}
                     badge={tour.badgeText || (tour.isFeatured ? t('badgeFeatured') : undefined)}
                     badgeColor={tour.badgeText ? 'blue' : 'amber'}
                     isFavorited={favoriteIds.has(tour.id)}
@@ -380,7 +381,7 @@ export default function HomePage() {
                 <button
                   type="button"
                   onClick={() => setTabIndex((prev) => (prev - 1 + 4) % 4)}
-                  aria-label="Previous tab"
+                  aria-label={t('previousTab')}
                   className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full"
                 >
                   <HiOutlineChevronLeft className="w-5 h-5 text-slate-600 dark:text-slate-400" />
@@ -388,7 +389,7 @@ export default function HomePage() {
                 <button
                   type="button"
                   onClick={() => setTabIndex((prev) => (prev + 1) % 4)}
-                  aria-label="Next tab"
+                  aria-label={t('nextTab')}
                   className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full"
                 >
                   <HiOutlineChevronRight className="w-5 h-5 text-slate-600 dark:text-slate-400" />
@@ -472,7 +473,7 @@ export default function HomePage() {
               onChange={(e) => setNewsletterEmail(e.target.value)}
               disabled={newsletterSuccess}
               className="flex-1 px-4 py-3 border-none rounded-lg focus:ring-2 focus:ring-primary shadow-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 disabled:opacity-70"
-              placeholder="Email"
+              placeholder={t('newsletterPlaceholder')}
             />
             <button
               type="submit"

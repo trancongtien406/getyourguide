@@ -1,8 +1,9 @@
+import { SITE_NAME, SITE_URL } from '@/lib/runtime-config';
 import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
 
-const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.getyourguide.com';
-const siteName = 'GetYourGuide';
+const siteUrl = SITE_URL;
+const siteName = SITE_NAME;
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations('public');

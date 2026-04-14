@@ -1297,9 +1297,12 @@
     "favorites": "Yêu thích",
     "cart": "Giỏ hàng",
     "profile": "Hồ sơ",
+    "mainNavigationAria": "Điều hướng chính",
+    "sectionNavigationAria": "Điều hướng theo mục",
 
     "heroTitle": "Trải nghiệm khó quên khắp Việt Nam",
     "heroSearchPlaceholder": "Bạn muốn đi đâu?",
+    "heroImageAlt": "Điểm đến du lịch",
     "destinationsTitle": "Điểm đến hàng đầu",
     "attractionsTitle": "Khám phá điểm tham quan nổi bật",
     "trustTitle": "Chúng tôi luôn đồng hành cùng bạn",
@@ -1332,6 +1335,11 @@
     "searchResultsCities": "Kết quả tìm kiếm",
     "didYouMean": "Bạn có muốn tìm?",
     "noCitiesFound": "Không tìm thấy thành phố. Thử tên khác.",
+    "previousTab": "Tab trước",
+    "nextTab": "Tab tiếp theo",
+    "guestLabel": "Khách",
+    "verifiedLabel": "Đã xác minh",
+    "removeSearchFilter": "Xóa từ khóa tìm kiếm",
 
     "filters": "Bộ lọc",
     "filterCity": "Thành phố",
@@ -1369,6 +1377,8 @@
     "loading": "Đang tải...",
     "noResults": "Không tìm thấy kết quả",
     "noResultsDesc": "Thử thay đổi bộ lọc hoặc tìm kiếm với từ khóa khác.",
+    "loadToursError": "Không thể tải danh sách tour lúc này. Vui lòng thử lại.",
+    "retry": "Thử lại",
 
     "navHome": "Trang chủ",
     "navTours": "Tour",
@@ -1502,6 +1512,8 @@
     "ratingExcellent": "Lựa chọn tuyệt vời",
     "ratingVeryGood": "Rất tốt",
     "ratingGood": "Tốt",
+    "addToFavoritesAria": "Thêm vào yêu thích",
+    "removeFromFavoritesAria": "Bỏ khỏi yêu thích",
 
     "checkoutTitle": "Thanh toán",
     "checkoutOrderSummary": "Tóm tắt đơn hàng",

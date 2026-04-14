@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useCallback, useContext, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 
 export type ToastType = 'success' | 'error' | 'info' | 'warning';
 
@@ -27,18 +27,37 @@ export function useToast() {
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
+  const timersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+  const idCounterRef = useRef(0);
 
   const removeToast = useCallback((id: string) => {
     setToasts((prev) => prev.filter((t) => t.id !== id));
+    const timer = timersRef.current.get(id);
+    if (timer) {
+      clearTimeout(timer);
+      timersRef.current.delete(id);
+    }
+  }, []);
+
+  useEffect(() => {
+    const timers = timersRef.current;
+    return () => {
+      timers.forEach((timer) => clearTimeout(timer));
+      timers.clear();
+    };
   }, []);
 
   const addToast = useCallback(
     (type: ToastType, message: string, duration = 4000) => {
-      const id = `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+      const id =
+        typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+          ? crypto.randomUUID()
+          : `toast-${Date.now()}-${idCounterRef.current++}`;
       setToasts((prev) => [...prev, { id, type, message, duration }]);
 
       if (duration > 0) {
-        setTimeout(() => removeToast(id), duration);
+        const timer = setTimeout(() => removeToast(id), duration);
+        timersRef.current.set(id, timer);
       }
     },
     [removeToast],

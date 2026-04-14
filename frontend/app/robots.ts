@@ -1,6 +1,7 @@
+import { SITE_URL } from '@/lib/runtime-config';
 import type { MetadataRoute } from 'next';
 
-const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.getyourguide.com';
+const baseUrl = SITE_URL;
 
 export default function robots(): MetadataRoute.Robots {
   return {

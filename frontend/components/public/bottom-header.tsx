@@ -213,7 +213,7 @@ export function BottomHeader() {
 
   return (
     <header
-      aria-label="Section navigation"
+      aria-label={t('sectionNavigationAria')}
       className="relative border-b border-slate-200/80 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-800/50"
       onMouseLeave={handleLeave}
     >

@@ -1,9 +1,11 @@
 'use client';
 
+import { ApiError, newsletterApi } from '@/lib/api';
 import {
     useLocaleCurrency,
 } from '@/lib/locale-currency-context';
 import { useTranslations } from 'next-intl';
+import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
 import { FaFacebookF, FaInstagram, FaLinkedinIn, FaXTwitter, FaYoutube } from 'react-icons/fa6';
@@ -16,22 +18,19 @@ export function Footer() {
 
   const handleNewsletterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!nlEmail) return;
+    const email = nlEmail.trim();
+    if (!email) return;
     setNlStatus('loading');
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/newsletter/subscribe`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: nlEmail }),
-      });
-      if (res.ok || res.status === 201 || res.status === 409) {
-        // 409 = already subscribed, still treat as success
+      await newsletterApi.subscribe(email);
+      setNlStatus('success');
+      setNlEmail('');
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 409) {
         setNlStatus('success');
         setNlEmail('');
-      } else {
-        setNlStatus('error');
+        return;
       }
-    } catch {
       setNlStatus('error');
     }
   };
@@ -81,10 +80,10 @@ export function Footer() {
             </h4>
             <div className="flex flex-row gap-3 md:flex-col md:gap-3">
               <a href="#" aria-label={t('footerAppStore')} className="block transition-opacity hover:opacity-80">
-                <img src="/app-store-badge-en-us.svg" alt={t('footerAppStore')} className="h-10 md:h-11 w-auto" />
+                <Image src="/app-store-badge-en-us.svg" alt={t('footerAppStore')} width={140} height={44} className="h-10 md:h-11 w-auto" />
               </a>
               <a href="#" aria-label={t('footerGooglePlay')} className="block transition-opacity hover:opacity-80">
-                <img src="/google-play-badge-en-us.svg" alt={t('footerGooglePlay')} className="h-10 md:h-11 w-auto" />
+                <Image src="/google-play-badge-en-us.svg" alt={t('footerGooglePlay')} width={148} height={44} className="h-10 md:h-11 w-auto" />
               </a>
             </div>
           </div>
@@ -95,23 +94,23 @@ export function Footer() {
               <h4 className="font-bold mb-4 uppercase text-xs tracking-widest text-slate-500">
                 {t('footerSupport')}
               </h4>
-              <ul className="space-y-3 text-sm text-white/60">
-                <li><Link href="/help" className="hover:text-primary-200 transition-colors">{t('footerHelpCenter')}</Link></li>
-                <li><Link href="/pages/legal-notice" className="hover:text-primary-200 transition-colors">{t('footerLegalNotice')}</Link></li>
-                <li><Link href="/pages/privacy" className="hover:text-primary-200 transition-colors">{t('footerPrivacy')}</Link></li>
-                <li><Link href="/pages/terms" className="hover:text-primary-200 transition-colors">{t('footerTerms')}</Link></li>
-                <li><Link href="/pages/cookies" className="hover:text-primary-200 transition-colors">{t('footerCookies')}</Link></li>
+              <ul className="space-y-3 text-sm text-slate-600">
+                <li><Link href="/help" className="hover:text-primary transition-colors">{t('footerHelpCenter')}</Link></li>
+                <li><Link href="/pages/legal-notice" className="hover:text-primary transition-colors">{t('footerLegalNotice')}</Link></li>
+                <li><Link href="/pages/privacy" className="hover:text-primary transition-colors">{t('footerPrivacy')}</Link></li>
+                <li><Link href="/pages/terms" className="hover:text-primary transition-colors">{t('footerTerms')}</Link></li>
+                <li><Link href="/pages/cookies" className="hover:text-primary transition-colors">{t('footerCookies')}</Link></li>
               </ul>
             </div>
             <div>
               <h4 className="font-bold mb-4 uppercase text-xs tracking-widest text-slate-400">
                 {t('footerCompany')}
               </h4>
-              <ul className="space-y-3 text-sm text-white/60">
-                <li><Link href="/pages/about" className="hover:text-primary-200 transition-colors">{t('footerAbout')}</Link></li>
-                <li><Link href="/pages/careers" className="hover:text-primary-200 transition-colors">{t('footerCareers')}</Link></li>
-                <li><Link href="/blog" className="hover:text-primary-200 transition-colors">{t('footerBlog')}</Link></li>
-                <li><Link href="/pages/press" className="hover:text-primary-200 transition-colors">{t('footerPress')}</Link></li>
+              <ul className="space-y-3 text-sm text-slate-600">
+                <li><Link href="/pages/about" className="hover:text-primary transition-colors">{t('footerAbout')}</Link></li>
+                <li><Link href="/pages/careers" className="hover:text-primary transition-colors">{t('footerCareers')}</Link></li>
+                <li><Link href="/blog" className="hover:text-primary transition-colors">{t('footerBlog')}</Link></li>
+                <li><Link href="/pages/press" className="hover:text-primary transition-colors">{t('footerPress')}</Link></li>
               </ul>
             </div>
           </div>

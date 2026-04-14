@@ -65,7 +65,7 @@ export function Navbar() {
 
   return (
     <>
-      <nav aria-label="Main navigation" className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/95 px-4 py-3 shadow-sm backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/95">
+      <nav aria-label={t('mainNavigationAria')} className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/95 px-4 py-3 shadow-sm backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/95">
         <div className="layout-container flex items-center justify-between gap-4">
           {/* Logo + Search */}
           <div className="flex items-center gap-8 flex-1">

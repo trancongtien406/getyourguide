@@ -245,20 +245,20 @@ export function AuthDialog({ isOpen, onClose, initialTab = 'login' }: AuthDialog
             <button
               type="button"
               onClick={() => handleTabSwitch('login')}
-              className="flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+              className="flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-slate-900 dark:text-[var(--color-ink-muted)] "
             >
               <HiOutlineArrowLeft className="w-4 h-4" />
               {t('authForgotBackToLogin')}
             </button>
           </div>
         ) : (
-          <div className="flex border-b border-slate-200 dark:border-slate-700 mb-6">
+          <div className="flex border-b border-[var(--color-line)] mb-6">
             <button
               onClick={() => handleTabSwitch('login')}
               className={`flex-1 pb-3 text-sm font-semibold transition-colors border-b-2 ${
                 tab === 'login'
                   ? 'border-primary text-primary'
-                  : 'border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+                  : 'border-transparent text-slate-500 hover:text-slate-700 '
               }`}
             >
               {t('authLoginTab')}
@@ -268,7 +268,7 @@ export function AuthDialog({ isOpen, onClose, initialTab = 'login' }: AuthDialog
               className={`flex-1 pb-3 text-sm font-semibold transition-colors border-b-2 ${
                 tab === 'register'
                   ? 'border-primary text-primary'
-                  : 'border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+                  : 'border-transparent text-slate-500 hover:text-slate-700 '
               }`}
             >
               {t('authRegisterTab')}
@@ -278,14 +278,14 @@ export function AuthDialog({ isOpen, onClose, initialTab = 'login' }: AuthDialog
 
         {/* Success Message */}
         {successMessage && (
-          <div className="mb-4 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 px-4 py-3 text-sm text-green-600 dark:text-green-400">
+          <div className="mb-4 rounded-lg bg-green-50  border border-green-200  px-4 py-3 text-sm text-green-600 ">
             {successMessage}
           </div>
         )}
 
         {/* Error Message */}
         {error && (
-          <div className="mb-4 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 px-4 py-3 text-sm text-red-600 dark:text-red-400">
+          <div className="mb-4 rounded-lg bg-red-50  border border-red-200  px-4 py-3 text-sm text-red-600 ">
             {error}
           </div>
         )}
@@ -294,39 +294,39 @@ export function AuthDialog({ isOpen, onClose, initialTab = 'login' }: AuthDialog
         {tab === 'login' && (
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+              <label className="block text-sm font-medium text-[var(--color-ink)] mb-1.5">
                 {t('authEmail')}
               </label>
               <div className="relative">
-                <HiOutlineMail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                <HiOutlineMail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--color-ink-muted)]" />
                 <input
                   type="email"
                   required
                   value={loginEmail}
                   onChange={(e) => setLoginEmail(e.target.value)}
                   placeholder={t('authEmailPlaceholder')}
-                  className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-[var(--color-line)] bg-white text-[var(--color-ink)] text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition"
                 />
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+              <label className="block text-sm font-medium text-[var(--color-ink)] mb-1.5">
                 {t('authPassword')}
               </label>
               <div className="relative">
-                <HiOutlineLockClosed className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                <HiOutlineLockClosed className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--color-ink-muted)]" />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   required
                   value={loginPassword}
                   onChange={(e) => setLoginPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full pl-10 pr-10 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition"
+                  className="w-full pl-10 pr-10 py-2.5 rounded-lg border border-[var(--color-line)] bg-white text-[var(--color-ink)] text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-ink-muted)] hover:text-slate-600 "
                 >
                   {showPassword ? <HiOutlineEyeOff className="w-5 h-5" /> : <HiOutlineEye className="w-5 h-5" />}
                 </button>
@@ -348,14 +348,14 @@ export function AuthDialog({ isOpen, onClose, initialTab = 'login' }: AuthDialog
             >
               {isLoading ? t('authLoading') : t('authLoginBtn')}
             </button>
-            <div className="mt-3 text-xs text-slate-500 dark:text-slate-400 text-center space-y-2">
+            <div className="mt-3 text-xs text-[var(--color-ink-muted)] text-center space-y-2">
               <p>{t('authTestLoginHint')}</p>
               <div className="grid grid-cols-2 gap-2 text-[11px]">
                 <button
                   type="button"
                   onClick={() => handleTestLogin(DEMO_ACCOUNTS.admin.email, DEMO_ACCOUNTS.admin.password)}
                   disabled={isLoading}
-                  className="border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-100 py-2 rounded-lg font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="border border-[var(--color-line)] text-[var(--color-ink)] py-2 rounded-lg font-semibold hover:bg-[var(--color-panel-soft)] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   {DEMO_ACCOUNTS.admin.label}
                 </button>
@@ -363,7 +363,7 @@ export function AuthDialog({ isOpen, onClose, initialTab = 'login' }: AuthDialog
                   type="button"
                   onClick={() => handleTestLogin(DEMO_ACCOUNTS.operator.email, DEMO_ACCOUNTS.operator.password)}
                   disabled={isLoading}
-                  className="border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-100 py-2 rounded-lg font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="border border-[var(--color-line)] text-[var(--color-ink)] py-2 rounded-lg font-semibold hover:bg-[var(--color-panel-soft)] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   {DEMO_ACCOUNTS.operator.label}
                 </button>
@@ -373,7 +373,7 @@ export function AuthDialog({ isOpen, onClose, initialTab = 'login' }: AuthDialog
                     handleTestLogin(DEMO_ACCOUNTS.supplierAdmin.email, DEMO_ACCOUNTS.supplierAdmin.password)
                   }
                   disabled={isLoading}
-                  className="border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-100 py-2 rounded-lg font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="border border-[var(--color-line)] text-[var(--color-ink)] py-2 rounded-lg font-semibold hover:bg-[var(--color-panel-soft)] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   {DEMO_ACCOUNTS.supplierAdmin.label}
                 </button>
@@ -383,7 +383,7 @@ export function AuthDialog({ isOpen, onClose, initialTab = 'login' }: AuthDialog
                     handleTestLogin(DEMO_ACCOUNTS.supplierStaff.email, DEMO_ACCOUNTS.supplierStaff.password)
                   }
                   disabled={isLoading}
-                  className="border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-100 py-2 rounded-lg font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="border border-[var(--color-line)] text-[var(--color-ink)] py-2 rounded-lg font-semibold hover:bg-[var(--color-panel-soft)] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   {DEMO_ACCOUNTS.supplierStaff.label}
                 </button>
@@ -391,7 +391,7 @@ export function AuthDialog({ isOpen, onClose, initialTab = 'login' }: AuthDialog
                   type="button"
                   onClick={() => handleTestLogin(DEMO_ACCOUNTS.customer.email, DEMO_ACCOUNTS.customer.password)}
                   disabled={isLoading}
-                  className="col-span-2 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-100 py-2 rounded-lg font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="col-span-2 border border-[var(--color-line)] text-[var(--color-ink)] py-2 rounded-lg font-semibold hover:bg-[var(--color-panel-soft)] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   {DEMO_ACCOUNTS.customer.label}
                 </button>
@@ -405,22 +405,22 @@ export function AuthDialog({ isOpen, onClose, initialTab = 'login' }: AuthDialog
           <form onSubmit={handleRegister} className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                <label className="block text-sm font-medium text-[var(--color-ink)] mb-1.5">
                   {t('authFirstName')}
                 </label>
                 <div className="relative">
-                  <HiOutlineUser className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                  <HiOutlineUser className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--color-ink-muted)]" />
                   <input
                     type="text"
                     value={regFirstName}
                     onChange={(e) => setRegFirstName(e.target.value)}
                     placeholder="John"
-                    className="w-full pl-10 pr-3 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition"
+                    className="w-full pl-10 pr-3 py-2.5 rounded-lg border border-[var(--color-line)] bg-white text-[var(--color-ink)] text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition"
                   />
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                <label className="block text-sm font-medium text-[var(--color-ink)] mb-1.5">
                   {t('authLastName')}
                 </label>
                 <input
@@ -428,33 +428,33 @@ export function AuthDialog({ isOpen, onClose, initialTab = 'login' }: AuthDialog
                   value={regLastName}
                   onChange={(e) => setRegLastName(e.target.value)}
                   placeholder="Doe"
-                  className="w-full px-3 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition"
+                  className="w-full px-3 py-2.5 rounded-lg border border-[var(--color-line)] bg-white text-[var(--color-ink)] text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition"
                 />
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+              <label className="block text-sm font-medium text-[var(--color-ink)] mb-1.5">
                 {t('authEmail')}
               </label>
               <div className="relative">
-                <HiOutlineMail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                <HiOutlineMail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--color-ink-muted)]" />
                 <input
                   type="email"
                   required
                   value={regEmail}
                   onChange={(e) => setRegEmail(e.target.value)}
                   placeholder={t('authEmailPlaceholder')}
-                  className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-[var(--color-line)] bg-white text-[var(--color-ink)] text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition"
                 />
               </div>
             </div>
             <div className="space-y-3">
               <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                <label className="block text-sm font-medium text-[var(--color-ink)] mb-1.5">
                   {t('authPassword')}
                 </label>
                 <div className="relative">
-                  <HiOutlineLockClosed className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                  <HiOutlineLockClosed className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--color-ink-muted)]" />
                   <input
                     type={showPassword ? 'text' : 'password'}
                     required
@@ -462,12 +462,12 @@ export function AuthDialog({ isOpen, onClose, initialTab = 'login' }: AuthDialog
                     value={regPassword}
                     onChange={(e) => setRegPassword(e.target.value)}
                     placeholder="Min. 8 characters"
-                    className="w-full pl-10 pr-10 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition"
+                    className="w-full pl-10 pr-10 py-2.5 rounded-lg border border-[var(--color-line)] bg-white text-[var(--color-ink)] text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-ink-muted)] hover:text-slate-600 "
                   >
                     {showPassword ? <HiOutlineEyeOff className="w-5 h-5" /> : <HiOutlineEye className="w-5 h-5" />}
                   </button>
@@ -475,7 +475,7 @@ export function AuthDialog({ isOpen, onClose, initialTab = 'login' }: AuthDialog
                 <p className="text-xs text-slate-500 mt-1">{t('authPasswordHint')}</p>
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                <label className="block text-sm font-medium text-[var(--color-ink)] mb-1.5">
                   {t('authPasswordConfirm')}
                 </label>
                 <input
@@ -485,7 +485,7 @@ export function AuthDialog({ isOpen, onClose, initialTab = 'login' }: AuthDialog
                   value={regPasswordConfirm}
                   onChange={(e) => setRegPasswordConfirm(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full px-3 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition"
+                  className="w-full px-3 py-2.5 rounded-lg border border-[var(--color-line)] bg-white text-[var(--color-ink)] text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition"
                 />
               </div>
             </div>
@@ -496,7 +496,7 @@ export function AuthDialog({ isOpen, onClose, initialTab = 'login' }: AuthDialog
             >
               {isLoading ? t('authLoading') : t('authRegisterBtn')}
             </button>
-            <div className="mt-3 text-xs text-slate-500 dark:text-slate-400 text-center space-y-1">
+            <div className="mt-3 text-xs text-[var(--color-ink-muted)] text-center space-y-1">
               <p>{t('authRegisterCustomerNote')}</p>
               <p>
                 {t('authRegisterSupplierCta')}{' '}
@@ -514,20 +514,20 @@ export function AuthDialog({ isOpen, onClose, initialTab = 'login' }: AuthDialog
         {/* Forgot password: request OTP */}
         {tab === 'forgot' && forgotStep === 'request' && (
           <form onSubmit={handleForgotRequest} className="space-y-4">
-            <p className="text-sm text-slate-600 dark:text-slate-400">{t('authForgotSubtitle')}</p>
+            <p className="text-sm text-[var(--color-ink-muted)]">{t('authForgotSubtitle')}</p>
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+              <label className="block text-sm font-medium text-[var(--color-ink)] mb-1.5">
                 {t('authEmail')}
               </label>
               <div className="relative">
-                <HiOutlineMail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                <HiOutlineMail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--color-ink-muted)]" />
                 <input
                   type="email"
                   required
                   value={forgotEmail}
                   onChange={(e) => setForgotEmail(e.target.value)}
                   placeholder={t('authEmailPlaceholder')}
-                  className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-[var(--color-line)] bg-white text-[var(--color-ink)] text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition"
                 />
               </div>
             </div>
@@ -544,25 +544,25 @@ export function AuthDialog({ isOpen, onClose, initialTab = 'login' }: AuthDialog
         {/* Forgot password: reset with OTP */}
         {tab === 'forgot' && forgotStep === 'reset' && (
           <form onSubmit={handleForgotReset} className="space-y-4">
-            <p className="text-sm text-slate-600 dark:text-slate-400">{t('authForgotResetSubtitle')}</p>
+            <p className="text-sm text-[var(--color-ink-muted)]">{t('authForgotResetSubtitle')}</p>
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+              <label className="block text-sm font-medium text-[var(--color-ink)] mb-1.5">
                 {t('authEmail')}
               </label>
               <div className="relative">
-                <HiOutlineMail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                <HiOutlineMail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--color-ink-muted)]" />
                 <input
                   type="email"
                   required
                   value={forgotEmail}
                   onChange={(e) => setForgotEmail(e.target.value)}
                   placeholder={t('authEmailPlaceholder')}
-                  className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-[var(--color-line)] bg-white text-[var(--color-ink)] text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition"
                 />
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+              <label className="block text-sm font-medium text-[var(--color-ink)] mb-1.5">
                 {t('authForgotOtpLabel')}
               </label>
               <input
@@ -571,15 +571,15 @@ export function AuthDialog({ isOpen, onClose, initialTab = 'login' }: AuthDialog
                 value={forgotOtp}
                 onChange={(e) => setForgotOtp(e.target.value)}
                 placeholder="123456"
-                className="w-full px-3 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition"
+                className="w-full px-3 py-2.5 rounded-lg border border-[var(--color-line)] bg-white text-[var(--color-ink)] text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+              <label className="block text-sm font-medium text-[var(--color-ink)] mb-1.5">
                 {t('authForgotNewPasswordLabel')}
               </label>
               <div className="relative">
-                <HiOutlineLockClosed className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                <HiOutlineLockClosed className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--color-ink-muted)]" />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   required
@@ -587,12 +587,12 @@ export function AuthDialog({ isOpen, onClose, initialTab = 'login' }: AuthDialog
                   value={forgotNewPassword}
                   onChange={(e) => setForgotNewPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full pl-10 pr-10 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition"
+                  className="w-full pl-10 pr-10 py-2.5 rounded-lg border border-[var(--color-line)] bg-white text-[var(--color-ink)] text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-ink-muted)] hover:text-slate-600 "
                 >
                   {showPassword ? <HiOutlineEyeOff className="w-5 h-5" /> : <HiOutlineEye className="w-5 h-5" />}
                 </button>
@@ -600,7 +600,7 @@ export function AuthDialog({ isOpen, onClose, initialTab = 'login' }: AuthDialog
               <p className="text-xs text-slate-500 mt-1">{t('authPasswordHint')}</p>
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+              <label className="block text-sm font-medium text-[var(--color-ink)] mb-1.5">
                 {t('authPasswordConfirm')}
               </label>
               <input
@@ -610,7 +610,7 @@ export function AuthDialog({ isOpen, onClose, initialTab = 'login' }: AuthDialog
                 value={forgotConfirmPassword}
                 onChange={(e) => setForgotConfirmPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full px-3 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition"
+                className="w-full px-3 py-2.5 rounded-lg border border-[var(--color-line)] bg-white text-[var(--color-ink)] text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition"
               />
             </div>
             <button
@@ -624,7 +624,7 @@ export function AuthDialog({ isOpen, onClose, initialTab = 'login' }: AuthDialog
         )}
 
         {/* Divider + switch */}
-        <div className="mt-5 pt-4 border-t border-slate-200 dark:border-slate-700 text-center text-sm text-slate-500 dark:text-slate-400">
+        <div className="mt-5 pt-4 border-t border-[var(--color-line)] text-center text-sm text-[var(--color-ink-muted)]">
           {tab === 'forgot' ? (
             <button
               onClick={() => handleTabSwitch('login')}
