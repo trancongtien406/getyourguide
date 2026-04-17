@@ -1,5 +1,14 @@
 import { Type } from 'class-transformer';
-import { IsNumber, IsOptional, IsString, IsUrl, IsUUID, Max, MaxLength, Min } from 'class-validator';
+import {
+  IsNumber,
+  IsOptional,
+  IsString,
+  IsUrl,
+  IsUUID,
+  Max,
+  MaxLength,
+  Min,
+} from 'class-validator';
 
 export class CreateCityDto {
   @IsUUID()

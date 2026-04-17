@@ -2,15 +2,30 @@
 
 import { AuthDialog } from '@/components/public/auth-dialog';
 import { useAuth } from '@/lib/auth-context';
-import { useSearchParams } from 'next/navigation';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect } from 'react';
+
+function sanitizeReturnUrl(rawValue: string | null): string {
+  if (!rawValue) {
+    return '/profile';
+  }
+
+  if (!rawValue.startsWith('/')) {
+    return '/profile';
+  }
+
+  if (rawValue.startsWith('//') || rawValue.includes('://')) {
+    return '/profile';
+  }
+
+  return rawValue;
+}
 
 export default function SignInPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { isAuthenticated, isLoading } = useAuth();
-  const returnUrl = searchParams.get('returnUrl') || '/profile';
+  const returnUrl = sanitizeReturnUrl(searchParams.get('returnUrl'));
 
   useEffect(() => {
     if (!isLoading && isAuthenticated) {

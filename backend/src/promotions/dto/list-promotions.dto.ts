@@ -9,7 +9,7 @@ export class ListPromotionsDto extends ListQueryDto {
   code?: string;
 
   @IsOptional()
-  @Transform(({ value }) => {
+  @Transform(({ value }: { value: unknown }) => {
     if (value === true || value === 'true' || value === '1') {
       return true;
     }

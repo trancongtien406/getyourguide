@@ -1,16 +1,11 @@
 import {
-    BadRequestException,
-    ConflictException,
-    ForbiddenException,
-    Injectable,
-    NotFoundException,
+  BadRequestException,
+  ConflictException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
 } from '@nestjs/common';
-import {
-    Prisma,
-    Tour,
-    TourStatus,
-    UserRole,
-} from '@prisma/client';
+import { Prisma, Tour, TourStatus, UserRole } from '@prisma/client';
 import type { JwtPayload } from '../auth/interfaces/jwt-payload.interface';
 import { CurrencyConverterService } from '../common/services/currency-converter.service';
 import { PrismaService } from '../prisma/prisma.service';
@@ -43,7 +38,9 @@ export class CatalogService {
     private readonly currencyConverter: CurrencyConverterService,
   ) {}
 
-  private resolveListToursOrderBy(query: ListToursDto): Prisma.TourOrderByWithRelationInput[] {
+  private resolveListToursOrderBy(
+    query: ListToursDto,
+  ): Prisma.TourOrderByWithRelationInput[] {
     const sortOrder: Prisma.SortOrder = query.sortOrder ?? 'desc';
     switch (query.sortBy) {
       case 'title':
@@ -59,7 +56,11 @@ export class CatalogService {
     }
   }
 
-  async listTours(query: ListToursDto, lang?: string | null, targetCurrency?: string | null) {
+  async listTours(
+    query: ListToursDto,
+    lang?: string | null,
+    targetCurrency?: string | null,
+  ) {
     const page = query.page ?? 1;
     const pageSize = query.pageSize ?? 20;
 
@@ -120,11 +121,17 @@ export class CatalogService {
 
     // Convert pricing to target currency
     if (targetCurrency) {
-      await this.currencyConverter.convertPricingRules(allPricingRules, targetCurrency);
+      await this.currencyConverter.convertPricingRules(
+        allPricingRules,
+        targetCurrency,
+      );
     }
 
     // Load translations if language specified
-    let transMap: Map<string, { title: string; shortDescription?: string | null }> | null = null;
+    let transMap: Map<
+      string,
+      { title: string; shortDescription?: string | null }
+    > | null = null;
     if (lang) {
       const translations = await this.prisma.tourTranslation.findMany({
         where: { tourId: { in: tourIds }, languageCode: lang },
@@ -136,14 +143,19 @@ export class CatalogService {
       const tr = transMap?.get(tour.id);
       return {
         ...tour,
-        ...(tr && { title: tr.title, shortDescription: tr.shortDescription ?? tour.shortDescription }),
+        ...(tr && {
+          title: tr.title,
+          shortDescription: tr.shortDescription ?? tour.shortDescription,
+        }),
         media: allMedia.filter((m) => m.tourId === tour.id),
         categories: allCategories.filter((c) => c.tourId === tour.id),
         options: allOptions
           .filter((o) => o.tourId === tour.id)
           .map((option) => ({
             ...option,
-            pricingRules: allPricingRules.filter((pr) => pr.tourOptionId === option.id),
+            pricingRules: allPricingRules.filter(
+              (pr) => pr.tourOptionId === option.id,
+            ),
           })),
       };
     });
@@ -151,7 +163,11 @@ export class CatalogService {
     return { page, pageSize, total, items };
   }
 
-  async searchTours(query: SearchToursDto, lang?: string | null, targetCurrency?: string | null) {
+  async searchTours(
+    query: SearchToursDto,
+    lang?: string | null,
+    targetCurrency?: string | null,
+  ) {
     const page = query.page ?? 1;
     const pageSize = query.pageSize ?? 20;
     const offset = (page - 1) * pageSize;
@@ -172,7 +188,9 @@ export class CatalogService {
       );
     }
     if (query.minRating !== undefined) {
-      conditions.push(Prisma.sql`COALESCE(t."ratingAvg", 0) >= ${query.minRating}`);
+      conditions.push(
+        Prisma.sql`COALESCE(t."ratingAvg", 0) >= ${query.minRating}`,
+      );
     }
     if (query.maxDurationMinutes !== undefined) {
       conditions.push(
@@ -239,14 +257,18 @@ export class CatalogService {
     const shortDescCol = Prisma.sql`t."shortDescription"`;
 
     // Count without JOIN
-    const countResult = await this.prisma.$queryRaw<[{ count: bigint }]>(Prisma.sql`
+    const countResult = await this.prisma.$queryRaw<
+      [{ count: bigint }]
+    >(Prisma.sql`
       SELECT COUNT(*)::bigint AS count
       FROM tours t
       ${whereClause}
     `);
     const total = Number(countResult[0].count);
 
-    const rows = await this.prisma.$queryRaw<Array<Record<string, unknown>>>(Prisma.sql`
+    const rows = await this.prisma.$queryRaw<
+      Array<Record<string, unknown>>
+    >(Prisma.sql`
       SELECT
         t.id,
         t.slug,
@@ -302,7 +324,11 @@ export class CatalogService {
     };
   }
 
-  async getTourBySlug(slug: string, lang?: string | null, targetCurrency?: string | null) {
+  async getTourBySlug(
+    slug: string,
+    lang?: string | null,
+    targetCurrency?: string | null,
+  ) {
     const tour = await this.prisma.tour.findUnique({ where: { slug } });
     if (!tour) {
       throw new NotFoundException('Tour not found');
@@ -310,7 +336,11 @@ export class CatalogService {
     return this.enrichTour(tour, lang, targetCurrency);
   }
 
-  async getTourById(id: string, lang?: string | null, targetCurrency?: string | null) {
+  async getTourById(
+    id: string,
+    lang?: string | null,
+    targetCurrency?: string | null,
+  ) {
     const tour = await this.prisma.tour.findUnique({ where: { id } });
     if (!tour) {
       throw new NotFoundException('Tour not found');
@@ -318,7 +348,11 @@ export class CatalogService {
     return this.enrichTour(tour, lang, targetCurrency);
   }
 
-  private async enrichTour(tour: Tour, lang?: string | null, targetCurrency?: string | null) {
+  private async enrichTour(
+    tour: Tour,
+    lang?: string | null,
+    targetCurrency?: string | null,
+  ) {
     const id = tour.id;
 
     const [categories, tags, media, options, itinerary] = await Promise.all([
@@ -352,47 +386,69 @@ export class CatalogService {
 
     const departureIds = departures.map((d) => d.id);
     const inventoryByDepartureId = await this.prisma.inventorySlot.findMany({
-      where: { departureSlotId: { in: departureIds.length ? departureIds : [''] } },
+      where: {
+        departureSlotId: { in: departureIds.length ? departureIds : [''] },
+      },
     });
 
     // Overlay translations if language specified
     let tourOverlay: Partial<Tour> = {};
-    let itineraryTransMap: Map<string, { title?: string | null; description?: string | null }> | null = null;
-    let optionTransMap: Map<string, { title?: string | null; description?: string | null }> | null = null;
+    let itineraryTransMap: Map<
+      string,
+      { title?: string | null; description?: string | null }
+    > | null = null;
+    let optionTransMap: Map<
+      string,
+      { title?: string | null; description?: string | null }
+    > | null = null;
 
     if (lang) {
       const itineraryStopIds = itinerary.map((s) => s.id);
       const optionIdsList = options.map((o) => o.id);
 
-      const [tourTrans, itineraryTrans, optionTrans] = await Promise.all([
-        this.prisma.tourTranslation.findFirst({
-          where: { tourId: id, languageCode: lang },
-        }),
-        itineraryStopIds.length
-          ? this.prisma.tourItineraryStopTranslation.findMany({
-              where: { stopId: { in: itineraryStopIds }, languageCode: lang },
-            })
-          : Promise.resolve([]),
-        optionIdsList.length
-          ? this.prisma.tourOptionTranslation.findMany({
-              where: { tourOptionId: { in: optionIdsList }, languageCode: lang },
-            })
-          : Promise.resolve([]),
-      ]);
+      const tourTrans = await this.prisma.tourTranslation.findFirst({
+        where: { tourId: id, languageCode: lang },
+      });
+      const itineraryTrans = itineraryStopIds.length
+        ? await this.prisma.tourItineraryStopTranslation.findMany({
+            where: { stopId: { in: itineraryStopIds }, languageCode: lang },
+          })
+        : [];
+      const optionTrans = optionIdsList.length
+        ? await this.prisma.tourOptionTranslation.findMany({
+            where: {
+              tourOptionId: { in: optionIdsList },
+              languageCode: lang,
+            },
+          })
+        : [];
 
       if (tourTrans) {
         tourOverlay = {
           ...(tourTrans.title && { title: tourTrans.title }),
-          ...(tourTrans.shortDescription && { shortDescription: tourTrans.shortDescription }),
-          ...(tourTrans.fullDescription && { fullDescription: tourTrans.fullDescription }),
+          ...(tourTrans.shortDescription && {
+            shortDescription: tourTrans.shortDescription,
+          }),
+          ...(tourTrans.fullDescription && {
+            fullDescription: tourTrans.fullDescription,
+          }),
         } as Partial<Tour>;
       }
 
       itineraryTransMap = new Map(
-        itineraryTrans.map((t) => [t.stopId, { title: t.title, description: t.description }] as const),
+        itineraryTrans.map(
+          (t) =>
+            [t.stopId, { title: t.title, description: t.description }] as const,
+        ),
       );
       optionTransMap = new Map(
-        optionTrans.map((t) => [t.tourOptionId, { title: t.title, description: t.description }] as const),
+        optionTrans.map(
+          (t) =>
+            [
+              t.tourOptionId,
+              { title: t.title, description: t.description },
+            ] as const,
+        ),
       );
     }
 
@@ -436,8 +492,13 @@ export class CatalogService {
 
     // Convert all pricing rules to target currency
     if (targetCurrency) {
-      const allPricingRulesInResult = result.options.flatMap((o) => o.pricingRules);
-      await this.currencyConverter.convertPricingRules(allPricingRulesInResult, targetCurrency);
+      const allPricingRulesInResult = result.options.flatMap(
+        (o) => o.pricingRules,
+      );
+      await this.currencyConverter.convertPricingRules(
+        allPricingRulesInResult,
+        targetCurrency,
+      );
     }
 
     return result;
@@ -544,7 +605,9 @@ export class CatalogService {
     optionId: string,
     dto: UpdateTourOptionDto,
   ) {
-    const option = await this.prisma.tourOption.findUnique({ where: { id: optionId } });
+    const option = await this.prisma.tourOption.findUnique({
+      where: { id: optionId },
+    });
     if (!option) {
       throw new NotFoundException('Tour option not found');
     }
@@ -576,13 +639,19 @@ export class CatalogService {
     optionId: string,
     dto: BulkGenerateDeparturesDto,
   ) {
-    const option = await this.prisma.tourOption.findUnique({ where: { id: optionId } });
+    const option = await this.prisma.tourOption.findUnique({
+      where: { id: optionId },
+    });
     if (!option) throw new NotFoundException('Tour option not found');
 
     const tour = await this.getTourById(option.tourId);
     await this.ensureCanManageSupplier(actor, tour.supplierId);
 
-    const durationMins = dto.durationMinutes ?? option.durationMinutes ?? tour.durationMinutes ?? 120;
+    const durationMins =
+      dto.durationMinutes ??
+      option.durationMinutes ??
+      tour.durationMinutes ??
+      120;
 
     const start = new Date(dto.startDate);
     const end = new Date(dto.endDate);
@@ -600,13 +669,21 @@ export class CatalogService {
         const exists = await this.prisma.departureSlot.findFirst({
           where: { tourOptionId: optionId, startsAt },
         });
-        if (exists) { skipped++; continue; }
+        if (exists) {
+          skipped++;
+          continue;
+        }
 
         const slot = await this.prisma.departureSlot.create({
           data: { tourOptionId: optionId, startsAt, endsAt, status: 'ACTIVE' },
         });
         await this.prisma.inventorySlot.create({
-          data: { departureSlotId: slot.id, totalCapacity: dto.totalCapacity, heldCapacity: 0, bookedCapacity: 0 },
+          data: {
+            departureSlotId: slot.id,
+            totalCapacity: dto.totalCapacity,
+            heldCapacity: 0,
+            bookedCapacity: 0,
+          },
         });
         created++;
       }
@@ -630,7 +707,8 @@ export class CatalogService {
 
     return departures.map((d) => ({
       ...d,
-      inventory: inventories.find((inv) => inv.departureSlotId === d.id) ?? null,
+      inventory:
+        inventories.find((inv) => inv.departureSlotId === d.id) ?? null,
     }));
   }
 
@@ -653,7 +731,9 @@ export class CatalogService {
     await this.ensureCanManageSupplier(actor, tour.supplierId);
 
     await this.prisma.$transaction(async (tx) => {
-      await tx.inventorySlot.deleteMany({ where: { departureSlotId: departureId } });
+      await tx.inventorySlot.deleteMany({
+        where: { departureSlotId: departureId },
+      });
       await tx.departureSlot.delete({ where: { id: departureId } });
     });
 
@@ -665,7 +745,9 @@ export class CatalogService {
     optionId: string,
     dto: CreateDepartureSlotDto,
   ) {
-    const option = await this.prisma.tourOption.findUnique({ where: { id: optionId } });
+    const option = await this.prisma.tourOption.findUnique({
+      where: { id: optionId },
+    });
     if (!option) {
       throw new NotFoundException('Tour option not found');
     }
@@ -736,7 +818,10 @@ export class CatalogService {
         where: { departureSlotId: departureId },
       });
 
-      if (!inventory && (dto.totalCapacity !== undefined || dto.oversellLimit !== undefined)) {
+      if (
+        !inventory &&
+        (dto.totalCapacity !== undefined || dto.oversellLimit !== undefined)
+      ) {
         inventory = await tx.inventorySlot.create({
           data: {
             departureSlotId: departureId,
@@ -744,7 +829,10 @@ export class CatalogService {
             oversellLimit: dto.oversellLimit,
           },
         });
-      } else if (inventory && (dto.totalCapacity !== undefined || dto.oversellLimit !== undefined)) {
+      } else if (
+        inventory &&
+        (dto.totalCapacity !== undefined || dto.oversellLimit !== undefined)
+      ) {
         inventory = await tx.inventorySlot.update({
           where: { departureSlotId: departureId },
           data: {
@@ -809,7 +897,11 @@ export class CatalogService {
     return this.prisma.tourTagMap.findMany({ where: { tourId } });
   }
 
-  async addTourMedia(actor: JwtPayload, tourId: string, dto: CreateTourMediaDto) {
+  async addTourMedia(
+    actor: JwtPayload,
+    tourId: string,
+    dto: CreateTourMediaDto,
+  ) {
     const tour = await this.getTourById(tourId);
     await this.ensureCanManageSupplier(actor, tour.supplierId);
 
@@ -837,7 +929,9 @@ export class CatalogService {
     mediaId: string,
     dto: UpdateTourMediaDto,
   ) {
-    const media = await this.prisma.tourMedia.findUnique({ where: { id: mediaId } });
+    const media = await this.prisma.tourMedia.findUnique({
+      where: { id: mediaId },
+    });
     if (!media) {
       throw new NotFoundException('Tour media not found');
     }
@@ -865,7 +959,9 @@ export class CatalogService {
   }
 
   async deleteTourMedia(actor: JwtPayload, mediaId: string) {
-    const media = await this.prisma.tourMedia.findUnique({ where: { id: mediaId } });
+    const media = await this.prisma.tourMedia.findUnique({
+      where: { id: mediaId },
+    });
     if (!media) {
       throw new NotFoundException('Tour media not found');
     }
@@ -896,7 +992,11 @@ export class CatalogService {
     return { message: 'Tour media deleted', objectKey };
   }
 
-  async setTourStatus(actor: JwtPayload, tourId: string, dto: SetTourStatusDto) {
+  async setTourStatus(
+    actor: JwtPayload,
+    tourId: string,
+    dto: SetTourStatusDto,
+  ) {
     const tour = await this.getTourById(tourId);
     await this.ensureCanManageSupplier(actor, tour.supplierId);
 
@@ -994,7 +1094,9 @@ export class CatalogService {
   // ─────────────────────────────────────────────────────────────────────
 
   async getTourOptionTranslations(optionId: string) {
-    const option = await this.prisma.tourOption.findUnique({ where: { id: optionId } });
+    const option = await this.prisma.tourOption.findUnique({
+      where: { id: optionId },
+    });
     if (!option) {
       throw new NotFoundException('Tour option not found');
     }
@@ -1009,7 +1111,9 @@ export class CatalogService {
     optionId: string,
     dto: UpsertTourOptionTranslationDto,
   ) {
-    const option = await this.prisma.tourOption.findUnique({ where: { id: optionId } });
+    const option = await this.prisma.tourOption.findUnique({
+      where: { id: optionId },
+    });
     if (!option) {
       throw new NotFoundException('Tour option not found');
     }
@@ -1042,7 +1146,9 @@ export class CatalogService {
     optionId: string,
     languageCode: string,
   ) {
-    const option = await this.prisma.tourOption.findUnique({ where: { id: optionId } });
+    const option = await this.prisma.tourOption.findUnique({
+      where: { id: optionId },
+    });
     if (!option) {
       throw new NotFoundException('Tour option not found');
     }
@@ -1075,7 +1181,9 @@ export class CatalogService {
       where: { tourId, isActive: true },
     });
     if (options.length === 0) {
-      throw new BadRequestException('Cannot publish tour without active option');
+      throw new BadRequestException(
+        'Cannot publish tour without active option',
+      );
     }
 
     const optionIds = options.map((o) => o.id);
@@ -1093,10 +1201,14 @@ export class CatalogService {
     ]);
 
     if (departureCount === 0) {
-      throw new BadRequestException('Cannot publish tour without departure slots');
+      throw new BadRequestException(
+        'Cannot publish tour without departure slots',
+      );
     }
     if (pricingCount === 0) {
-      throw new BadRequestException('Cannot publish tour without base pricing rules');
+      throw new BadRequestException(
+        'Cannot publish tour without base pricing rules',
+      );
     }
     if (mediaCount === 0) {
       throw new BadRequestException('Cannot publish tour without media');
@@ -1108,7 +1220,9 @@ export class CatalogService {
     optionId: string,
     dto: CreatePricingRuleDto,
   ) {
-    const option = await this.prisma.tourOption.findUnique({ where: { id: optionId } });
+    const option = await this.prisma.tourOption.findUnique({
+      where: { id: optionId },
+    });
     if (!option) {
       throw new NotFoundException('Tour option not found');
     }
@@ -1203,7 +1317,10 @@ export class CatalogService {
         },
       });
     } catch (error) {
-      this.handleKnownPrismaError(error, 'Itinerary stop order already exists for this tour');
+      this.handleKnownPrismaError(
+        error,
+        'Itinerary stop order already exists for this tour',
+      );
     }
   }
 
@@ -1212,7 +1329,9 @@ export class CatalogService {
     stopId: string,
     dto: UpdateItineraryStopDto,
   ) {
-    const stop = await this.prisma.tourItineraryStop.findUnique({ where: { id: stopId } });
+    const stop = await this.prisma.tourItineraryStop.findUnique({
+      where: { id: stopId },
+    });
     if (!stop) {
       throw new NotFoundException('Itinerary stop not found');
     }
@@ -1235,12 +1354,17 @@ export class CatalogService {
         },
       });
     } catch (error) {
-      this.handleKnownPrismaError(error, 'Itinerary stop order already exists for this tour');
+      this.handleKnownPrismaError(
+        error,
+        'Itinerary stop order already exists for this tour',
+      );
     }
   }
 
   async deleteItineraryStop(actor: JwtPayload, stopId: string) {
-    const stop = await this.prisma.tourItineraryStop.findUnique({ where: { id: stopId } });
+    const stop = await this.prisma.tourItineraryStop.findUnique({
+      where: { id: stopId },
+    });
     if (!stop) {
       throw new NotFoundException('Itinerary stop not found');
     }
@@ -1249,7 +1373,9 @@ export class CatalogService {
     await this.ensureCanManageSupplier(actor, tour.supplierId);
 
     await this.prisma.$transaction([
-      this.prisma.tourItineraryStopTranslation.deleteMany({ where: { stopId } }),
+      this.prisma.tourItineraryStopTranslation.deleteMany({
+        where: { stopId },
+      }),
       this.prisma.tourItineraryStop.delete({ where: { id: stopId } }),
     ]);
 
@@ -1257,7 +1383,9 @@ export class CatalogService {
   }
 
   async getItineraryStopTranslations(stopId: string) {
-    const stop = await this.prisma.tourItineraryStop.findUnique({ where: { id: stopId } });
+    const stop = await this.prisma.tourItineraryStop.findUnique({
+      where: { id: stopId },
+    });
     if (!stop) {
       throw new NotFoundException('Itinerary stop not found');
     }
@@ -1272,7 +1400,9 @@ export class CatalogService {
     stopId: string,
     dto: UpsertItineraryStopTranslationDto,
   ) {
-    const stop = await this.prisma.tourItineraryStop.findUnique({ where: { id: stopId } });
+    const stop = await this.prisma.tourItineraryStop.findUnique({
+      where: { id: stopId },
+    });
     if (!stop) {
       throw new NotFoundException('Itinerary stop not found');
     }
@@ -1305,7 +1435,9 @@ export class CatalogService {
     stopId: string,
     languageCode: string,
   ) {
-    const stop = await this.prisma.tourItineraryStop.findUnique({ where: { id: stopId } });
+    const stop = await this.prisma.tourItineraryStop.findUnique({
+      where: { id: stopId },
+    });
     if (!stop) {
       throw new NotFoundException('Itinerary stop not found');
     }
@@ -1358,7 +1490,10 @@ export class CatalogService {
     }
   }
 
-  private handleKnownPrismaError(error: unknown, conflictMessage: string): never {
+  private handleKnownPrismaError(
+    error: unknown,
+    conflictMessage: string,
+  ): never {
     if (
       error instanceof Prisma.PrismaClientKnownRequestError &&
       error.code === 'P2002'

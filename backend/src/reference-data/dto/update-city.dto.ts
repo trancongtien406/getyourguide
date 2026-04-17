@@ -1,13 +1,13 @@
 import { Type } from 'class-transformer';
 import {
-    IsNumber,
-    IsOptional,
-    IsString,
-    IsUrl,
-    IsUUID,
-    Max,
-    MaxLength,
-    Min,
+  IsNumber,
+  IsOptional,
+  IsString,
+  IsUrl,
+  IsUUID,
+  Max,
+  MaxLength,
+  Min,
 } from 'class-validator';
 
 export class UpdateCityDto {

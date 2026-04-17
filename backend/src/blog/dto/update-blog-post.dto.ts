@@ -1,15 +1,15 @@
 import { BlogPostStatus } from '@prisma/client';
 import {
-    IsArray,
-    IsBoolean,
-    IsDateString,
-    IsEnum,
-    IsInt,
-    IsOptional,
-    IsString,
-    IsUrl,
-    IsUUID,
-    MaxLength,
+  IsArray,
+  IsBoolean,
+  IsDateString,
+  IsEnum,
+  IsInt,
+  IsOptional,
+  IsString,
+  IsUrl,
+  IsUUID,
+  MaxLength,
 } from 'class-validator';
 
 export class UpdateBlogPostDto {

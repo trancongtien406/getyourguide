@@ -1,12 +1,12 @@
 import {
-    Body,
-    Controller,
-    Get,
-    Param,
-    Patch,
-    Post,
-    Query,
-    UseGuards,
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
 } from '@nestjs/common';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -18,7 +18,7 @@ import { RedeemPromotionDto } from './dto/redeem-promotion.dto';
 import { SetPromotionScopesDto } from './dto/set-promotion-scopes.dto';
 import { UpdatePromotionDto } from './dto/update-promotion.dto';
 import { PromotionsService } from './promotions.service';
- 
+
 @Controller('promotions')
 export class PromotionsController {
   constructor(private readonly promotionsService: PromotionsService) {}
@@ -30,7 +30,10 @@ export class PromotionsController {
 
   @UseGuards(JwtAuthGuard)
   @Get('admin')
-  listAdminPromotions(@CurrentUser() actor: JwtPayload, @Query() query: ListPromotionsDto) {
+  listAdminPromotions(
+    @CurrentUser() actor: JwtPayload,
+    @Query() query: ListPromotionsDto,
+  ) {
     return this.promotionsService.listAdminPromotions(actor, query);
   }
 
@@ -42,7 +45,10 @@ export class PromotionsController {
 
   @UseGuards(JwtAuthGuard)
   @Post('admin')
-  createPromotion(@CurrentUser() actor: JwtPayload, @Body() dto: CreatePromotionDto) {
+  createPromotion(
+    @CurrentUser() actor: JwtPayload,
+    @Body() dto: CreatePromotionDto,
+  ) {
     return this.promotionsService.createPromotion(actor, dto);
   }
 
@@ -68,7 +74,10 @@ export class PromotionsController {
 
   @UseGuards(JwtAuthGuard)
   @Post('redeem')
-  redeemPromotion(@CurrentUser() actor: JwtPayload, @Body() dto: RedeemPromotionDto) {
+  redeemPromotion(
+    @CurrentUser() actor: JwtPayload,
+    @Body() dto: RedeemPromotionDto,
+  ) {
     return this.promotionsService.redeemPromotion(actor, dto);
   }
 }

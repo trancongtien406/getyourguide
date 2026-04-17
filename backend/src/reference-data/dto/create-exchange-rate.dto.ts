@@ -1,11 +1,11 @@
 import { Type } from 'class-transformer';
 import {
-    IsDateString,
-    IsNumber,
-    IsOptional,
-    IsString,
-    Length,
-    Min,
+  IsDateString,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Length,
+  Min,
 } from 'class-validator';
 
 export class CreateExchangeRateDto {

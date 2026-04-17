@@ -1,10 +1,10 @@
 import {
-    IsInt,
-    IsNumber,
-    IsOptional,
-    IsString,
-    MaxLength,
-    Min,
+  IsInt,
+  IsNumber,
+  IsOptional,
+  IsString,
+  MaxLength,
+  Min,
 } from 'class-validator';
 
 export class UpdateItineraryStopDto {

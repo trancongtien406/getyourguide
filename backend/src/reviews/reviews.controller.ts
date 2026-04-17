@@ -1,13 +1,13 @@
 import {
-    Body,
-    Controller,
-    Delete,
-    Get,
-    Param,
-    Patch,
-    Post,
-    Query,
-    UseGuards,
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
 } from '@nestjs/common';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -27,12 +27,18 @@ export class ReviewsController {
 
   @UseGuards(JwtAuthGuard)
   @Get('me')
-  listMyReviews(@CurrentUser() actor: JwtPayload, @Query() query: ListTourReviewsDto) {
+  listMyReviews(
+    @CurrentUser() actor: JwtPayload,
+    @Query() query: ListTourReviewsDto,
+  ) {
     return this.reviewsService.listMyReviews(actor, query);
   }
 
   @Get('tours/:tourId')
-  listTourReviews(@Param('tourId') tourId: string, @Query() query: ListTourReviewsDto) {
+  listTourReviews(
+    @Param('tourId') tourId: string,
+    @Query() query: ListTourReviewsDto,
+  ) {
     return this.reviewsService.listTourReviews(tourId, query);
   }
 

@@ -1,11 +1,11 @@
 import {
-    IsArray,
-    IsInt,
-    IsOptional,
-    IsString,
-    IsUUID,
-    Matches,
-    Min,
+  IsArray,
+  IsInt,
+  IsOptional,
+  IsString,
+  IsUUID,
+  Matches,
+  Min,
 } from 'class-validator';
 
 export class AddCartItemDto {

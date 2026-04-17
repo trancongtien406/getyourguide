@@ -1,13 +1,13 @@
 import { PriceComponentType } from '@prisma/client';
 import {
-    IsArray,
-    IsDateString,
-    IsEnum,
-    IsInt,
-    IsOptional,
-    IsString,
-    Max,
-    Min,
+  IsArray,
+  IsDateString,
+  IsEnum,
+  IsInt,
+  IsOptional,
+  IsString,
+  Max,
+  Min,
 } from 'class-validator';
 
 export class UpdatePricingRuleDto {

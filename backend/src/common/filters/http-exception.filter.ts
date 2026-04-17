@@ -1,10 +1,10 @@
 import {
-    ArgumentsHost,
-    Catch,
-    ExceptionFilter,
-    HttpException,
-    HttpStatus,
-    Logger,
+  ArgumentsHost,
+  Catch,
+  ExceptionFilter,
+  HttpException,
+  HttpStatus,
+  Logger,
 } from '@nestjs/common';
 import type { Response } from 'express';
 import { ApiResponse } from '../interfaces/api-response.interface';
@@ -29,10 +29,13 @@ export class HttpExceptionFilter implements ExceptionFilter {
 
       if (typeof exceptionResponse === 'string') {
         message = exceptionResponse;
-      } else if (typeof exceptionResponse === 'object' && exceptionResponse !== null) {
+      } else if (
+        typeof exceptionResponse === 'object' &&
+        exceptionResponse !== null
+      ) {
         const responseObj = exceptionResponse as Record<string, unknown>;
         message = (responseObj.message as string) || exception.message;
-        
+
         // Handle validation errors
         if (Array.isArray(responseObj.message)) {
           errors = responseObj.message;
@@ -43,7 +46,10 @@ export class HttpExceptionFilter implements ExceptionFilter {
       // In production, never leak internal error messages to clients
       if (this.isProduction) {
         message = 'Internal server error';
-        this.logger.error(`[UnhandledException] ${exception.message}`, exception.stack);
+        this.logger.error(
+          `[UnhandledException] ${exception.message}`,
+          exception.stack,
+        );
       } else {
         message = exception.message;
       }

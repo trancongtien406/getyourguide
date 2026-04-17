@@ -1,4 +1,12 @@
-import { Controller, Delete, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import type { JwtPayload } from '../auth/interfaces/jwt-payload.interface';
@@ -11,7 +19,10 @@ export class FavoritesController {
 
   @UseGuards(JwtAuthGuard)
   @Get('tours')
-  listMyFavoriteTours(@CurrentUser() actor: JwtPayload, @Query() query: ListFavoriteToursDto) {
+  listMyFavoriteTours(
+    @CurrentUser() actor: JwtPayload,
+    @Query() query: ListFavoriteToursDto,
+  ) {
     return this.favoritesService.listMyFavoriteTours(actor.sub, query);
   }
 

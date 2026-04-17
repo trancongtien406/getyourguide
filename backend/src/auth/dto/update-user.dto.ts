@@ -1,12 +1,12 @@
 import { UserRole, UserStatus } from '@prisma/client';
 import {
-    ArrayMinSize,
-    IsArray,
-    IsEnum,
-    IsOptional,
-    IsString,
-    Matches,
-    MaxLength,
+  ArrayMinSize,
+  IsArray,
+  IsEnum,
+  IsOptional,
+  IsString,
+  Matches,
+  MaxLength,
 } from 'class-validator';
 
 export class UpdateUserDto {

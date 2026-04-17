@@ -1,14 +1,14 @@
 import { TourStatus } from '@prisma/client';
 import { Transform, Type } from 'class-transformer';
 import {
-    IsEnum,
-    IsInt,
-    IsNumber,
-    IsOptional,
-    IsString,
-    IsUUID,
-    Max,
-    Min,
+  IsEnum,
+  IsInt,
+  IsNumber,
+  IsOptional,
+  IsString,
+  IsUUID,
+  Max,
+  Min,
 } from 'class-validator';
 
 export class SearchToursDto {

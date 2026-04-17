@@ -23,7 +23,9 @@ export type CreateAuditLogInput = {
 export class AuditLogsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  private resolveAuditOrderBy(query: ListAuditLogsDto): Prisma.AuditLogOrderByWithRelationInput[] {
+  private resolveAuditOrderBy(
+    query: ListAuditLogsDto,
+  ): Prisma.AuditLogOrderByWithRelationInput[] {
     const sortOrder: Prisma.SortOrder = query.sortOrder ?? 'desc';
     switch (query.sortBy) {
       case 'action':

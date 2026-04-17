@@ -1,14 +1,14 @@
 import { PromoScope, PromoType } from '@prisma/client';
 import {
-    IsBoolean,
-    IsDateString,
-    IsEnum,
-    IsInt,
-    IsNumber,
-    IsOptional,
-    IsString,
-    MaxLength,
-    Min,
+  IsBoolean,
+  IsDateString,
+  IsEnum,
+  IsInt,
+  IsNumber,
+  IsOptional,
+  IsString,
+  MaxLength,
+  Min,
 } from 'class-validator';
 
 export class UpdatePromotionDto {

@@ -372,7 +372,7 @@ export const cartApi = {
     contactEmail: string;
     contactPhoneE164?: string;
     notes?: string;
-  }) => api<unknown>('/cart/guest-checkout', { method: 'POST', body: data }),
+  }) => api<GuestCheckoutResult>('/cart/guest-checkout', { method: 'POST', body: data }),
 };
 
 // Bookings APIs
@@ -394,7 +394,10 @@ export const bookingsApi = {
   
   getBookingById: (id: string) => api<Booking>(`/bookings/${id}`),
 
-  getGuestBookingById: (id: string) => api<Booking>(`/bookings/guest/${id}`),
+  getGuestBookingById: (id: string, guestAccessToken: string) => {
+    const query = new URLSearchParams({ token: guestAccessToken }).toString();
+    return api<Booking>(`/bookings/guest/${id}?${query}`);
+  },
 
   cancelBooking: (id: string, reason?: string) =>
     api(`/bookings/${id}/cancel`, { method: 'POST', body: { reason } }),
@@ -464,17 +467,62 @@ export interface PaymentOption {
   method: string;
   label: string;
   enabled: boolean;
+  channels?: string[];
+  domesticOnly?: boolean;
+}
+
+interface PaymentMethodOptionPayload {
+  key?: string;
+  method?: string;
+  displayName?: string;
+  label?: string;
+  enabled?: boolean;
+  channels?: string[];
+  domesticOnly?: boolean;
+}
+
+interface PaymentOptionsPayload {
+  methods?: PaymentMethodOptionPayload[];
 }
 
 export interface PaymentInitResult {
-  paymentUrl: string;
+  paymentUrl?: string;
+  redirectUrl?: string;
+  payUrl?: string;
   transactionRef?: string;
+  paymentId?: string;
+  providerPaymentId?: string;
+  deeplink?: string;
+  qrCodeUrl?: string;
+  expiresAt?: string;
 }
 
 export const paymentsApi = {
-  getOptions: (params?: Record<string, string>) => {
+  getOptions: async (params?: Record<string, string>) => {
     const query = params ? '?' + new URLSearchParams(params).toString() : '';
-    return api<PaymentOption[]>(`/payments/options${query}`);
+    const payload = await api<PaymentOption[] | PaymentOptionsPayload>(`/payments/options${query}`);
+
+    if (Array.isArray(payload)) {
+      return payload;
+    }
+
+    const methods = payload?.methods ?? [];
+    return methods.reduce<PaymentOption[]>((acc, method) => {
+        const methodKey = method.key ?? method.method;
+        if (!methodKey) {
+          return acc;
+        }
+
+        acc.push({
+          method: methodKey,
+          label: method.displayName ?? method.label ?? methodKey,
+          enabled: method.enabled ?? true,
+          channels: method.channels,
+          domesticOnly: method.domesticOnly,
+        });
+
+        return acc;
+      }, []);
   },
 
   initiateVnpay: (data: { bookingId: string; returnUrl?: string; locale?: string }) =>
@@ -482,6 +530,20 @@ export const paymentsApi = {
 
   initiateMomo: (data: { bookingId: string; returnUrl?: string; locale?: string }) =>
     api<PaymentInitResult>('/payments/momo/create', { method: 'POST', body: data }),
+
+  initiateGuestVnpay: (data: {
+    bookingId: string;
+    guestAccessToken: string;
+    returnUrl?: string;
+    locale?: string;
+  }) => api<PaymentInitResult>('/payments/guest/vnpay/create', { method: 'POST', body: data }),
+
+  initiateGuestMomo: (data: {
+    bookingId: string;
+    guestAccessToken: string;
+    returnUrl?: string;
+    locale?: string;
+  }) => api<PaymentInitResult>('/payments/guest/momo/create', { method: 'POST', body: data }),
 
   /* Admin */
   getSettings: () => api<PaymentSettings>('/payments/admin/settings'),
@@ -1107,28 +1169,35 @@ export interface Booking {
   };
 }
 
+export interface GuestCheckoutResult extends Booking {
+  guestAccessToken: string;
+}
+
 export interface CartItem {
   id: string;
   cartId: string;
   departureSlotId: string;
-  optionId: string;
-  optionTitle: string;
-  tourId: string;
-  tourTitle: string;
+  optionId?: string | null;
+  optionTitle?: string | null;
+  tourId?: string | null;
+  tourTitle?: string | null;
   quantity: number;
   unitPrice: number;
-  lineTotal: number;
-  currencyCode: string;
-  startsAt: string;
+  lineTotal?: number;
+  totalPrice?: number;
+  currencyCode?: string;
+  startsAt?: string | null;
   addedAt: string;
   languageCode?: string;
 }
 
 export interface CartData {
   id: string;
-  userId: string;
-  status: string;
+  userId?: string | null;
+  currencyCode: string;
+  expiresAt?: string;
   createdAt: string;
+  updatedAt?: string;
   items: CartItem[];
 }
 

@@ -2,10 +2,10 @@ import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createHmac } from 'crypto';
 import type {
-    PayableBooking,
-    PaymentGateway,
-    PaymentInitiationResult,
-    WebhookVerificationResult,
+  PayableBooking,
+  PaymentGateway,
+  PaymentInitiationResult,
+  WebhookVerificationResult,
 } from './payment-gateway.interface';
 
 @Injectable()
@@ -14,15 +14,17 @@ export class VnpayGateway implements PaymentGateway {
 
   constructor(private readonly configService: ConfigService) {}
 
-  async initiatePayment(
+  initiatePayment(
     booking: PayableBooking,
     options: { returnUrl?: string; locale?: string; clientIp?: string },
   ): Promise<PaymentInitiationResult> {
-    const tmnCode = this.configService.get('VNPAY_TMN_CODE');
-    const hashSecret = this.configService.get('VNPAY_HASH_SECRET');
+    const tmnCode = this.configService.get<string>('VNPAY_TMN_CODE');
+    const hashSecret = this.configService.get<string>('VNPAY_HASH_SECRET');
     const paymentUrl =
-      this.configService.get('VNPAY_PAYMENT_URL') ?? 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html';
-    const returnUrl = options.returnUrl ?? this.configService.get('VNPAY_RETURN_URL');
+      this.configService.get<string>('VNPAY_PAYMENT_URL') ??
+      'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html';
+    const returnUrl =
+      options.returnUrl ?? this.configService.get<string>('VNPAY_RETURN_URL');
 
     if (!tmnCode || !hashSecret || !returnUrl) {
       throw new InternalServerErrorException('VNPay configuration is missing');
@@ -30,20 +32,27 @@ export class VnpayGateway implements PaymentGateway {
 
     const now = new Date();
     const createDate = this.formatDate(now);
-    const expireDate = this.formatDate(new Date(now.getTime() + 15 * 60 * 1000));
+    const expireDate = this.formatDate(
+      new Date(now.getTime() + 15 * 60 * 1000),
+    );
     const txnRef = `VNP-${booking.bookingRef}-${Date.now().toString(36).toUpperCase()}`;
     const amount = Math.round(booking.totalAmount.toNumber() * 100);
 
     const params: Record<string, string> = {
-      vnp_Version: this.configService.get('VNPAY_VERSION') ?? '2.1.0',
-      vnp_Command: this.configService.get('VNPAY_COMMAND') ?? 'pay',
+      vnp_Version: this.configService.get<string>('VNPAY_VERSION') ?? '2.1.0',
+      vnp_Command: this.configService.get<string>('VNPAY_COMMAND') ?? 'pay',
       vnp_TmnCode: tmnCode,
       vnp_Amount: String(amount),
-      vnp_CurrCode: this.configService.get('VNPAY_CURRENCY') ?? booking.currencyCode,
+      vnp_CurrCode:
+        this.configService.get<string>('VNPAY_CURRENCY') ??
+        booking.currencyCode,
       vnp_TxnRef: txnRef,
       vnp_OrderInfo: `Thanh toan don ${booking.bookingRef}`,
       vnp_OrderType: 'other',
-      vnp_Locale: options.locale ?? this.configService.get('VNPAY_LOCALE') ?? 'vn',
+      vnp_Locale:
+        options.locale ??
+        this.configService.get<string>('VNPAY_LOCALE') ??
+        'vn',
       vnp_ReturnUrl: returnUrl,
       vnp_IpAddr: options.clientIp ?? '127.0.0.1',
       vnp_CreateDate: createDate,
@@ -60,37 +69,39 @@ export class VnpayGateway implements PaymentGateway {
       true,
     )}`;
 
-    return {
+    return Promise.resolve({
       providerPaymentId: txnRef,
       redirectUrl,
       expiresAt: expireDate,
       metadata: { params },
-    };
+    });
   }
 
-  async verifyWebhook(payload: Record<string, unknown>): Promise<WebhookVerificationResult> {
-    const query = payload as Record<string, string>;
-    const hashSecret = this.configService.get('VNPAY_HASH_SECRET');
+  verifyWebhook(
+    payload: Record<string, unknown>,
+  ): Promise<WebhookVerificationResult> {
+    const query = this.toStringRecord(payload);
+    const hashSecret = this.configService.get<string>('VNPAY_HASH_SECRET');
 
     if (!hashSecret) {
-      return {
+      return Promise.resolve({
         valid: false,
         providerPaymentId: null,
         success: false,
         rawPayload: payload,
         gatewayResponse: { RspCode: '99', Message: 'Config error' },
-      };
+      });
     }
 
     const secureHash = query.vnp_SecureHash;
     if (!secureHash) {
-      return {
+      return Promise.resolve({
         valid: false,
         providerPaymentId: null,
         success: false,
         rawPayload: payload,
         gatewayResponse: { RspCode: '97', Message: 'Invalid signature' },
-      };
+      });
     }
 
     const signedPayload = { ...query };
@@ -103,31 +114,35 @@ export class VnpayGateway implements PaymentGateway {
       .digest('hex');
 
     if (expectedHash !== secureHash) {
-      return {
+      return Promise.resolve({
         valid: false,
         providerPaymentId: null,
         success: false,
         rawPayload: payload,
         gatewayResponse: { RspCode: '97', Message: 'Invalid signature' },
-      };
+      });
     }
 
     const providerPaymentId = query.vnp_TxnRef ?? null;
-    const amount = query.vnp_Amount ? Number(query.vnp_Amount) / 100 : undefined;
+    const amount = query.vnp_Amount
+      ? Number(query.vnp_Amount) / 100
+      : undefined;
     const success =
       query.vnp_ResponseCode === '00' &&
       (query.vnp_TransactionStatus === '00' || !query.vnp_TransactionStatus);
 
-    return {
+    return Promise.resolve({
       valid: true,
       providerPaymentId,
       success,
       amount,
       failureCode: success ? undefined : query.vnp_ResponseCode,
-      failureMessage: success ? undefined : query.vnp_OrderInfo ?? 'VNPay payment failed',
+      failureMessage: success
+        ? undefined
+        : (query.vnp_OrderInfo ?? 'VNPay payment failed'),
       rawPayload: payload,
       gatewayResponse: { RspCode: '00', Message: 'Confirm Success' },
-    };
+    });
   }
 
   // ─── Helpers ─────────────────────────────────────────────
@@ -142,7 +157,10 @@ export class VnpayGateway implements PaymentGateway {
     return `${yyyy}${mm}${dd}${hh}${min}${ss}`;
   }
 
-  private buildSortedQuery(params: Record<string, string>, uriEncode: boolean): string {
+  private buildSortedQuery(
+    params: Record<string, string>,
+    uriEncode: boolean,
+  ): string {
     const sortedKeys = Object.keys(params).sort();
     const pairs = sortedKeys.map((key) => {
       const encodedKey = encodeURIComponent(key);
@@ -152,5 +170,23 @@ export class VnpayGateway implements PaymentGateway {
       return `${encodedKey}=${encodedValue}`;
     });
     return pairs.join('&');
+  }
+
+  private toStringRecord(
+    payload: Record<string, unknown>,
+  ): Record<string, string> {
+    const result: Record<string, string> = {};
+    for (const [key, value] of Object.entries(payload)) {
+      if (typeof value === 'string') {
+        result[key] = value;
+      } else if (
+        typeof value === 'number' ||
+        typeof value === 'boolean' ||
+        typeof value === 'bigint'
+      ) {
+        result[key] = String(value);
+      }
+    }
+    return result;
   }
 }

@@ -1,19 +1,22 @@
 import {
-    Body,
-    Controller,
-    Delete,
-    Get,
-    Param,
-    Patch,
-    Post,
-    Query,
-    UseGuards,
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
 } from '@nestjs/common';
 import { UserRole } from '@prisma/client';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
-import { Locale, type RequestLocale } from '../common/decorators/locale.decorator';
+import {
+  Locale,
+  type RequestLocale,
+} from '../common/decorators/locale.decorator';
 import { CreateCityDto } from './dto/create-city.dto';
 import { CreateCountryDto } from './dto/create-country.dto';
 import { CreateCurrencyDto } from './dto/create-currency.dto';
@@ -43,7 +46,10 @@ export class ReferenceDataController {
   constructor(private readonly referenceDataService: ReferenceDataService) {}
 
   @Get('countries')
-  listCountries(@Query() query: ListCountriesDto, @Locale() locale: RequestLocale) {
+  listCountries(
+    @Query() query: ListCountriesDto,
+    @Locale() locale: RequestLocale,
+  ) {
     return this.referenceDataService.listCountries(query, locale.language);
   }
 
@@ -228,7 +234,10 @@ export class ReferenceDataController {
   // ─────────────────────────────────────────────────────────────────────
 
   @Get('faq-categories')
-  listFaqCategories(@Query() query: Record<string, string>, @Locale() locale: RequestLocale) {
+  listFaqCategories(
+    @Query() query: Record<string, string>,
+    @Locale() locale: RequestLocale,
+  ) {
     return this.referenceDataService.listFaqCategories(query, locale.language);
   }
 
@@ -242,7 +251,10 @@ export class ReferenceDataController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.OPERATOR)
   @Patch('faq-categories/:id')
-  updateFaqCategory(@Param('id') id: string, @Body() dto: UpdateFaqCategoryDto) {
+  updateFaqCategory(
+    @Param('id') id: string,
+    @Body() dto: UpdateFaqCategoryDto,
+  ) {
     return this.referenceDataService.updateFaqCategory(id, dto);
   }
 
@@ -254,7 +266,10 @@ export class ReferenceDataController {
   }
 
   @Get('faq-items')
-  listFaqItems(@Query() query: Record<string, string>, @Locale() locale: RequestLocale) {
+  listFaqItems(
+    @Query() query: Record<string, string>,
+    @Locale() locale: RequestLocale,
+  ) {
     return this.referenceDataService.listFaqItems(query, locale.language);
   }
 
@@ -305,7 +320,10 @@ export class ReferenceDataController {
     @Param('id') id: string,
     @Param('languageCode') languageCode: string,
   ) {
-    return this.referenceDataService.deleteFaqCategoryTranslation(id, languageCode);
+    return this.referenceDataService.deleteFaqCategoryTranslation(
+      id,
+      languageCode,
+    );
   }
 
   // ─────────────────────────────────────────────────────────────────────

@@ -1,10 +1,10 @@
 import {
-    IsBoolean,
-    IsInt,
-    IsOptional,
-    IsString,
-    MaxLength,
-    Min,
+  IsBoolean,
+  IsInt,
+  IsOptional,
+  IsString,
+  MaxLength,
+  Min,
 } from 'class-validator';
 
 export class UpdateTourOptionDto {

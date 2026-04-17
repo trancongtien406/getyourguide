@@ -1,13 +1,13 @@
 import { Type } from 'class-transformer';
 import {
-    IsArray,
-    IsBoolean,
-    IsIn,
-    IsObject,
-    IsOptional,
-    IsString,
-    Matches,
-    ValidateNested,
+  IsArray,
+  IsBoolean,
+  IsIn,
+  IsObject,
+  IsOptional,
+  IsString,
+  Matches,
+  ValidateNested,
 } from 'class-validator';
 
 class GatewayConfigDto {

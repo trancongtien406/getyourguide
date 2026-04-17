@@ -1,18 +1,19 @@
 import {
-    BadRequestException,
-    ForbiddenException,
-    Injectable,
-    NotFoundException,
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
 } from '@nestjs/common';
 import {
-    BookingStatus,
-    DepartureSlotStatus,
-    Prisma,
-    TourStatus,
-    UserRole,
+  BookingStatus,
+  DepartureSlotStatus,
+  Prisma,
+  TourStatus,
+  UserRole,
 } from '@prisma/client';
 import { randomBytes } from 'crypto';
 import type { JwtPayload } from '../auth/interfaces/jwt-payload.interface';
+import { GuestBookingTokenService } from '../common/services/guest-booking-token.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { CancelBookingDto } from './dto/cancel-booking.dto';
 import { CreateBookingDto } from './dto/create-booking.dto';
@@ -22,7 +23,10 @@ import { ListSupplierBookingsDto } from './dto/list-supplier-bookings.dto';
 
 @Injectable()
 export class BookingsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly guestBookingToken: GuestBookingTokenService,
+  ) {}
 
   private resolveMyBookingsOrderBy(
     query: ListMyBookingsDto,
@@ -61,16 +65,17 @@ export class BookingsService {
       throw new BadRequestException('Tour option is not available');
     }
 
-    const tour = await this.prisma.tour.findUnique({ where: { id: option.tourId } });
+    const tour = await this.prisma.tour.findUnique({
+      where: { id: option.tourId },
+    });
     if (!tour || tour.status !== TourStatus.PUBLISHED) {
       throw new BadRequestException('Tour is not available for booking');
     }
 
-    if (
-      option.maxParticipants &&
-      dto.quantity > option.maxParticipants
-    ) {
-      throw new BadRequestException('Quantity exceeds option maximum participants');
+    if (option.maxParticipants && dto.quantity > option.maxParticipants) {
+      throw new BadRequestException(
+        'Quantity exceeds option maximum participants',
+      );
     }
 
     const now = new Date();
@@ -270,7 +275,7 @@ export class BookingsService {
    * Public lookup for guest bookings (userId is null).
    * Only returns bookings that have no userId assigned.
    */
-  async getGuestBookingById(bookingId: string) {
+  async getGuestBookingById(bookingId: string, guestToken?: string) {
     const booking = await this.prisma.booking.findUnique({
       where: { id: bookingId },
     });
@@ -283,6 +288,8 @@ export class BookingsService {
       throw new ForbiddenException('Access denied');
     }
 
+    this.guestBookingToken.assertValidForBooking(guestToken, booking.id);
+
     const items = await this.prisma.bookingItem.findMany({
       where: { bookingId: booking.id },
       orderBy: [{ createdAt: 'asc' }],
@@ -294,7 +301,11 @@ export class BookingsService {
     };
   }
 
-  async cancelBooking(actor: JwtPayload, bookingId: string, dto: CancelBookingDto) {
+  async cancelBooking(
+    actor: JwtPayload,
+    bookingId: string,
+    dto: CancelBookingDto,
+  ) {
     const booking = await this.prisma.booking.findUnique({
       where: { id: bookingId },
     });
@@ -315,9 +326,10 @@ export class BookingsService {
       where: { bookingId },
     });
 
-    const cancelStatus = actor.sub === booking.userId
-      ? BookingStatus.CANCELLED_BY_CUSTOMER
-      : BookingStatus.CANCELLED_BY_OPERATOR;
+    const cancelStatus =
+      actor.sub === booking.userId
+        ? BookingStatus.CANCELLED_BY_CUSTOMER
+        : BookingStatus.CANCELLED_BY_OPERATOR;
 
     return this.prisma.$transaction(async (tx) => {
       for (const item of bookingItems) {
@@ -358,7 +370,9 @@ export class BookingsService {
   }
 
   private async ensureCanAccessBooking(actor: JwtPayload, bookingId: string) {
-    const booking = await this.prisma.booking.findUnique({ where: { id: bookingId } });
+    const booking = await this.prisma.booking.findUnique({
+      where: { id: bookingId },
+    });
     if (!booking) {
       throw new NotFoundException('Booking not found');
     }
@@ -373,7 +387,10 @@ export class BookingsService {
       return;
     }
 
-    if (actorRoles.has(UserRole.SUPPLIER_ADMIN) || actorRoles.has(UserRole.SUPPLIER_STAFF)) {
+    if (
+      actorRoles.has(UserRole.SUPPLIER_ADMIN) ||
+      actorRoles.has(UserRole.SUPPLIER_STAFF)
+    ) {
       if (!booking.supplierId) {
         throw new ForbiddenException('Insufficient permissions');
       }
@@ -399,9 +416,15 @@ export class BookingsService {
       .toUpperCase()}`;
   }
 
-  async listSupplierBookings(actor: JwtPayload, query: ListSupplierBookingsDto) {
+  async listSupplierBookings(
+    actor: JwtPayload,
+    query: ListSupplierBookingsDto,
+  ) {
     const actorRoles = new Set(actor.roles);
-    if (!actorRoles.has(UserRole.SUPPLIER_ADMIN) && !actorRoles.has(UserRole.SUPPLIER_STAFF)) {
+    if (
+      !actorRoles.has(UserRole.SUPPLIER_ADMIN) &&
+      !actorRoles.has(UserRole.SUPPLIER_STAFF)
+    ) {
       throw new ForbiddenException('Only suppliers can access this endpoint');
     }
 
@@ -437,7 +460,9 @@ export class BookingsService {
         where,
         include: {
           items: true,
-          user: { select: { id: true, email: true, firstName: true, lastName: true } },
+          user: {
+            select: { id: true, email: true, firstName: true, lastName: true },
+          },
         },
         orderBy: { createdAt: 'desc' },
         skip: (page - 1) * pageSize,
@@ -479,7 +504,9 @@ export class BookingsService {
         where,
         include: {
           items: true,
-          user: { select: { id: true, email: true, firstName: true, lastName: true } },
+          user: {
+            select: { id: true, email: true, firstName: true, lastName: true },
+          },
         },
         orderBy: { createdAt: 'desc' },
         skip: (page - 1) * pageSize,

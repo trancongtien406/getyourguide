@@ -119,6 +119,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             departureSlotId: item.departureSlotId,
             quantity: item.quantity,
             currencyCode: item.currencyCode,
+            languageCode: item.languageCode,
             travelerMix: item.travelerMix,
           }).catch(() => { /* ignore individual failures */ }),
         ),

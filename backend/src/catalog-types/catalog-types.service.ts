@@ -1,7 +1,7 @@
 import {
-    ConflictException,
-    Injectable,
-    NotFoundException,
+  ConflictException,
+  Injectable,
+  NotFoundException,
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
@@ -18,7 +18,9 @@ import { UpsertTagTranslationDto } from './dto/upsert-tag-translation.dto';
 export class CatalogTypesService {
   constructor(private readonly prisma: PrismaService) {}
 
-  private resolveCategoryOrderBy(query: ListCategoriesDto): Prisma.CategoryOrderByWithRelationInput[] {
+  private resolveCategoryOrderBy(
+    query: ListCategoriesDto,
+  ): Prisma.CategoryOrderByWithRelationInput[] {
     const sortOrder: Prisma.SortOrder = query.sortOrder ?? 'asc';
     switch (query.sortBy) {
       case 'name':
@@ -32,7 +34,9 @@ export class CatalogTypesService {
     }
   }
 
-  private resolveTagOrderBy(query: ListTagsDto): Prisma.TourTagOrderByWithRelationInput[] {
+  private resolveTagOrderBy(
+    query: ListTagsDto,
+  ): Prisma.TourTagOrderByWithRelationInput[] {
     const sortOrder: Prisma.SortOrder = query.sortOrder ?? 'desc';
     switch (query.sortBy) {
       case 'name':
@@ -73,22 +77,29 @@ export class CatalogTypesService {
       }),
     ]);
 
+    let localizedItems = items;
     if (lang && items.length > 0) {
       const ids = items.map((i) => i.id);
       const translations = await this.prisma.categoryTranslation.findMany({
         where: { categoryId: { in: ids }, languageCode: lang },
       });
-      const transMap = new Map(translations.map((t) => [t.categoryId, t] as const));
-      for (const item of items) {
+      const transMap = new Map(
+        translations.map((t) => [t.categoryId, t] as const),
+      );
+      localizedItems = items.map((item) => {
         const tr = transMap.get(item.id);
-        if (tr) {
-          (item as any).name = tr.name;
-          if (tr.description) (item as any).description = tr.description;
+        if (!tr) {
+          return item;
         }
-      }
+        return {
+          ...item,
+          name: tr.name,
+          ...(tr.description ? { description: tr.description } : {}),
+        };
+      });
     }
 
-    return { page, pageSize, total, items };
+    return { page, pageSize, total, items: localizedItems };
   }
 
   async createCategory(dto: CreateCategoryDto) {
@@ -151,21 +162,26 @@ export class CatalogTypesService {
       }),
     ]);
 
+    let localizedItems = items;
     if (lang && items.length > 0) {
       const ids = items.map((i) => i.id);
       const translations = await this.prisma.tourTagTranslation.findMany({
         where: { tagId: { in: ids }, languageCode: lang },
       });
       const transMap = new Map(translations.map((t) => [t.tagId, t] as const));
-      for (const item of items) {
+      localizedItems = items.map((item) => {
         const tr = transMap.get(item.id);
-        if (tr) {
-          (item as any).name = tr.name;
+        if (!tr) {
+          return item;
         }
-      }
+        return {
+          ...item,
+          name: tr.name,
+        };
+      });
     }
 
-    return { page, pageSize, total, items };
+    return { page, pageSize, total, items: localizedItems };
   }
 
   async createTag(dto: CreateTagDto) {
@@ -204,7 +220,9 @@ export class CatalogTypesService {
   // ─────────────────────────────────────────────────────────────────────
 
   async getCategoryTranslations(categoryId: string) {
-    const exists = await this.prisma.category.findUnique({ where: { id: categoryId } });
+    const exists = await this.prisma.category.findUnique({
+      where: { id: categoryId },
+    });
     if (!exists) {
       throw new NotFoundException('Category not found');
     }
@@ -214,8 +232,13 @@ export class CatalogTypesService {
     });
   }
 
-  async upsertCategoryTranslation(categoryId: string, dto: UpsertCategoryTranslationDto) {
-    const exists = await this.prisma.category.findUnique({ where: { id: categoryId } });
+  async upsertCategoryTranslation(
+    categoryId: string,
+    dto: UpsertCategoryTranslationDto,
+  ) {
+    const exists = await this.prisma.category.findUnique({
+      where: { id: categoryId },
+    });
     if (!exists) {
       throw new NotFoundException('Category not found');
     }
@@ -265,7 +288,9 @@ export class CatalogTypesService {
   // ─────────────────────────────────────────────────────────────────────
 
   async getTagTranslations(tagId: string) {
-    const exists = await this.prisma.tourTag.findUnique({ where: { id: tagId } });
+    const exists = await this.prisma.tourTag.findUnique({
+      where: { id: tagId },
+    });
     if (!exists) {
       throw new NotFoundException('Tag not found');
     }
@@ -276,7 +301,9 @@ export class CatalogTypesService {
   }
 
   async upsertTagTranslation(tagId: string, dto: UpsertTagTranslationDto) {
-    const exists = await this.prisma.tourTag.findUnique({ where: { id: tagId } });
+    const exists = await this.prisma.tourTag.findUnique({
+      where: { id: tagId },
+    });
     if (!exists) {
       throw new NotFoundException('Tag not found');
     }

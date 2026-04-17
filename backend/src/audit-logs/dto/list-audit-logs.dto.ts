@@ -36,5 +36,4 @@ export class ListAuditLogsDto extends ListQueryDto {
   @IsOptional()
   @IsDateString()
   dateTo?: string;
-
 }

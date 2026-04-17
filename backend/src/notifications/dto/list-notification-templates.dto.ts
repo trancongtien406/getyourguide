@@ -1,15 +1,9 @@
 import { NotificationChannel } from '@prisma/client';
 import { Transform } from 'class-transformer';
-import {
-    IsBoolean,
-    IsEnum,
-    IsOptional,
-    IsString,
-} from 'class-validator';
+import { IsBoolean, IsEnum, IsOptional, IsString } from 'class-validator';
 import { ListQueryDto } from '../../common/dto/list-query.dto';
 
 export class ListNotificationTemplatesDto extends ListQueryDto {
-
   @IsOptional()
   @IsString()
   eventKey?: string;

@@ -224,6 +224,7 @@ function OptionCard({
         const message = err instanceof Error ? err.message : t('addToCartError');
         setError(message);
         addToast('error', message);
+      } finally {
         setLoading(false);
       }
     } else {

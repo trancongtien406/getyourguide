@@ -1,9 +1,4 @@
-import {
-    IsDateString,
-    IsOptional,
-    IsString,
-    Length,
-} from 'class-validator';
+import { IsDateString, IsOptional, IsString, Length } from 'class-validator';
 import { ListQueryDto } from '../../common/dto/list-query.dto';
 
 export class ListExchangeRatesDto extends ListQueryDto {

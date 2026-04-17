@@ -1,10 +1,5 @@
 import { Transform } from 'class-transformer';
-import {
-  IsBoolean,
-  IsIn,
-  IsOptional,
-  IsUUID,
-} from 'class-validator';
+import { IsBoolean, IsIn, IsOptional, IsUUID } from 'class-validator';
 import { ListQueryDto } from '../../common/dto/list-query.dto';
 
 export class ListApiKeysDto extends ListQueryDto {

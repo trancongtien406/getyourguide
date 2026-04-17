@@ -1,18 +1,21 @@
 import {
-    Body,
-    Controller,
-    Delete,
-    Get,
-    Param,
-    Patch,
-    Post,
-    Query,
-    UseGuards,
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
 } from '@nestjs/common';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import type { JwtPayload } from '../auth/interfaces/jwt-payload.interface';
-import { Locale, type RequestLocale } from '../common/decorators/locale.decorator';
+import {
+  Locale,
+  type RequestLocale,
+} from '../common/decorators/locale.decorator';
 import { BlogService } from './blog.service';
 import { BlogListPostsDto } from './dto/blog-list-posts.dto';
 import { BlogListTaxonomyDto } from './dto/blog-list-taxonomy.dto';
@@ -33,23 +36,35 @@ export class BlogController {
   constructor(private readonly blogService: BlogService) {}
 
   @Get('categories')
-  listCategories(@Query() query: BlogListTaxonomyDto, @Locale() locale: RequestLocale) {
+  listCategories(
+    @Query() query: BlogListTaxonomyDto,
+    @Locale() locale: RequestLocale,
+  ) {
     return this.blogService.listCategories(query, locale.language);
   }
 
   @Get('tags')
-  listTags(@Query() query: BlogListTaxonomyDto, @Locale() locale: RequestLocale) {
+  listTags(
+    @Query() query: BlogListTaxonomyDto,
+    @Locale() locale: RequestLocale,
+  ) {
     return this.blogService.listTags(query, locale.language);
   }
 
   @Get('posts')
-  listPostsPublic(@Query() query: BlogListPostsDto, @Locale() locale: RequestLocale) {
+  listPostsPublic(
+    @Query() query: BlogListPostsDto,
+    @Locale() locale: RequestLocale,
+  ) {
     return this.blogService.listPostsPublic(query, locale.language);
   }
 
   @UseGuards(JwtAuthGuard)
   @Get('admin/posts')
-  listPostsAdmin(@CurrentUser() actor: JwtPayload, @Query() query: BlogListPostsDto) {
+  listPostsAdmin(
+    @CurrentUser() actor: JwtPayload,
+    @Query() query: BlogListPostsDto,
+  ) {
     return this.blogService.listPostsAdmin(actor, query);
   }
 
@@ -61,13 +76,19 @@ export class BlogController {
 
   @UseGuards(JwtAuthGuard)
   @Get('admin/posts/:id/translations')
-  getPostTranslations(@CurrentUser() actor: JwtPayload, @Param('id') id: string) {
+  getPostTranslations(
+    @CurrentUser() actor: JwtPayload,
+    @Param('id') id: string,
+  ) {
     return this.blogService.getPostTranslations(actor, id);
   }
 
   @UseGuards(JwtAuthGuard)
   @Post('admin/categories')
-  createCategory(@CurrentUser() actor: JwtPayload, @Body() dto: CreateBlogCategoryDto) {
+  createCategory(
+    @CurrentUser() actor: JwtPayload,
+    @Body() dto: CreateBlogCategoryDto,
+  ) {
     return this.blogService.createCategory(actor, dto);
   }
 

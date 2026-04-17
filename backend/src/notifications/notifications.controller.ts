@@ -1,12 +1,12 @@
 import {
-    Body,
-    Controller,
-    Get,
-    Param,
-    Patch,
-    Post,
-    Query,
-    UseGuards,
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
 } from '@nestjs/common';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -25,19 +25,28 @@ export class NotificationsController {
 
   @UseGuards(JwtAuthGuard)
   @Get('me')
-  listMyNotifications(@CurrentUser() actor: JwtPayload, @Query() query: ListNotificationsDto) {
+  listMyNotifications(
+    @CurrentUser() actor: JwtPayload,
+    @Query() query: ListNotificationsDto,
+  ) {
     return this.notificationsService.listMyNotifications(actor, query);
   }
 
   @UseGuards(JwtAuthGuard)
   @Get('admin')
-  listAdminNotifications(@CurrentUser() actor: JwtPayload, @Query() query: ListNotificationsDto) {
+  listAdminNotifications(
+    @CurrentUser() actor: JwtPayload,
+    @Query() query: ListNotificationsDto,
+  ) {
     return this.notificationsService.listAdminNotifications(actor, query);
   }
 
   @UseGuards(JwtAuthGuard)
   @Post('admin/send')
-  createNotification(@CurrentUser() actor: JwtPayload, @Body() dto: CreateNotificationDto) {
+  createNotification(
+    @CurrentUser() actor: JwtPayload,
+    @Body() dto: CreateNotificationDto,
+  ) {
     return this.notificationsService.createNotification(actor, dto);
   }
 

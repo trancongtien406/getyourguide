@@ -1,11 +1,11 @@
 import { DepartureSlotStatus } from '@prisma/client';
 import {
-    IsDateString,
-    IsEnum,
-    IsInt,
-    IsOptional,
-    IsString,
-    Min,
+  IsDateString,
+  IsEnum,
+  IsInt,
+  IsOptional,
+  IsString,
+  Min,
 } from 'class-validator';
 
 export class UpdateDepartureSlotDto {

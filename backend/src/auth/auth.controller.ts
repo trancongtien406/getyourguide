@@ -1,16 +1,16 @@
 import {
-    Body,
-    Controller,
-    Delete,
-    Get,
-    Param,
-    Patch,
-    Post,
-    Query,
-    Req,
-    Res,
-    UnauthorizedException,
-    UseGuards,
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  Req,
+  Res,
+  UnauthorizedException,
+  UseGuards,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Throttle } from '@nestjs/throttler';
@@ -56,7 +56,7 @@ export class AuthController {
       httpOnly: true,
       secure: this.isProduction,
       sameSite: this.isProduction ? 'strict' : 'lax',
-      path: '/auth',          // only sent to /auth/* endpoints
+      path: '/auth', // only sent to /auth/* endpoints
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
     });
   }
@@ -99,7 +99,14 @@ export class AuthController {
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const token = req.cookies?.[REFRESH_COOKIE];
+    const rawCookies: unknown = req.cookies;
+    const cookies =
+      rawCookies && typeof rawCookies === 'object'
+        ? (rawCookies as Record<string, unknown>)
+        : undefined;
+    const rawToken = cookies?.[REFRESH_COOKIE];
+    const token = typeof rawToken === 'string' ? rawToken : undefined;
+
     if (!token) {
       throw new UnauthorizedException('No refresh token');
     }
@@ -132,7 +139,10 @@ export class AuthController {
 
   @UseGuards(JwtAuthGuard)
   @Post('change-password')
-  changePassword(@CurrentUser() user: JwtPayload, @Body() dto: ChangePasswordDto) {
+  changePassword(
+    @CurrentUser() user: JwtPayload,
+    @Body() dto: ChangePasswordDto,
+  ) {
     return this.authService.changePassword(user.sub, dto);
   }
 
@@ -290,6 +300,10 @@ export class AuthController {
     @Param('id') userId: string,
     @Body() dto: AdminResetUserPasswordDto,
   ) {
-    return this.userManagementService.resetUserPasswordByAdmin(user, userId, dto);
+    return this.userManagementService.resetUserPasswordByAdmin(
+      user,
+      userId,
+      dto,
+    );
   }
 }

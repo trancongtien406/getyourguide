@@ -1,8 +1,8 @@
 import {
-    ConflictException,
-    ForbiddenException,
-    Injectable,
-    NotFoundException,
+  ConflictException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
 } from '@nestjs/common';
 import { Prisma, UserRole } from '@prisma/client';
 import type { JwtPayload } from '../auth/interfaces/jwt-payload.interface';
@@ -18,7 +18,9 @@ import { UpdateNotificationTemplateDto } from './dto/update-notification-templat
 export class NotificationsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  private resolveNotificationOrderBy(query: ListNotificationsDto): Prisma.NotificationOrderByWithRelationInput[] {
+  private resolveNotificationOrderBy(
+    query: ListNotificationsDto,
+  ): Prisma.NotificationOrderByWithRelationInput[] {
     const sortOrder: Prisma.SortOrder = query.sortOrder ?? 'desc';
     switch (query.sortBy) {
       case 'status':
@@ -131,7 +133,10 @@ export class NotificationsService {
     });
   }
 
-  async dispatchQueuedNotifications(actor: JwtPayload, dto: DispatchNotificationsDto) {
+  async dispatchQueuedNotifications(
+    actor: JwtPayload,
+    dto: DispatchNotificationsDto,
+  ) {
     this.ensureCanManageNotifications(actor);
 
     const limit = dto.limit ?? 100;
@@ -210,14 +215,23 @@ export class NotificationsService {
         },
       });
     } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
-        throw new ConflictException('Template already exists for event/channel/language');
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+      ) {
+        throw new ConflictException(
+          'Template already exists for event/channel/language',
+        );
       }
       throw error;
     }
   }
 
-  async updateTemplate(actor: JwtPayload, id: string, dto: UpdateNotificationTemplateDto) {
+  async updateTemplate(
+    actor: JwtPayload,
+    id: string,
+    dto: UpdateNotificationTemplateDto,
+  ) {
     this.ensureCanManageNotifications(actor);
     await this.ensureTemplateExists(id);
 
@@ -244,7 +258,9 @@ export class NotificationsService {
   }
 
   private async ensureTemplateExists(id: string) {
-    const template = await this.prisma.notificationTemplate.findUnique({ where: { id } });
+    const template = await this.prisma.notificationTemplate.findUnique({
+      where: { id },
+    });
     if (!template) {
       throw new NotFoundException('Notification template not found');
     }

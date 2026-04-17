@@ -1,18 +1,21 @@
 import {
-    Body,
-    Controller,
-    Delete,
-    Get,
-    Param,
-    Patch,
-    Post,
-    Query,
-    UseGuards,
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
 } from '@nestjs/common';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import type { JwtPayload } from '../auth/interfaces/jwt-payload.interface';
-import { Locale, type RequestLocale } from '../common/decorators/locale.decorator';
+import {
+  Locale,
+  type RequestLocale,
+} from '../common/decorators/locale.decorator';
 import { CatalogService } from './catalog.service';
 import { BulkGenerateDeparturesDto } from './dto/bulk-generate-departures.dto';
 import { CreateDepartureSlotDto } from './dto/create-departure-slot.dto';
@@ -42,22 +45,38 @@ export class CatalogController {
 
   @Get('tours')
   listTours(@Query() query: ListToursDto, @Locale() locale: RequestLocale) {
-    return this.catalogService.listTours(query, locale.language, locale.currency);
+    return this.catalogService.listTours(
+      query,
+      locale.language,
+      locale.currency,
+    );
   }
 
   @Get('tours/search')
   searchTours(@Query() query: SearchToursDto, @Locale() locale: RequestLocale) {
-    return this.catalogService.searchTours(query, locale.language, locale.currency);
+    return this.catalogService.searchTours(
+      query,
+      locale.language,
+      locale.currency,
+    );
   }
 
   @Get('tours/by-slug/:slug')
   getTourBySlug(@Param('slug') slug: string, @Locale() locale: RequestLocale) {
-    return this.catalogService.getTourBySlug(slug, locale.language, locale.currency);
+    return this.catalogService.getTourBySlug(
+      slug,
+      locale.language,
+      locale.currency,
+    );
   }
 
   @Get('tours/:id')
   getTourById(@Param('id') id: string, @Locale() locale: RequestLocale) {
-    return this.catalogService.getTourById(id, locale.language, locale.currency);
+    return this.catalogService.getTourById(
+      id,
+      locale.language,
+      locale.currency,
+    );
   }
 
   @Get('tours/:id/translations')
@@ -123,10 +142,7 @@ export class CatalogController {
 
   @UseGuards(JwtAuthGuard)
   @Delete('tour-media/:id')
-  deleteTourMedia(
-    @CurrentUser() actor: JwtPayload,
-    @Param('id') id: string,
-  ) {
+  deleteTourMedia(@CurrentUser() actor: JwtPayload, @Param('id') id: string) {
     return this.catalogService.deleteTourMedia(actor, id);
   }
 
@@ -206,7 +222,11 @@ export class CatalogController {
     @Param('id') id: string,
     @Param('languageCode') languageCode: string,
   ) {
-    return this.catalogService.deleteTourOptionTranslation(actor, id, languageCode);
+    return this.catalogService.deleteTourOptionTranslation(
+      actor,
+      id,
+      languageCode,
+    );
   }
 
   @UseGuards(JwtAuthGuard)
@@ -334,6 +354,10 @@ export class CatalogController {
     @Param('id') id: string,
     @Param('languageCode') languageCode: string,
   ) {
-    return this.catalogService.deleteItineraryStopTranslation(actor, id, languageCode);
+    return this.catalogService.deleteItineraryStopTranslation(
+      actor,
+      id,
+      languageCode,
+    );
   }
 }

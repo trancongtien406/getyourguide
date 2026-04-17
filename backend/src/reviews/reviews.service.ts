@@ -1,10 +1,16 @@
 import {
-    BadRequestException,
-    ForbiddenException,
-    Injectable,
-    NotFoundException,
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
 } from '@nestjs/common';
-import { BookingStatus, Prisma, ReviewReportStatus, ReviewStatus, UserRole } from '@prisma/client';
+import {
+  BookingStatus,
+  Prisma,
+  ReviewReportStatus,
+  ReviewStatus,
+  UserRole,
+} from '@prisma/client';
 import type { JwtPayload } from '../auth/interfaces/jwt-payload.interface';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateReviewDto } from './dto/create-review.dto';
@@ -18,7 +24,9 @@ import { VoteReviewDto } from './dto/vote-review.dto';
 export class ReviewsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  private resolveReviewOrderBy(query: ListTourReviewsDto): Prisma.ReviewOrderByWithRelationInput[] {
+  private resolveReviewOrderBy(
+    query: ListTourReviewsDto,
+  ): Prisma.ReviewOrderByWithRelationInput[] {
     const sortOrder: Prisma.SortOrder = query.sortOrder ?? 'desc';
     switch (query.sortBy) {
       case 'rating':
@@ -133,9 +141,15 @@ export class ReviewsService {
 
   async createReview(actor: JwtPayload, dto: CreateReviewDto) {
     await this.ensureTourExists(dto.tourId);
-    const verification = await this.validateReviewBooking(actor.sub, dto.tourId, dto.bookingId);
+    const verification = await this.validateReviewBooking(
+      actor.sub,
+      dto.tourId,
+      dto.bookingId,
+    );
 
-    const status = verification.verifiedBooking ? ReviewStatus.PUBLISHED : ReviewStatus.PENDING;
+    const status = verification.verifiedBooking
+      ? ReviewStatus.PUBLISHED
+      : ReviewStatus.PENDING;
 
     const review = await this.prisma.review.create({
       data: {
@@ -161,7 +175,11 @@ export class ReviewsService {
     return review;
   }
 
-  async updateMyReview(actor: JwtPayload, reviewId: string, dto: UpdateReviewDto) {
+  async updateMyReview(
+    actor: JwtPayload,
+    reviewId: string,
+    dto: UpdateReviewDto,
+  ) {
     const review = await this.ensureReviewExists(reviewId);
     if (review.userId !== actor.sub) {
       throw new ForbiddenException('Insufficient permissions');
@@ -177,7 +195,9 @@ export class ReviewsService {
         title: dto.title,
         body: dto.body,
         languageCode: dto.languageCode,
-        status: review.verifiedBooking ? ReviewStatus.PUBLISHED : ReviewStatus.PENDING,
+        status: review.verifiedBooking
+          ? ReviewStatus.PUBLISHED
+          : ReviewStatus.PENDING,
       },
     });
 
@@ -198,7 +218,11 @@ export class ReviewsService {
     return { message: 'Review deleted' };
   }
 
-  async voteReviewHelpful(actor: JwtPayload, reviewId: string, dto: VoteReviewDto) {
+  async voteReviewHelpful(
+    actor: JwtPayload,
+    reviewId: string,
+    dto: VoteReviewDto,
+  ) {
     await this.ensureReviewExists(reviewId);
 
     await this.prisma.reviewVote.upsert({
@@ -233,7 +257,11 @@ export class ReviewsService {
     });
   }
 
-  async moderateReview(actor: JwtPayload, reviewId: string, dto: ModerateReviewDto) {
+  async moderateReview(
+    actor: JwtPayload,
+    reviewId: string,
+    dto: ModerateReviewDto,
+  ) {
     this.ensureCanModerate(actor);
     const review = await this.ensureReviewExists(reviewId);
 
@@ -248,12 +276,18 @@ export class ReviewsService {
     return updated;
   }
 
-  private async validateReviewBooking(userId: string, tourId: string, bookingId?: string) {
+  private async validateReviewBooking(
+    userId: string,
+    tourId: string,
+    bookingId?: string,
+  ) {
     if (!bookingId) {
       return { verifiedBooking: false, bookingId: null as string | null };
     }
 
-    const booking = await this.prisma.booking.findUnique({ where: { id: bookingId } });
+    const booking = await this.prisma.booking.findUnique({
+      where: { id: bookingId },
+    });
     if (!booking) {
       throw new NotFoundException('Booking not found');
     }
@@ -332,7 +366,9 @@ export class ReviewsService {
   }
 
   private async ensureReviewExists(reviewId: string) {
-    const review = await this.prisma.review.findUnique({ where: { id: reviewId } });
+    const review = await this.prisma.review.findUnique({
+      where: { id: reviewId },
+    });
     if (!review) {
       throw new NotFoundException('Review not found');
     }
@@ -343,7 +379,11 @@ export class ReviewsService {
   // Review Reports
   // ─────────────────────────────────────────────────────────────────────
 
-  async reportReview(actor: JwtPayload, reviewId: string, dto: ReportReviewDto) {
+  async reportReview(
+    actor: JwtPayload,
+    reviewId: string,
+    dto: ReportReviewDto,
+  ) {
     await this.ensureReviewExists(reviewId);
 
     try {
@@ -383,7 +423,9 @@ export class ReviewsService {
   ) {
     this.ensureCanModerate(actor);
 
-    const report = await this.prisma.reviewReport.findUnique({ where: { id: reportId } });
+    const report = await this.prisma.reviewReport.findUnique({
+      where: { id: reportId },
+    });
     if (!report) {
       throw new NotFoundException('Review report not found');
     }

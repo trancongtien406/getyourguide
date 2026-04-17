@@ -104,7 +104,9 @@ export default function CartPage() {
       const data = await cartApi.getMyCart();
       setServerCart(data);
       if (data?.items) {
-        const uniqueTourIds = [...new Set(data.items.map((i: CartItem) => i.tourId))];
+        const uniqueTourIds = [
+          ...new Set(data.items.map((i: CartItem) => i.tourId).filter(Boolean)),
+        ] as string[];
         fetchTourMeta(uniqueTourIds);
       }
     } catch { /* empty */ } finally {
@@ -129,13 +131,13 @@ export default function CartPage() {
       return serverCart.items.map((i: CartItem) => ({
         id: i.id,
         departureSlotId: i.departureSlotId,
-        tourId: i.tourId,
-        tourTitle: i.tourTitle,
-        optionTitle: i.optionTitle,
+        tourId: i.tourId ?? '',
+        tourTitle: i.tourTitle ?? '',
+        optionTitle: i.optionTitle ?? '',
         quantity: i.quantity,
         unitPrice: Number(i.unitPrice),
-        lineTotal: Number(i.lineTotal),
-        startsAt: i.startsAt,
+        lineTotal: Number(i.lineTotal ?? i.totalPrice ?? 0),
+        startsAt: i.startsAt ?? '',
         languageCode: i.languageCode,
       }));
     }
@@ -267,14 +269,18 @@ export default function CartPage() {
         currencyCode: guestCart.currencyCode!,
         contactEmail: guestEmail.trim(),
         contactPhoneE164: guestPhone.trim() || undefined,
-      }) as { id?: string; bookingId?: string; bookingRef?: string };
+      });
 
       guestCart.clearCart();
       addToast('success', t('cartBookingCreated'));
 
-      const bookingId = result?.id ?? result?.bookingId;
+      const bookingId = result?.id;
+      const guestAccessToken = result?.guestAccessToken;
       if (bookingId) {
-        router.push(`/checkout/${bookingId}`);
+        const query = guestAccessToken
+          ? `?guestToken=${encodeURIComponent(guestAccessToken)}`
+          : '';
+        router.push(`/checkout/${bookingId}${query}`);
       } else {
         router.push('/tours');
       }

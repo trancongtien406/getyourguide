@@ -95,9 +95,14 @@ export default function MyBookingsPage() {
     {
       key: 'status',
       header: tb('colStatus'),
-      render: (b: Booking) => (
-        <Badge variant={statusVariant(b.status)}>{b.status.replace(/_/g, ' ')}</Badge>
-      ),
+      render: (b: Booking) => {
+        const statusKey = STATUS_I18N_MAP[b.status as BookingStatus];
+        const statusLabel = statusKey
+          ? tb(statusKey as Parameters<typeof tb>[0])
+          : b.status.replace(/_/g, ' ');
+
+        return <Badge variant={statusVariant(b.status)}>{statusLabel}</Badge>;
+      },
     },
     {
       key: 'totalAmount',

@@ -1,5 +1,12 @@
 import { plainToInstance } from 'class-transformer';
-import { IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, validateSync } from 'class-validator';
+import {
+  IsEnum,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+  validateSync,
+} from 'class-validator';
 
 export enum Environment {
   Development = 'development',
@@ -17,11 +24,17 @@ export class EnvironmentVariables {
   PORT: number = 3000;
 
   @IsString()
-  @IsNotEmpty({ message: 'JWT_ACCESS_SECRET is required. Do NOT use default secrets in production.' })
+  @IsNotEmpty({
+    message:
+      'JWT_ACCESS_SECRET is required. Do NOT use default secrets in production.',
+  })
   JWT_ACCESS_SECRET: string;
 
   @IsString()
-  @IsNotEmpty({ message: 'JWT_REFRESH_SECRET is required. Do NOT use default secrets in production.' })
+  @IsNotEmpty({
+    message:
+      'JWT_REFRESH_SECRET is required. Do NOT use default secrets in production.',
+  })
   JWT_REFRESH_SECRET: string;
 
   @IsString()

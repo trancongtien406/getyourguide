@@ -1,3 +1,5 @@
+import { Logger } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import {
   ConnectedSocket,
   MessageBody,
@@ -7,13 +9,11 @@ import {
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
-import { Logger } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
+import type { Server, Socket } from 'socket.io';
 import type { JwtPayload } from '../auth/interfaces/jwt-payload.interface';
 import { MessagesService } from './messages.service';
-import type { Server, Socket } from 'socket.io';
 
-type SocketWithUser = Socket & { data: { user?: JwtPayload } };
+type SocketWithUser = Socket;
 
 @WebSocketGateway({
   namespace: 'messages',
@@ -21,7 +21,9 @@ type SocketWithUser = Socket & { data: { user?: JwtPayload } };
     origin: '*',
   },
 })
-export class MessagesGateway implements OnGatewayConnection, OnGatewayDisconnect {
+export class MessagesGateway
+  implements OnGatewayConnection, OnGatewayDisconnect
+{
   @WebSocketServer()
   server!: Server;
 
@@ -44,7 +46,7 @@ export class MessagesGateway implements OnGatewayConnection, OnGatewayDisconnect
         secret: process.env.JWT_ACCESS_SECRET ?? 'dev_access_secret_change_me',
       });
 
-      client.data.user = payload;
+      this.setSocketUser(client, payload);
       this.logger.debug(`Client connected: ${client.id} user=${payload.sub}`);
     } catch {
       client.disconnect(true);
@@ -52,7 +54,7 @@ export class MessagesGateway implements OnGatewayConnection, OnGatewayDisconnect
   }
 
   handleDisconnect(client: SocketWithUser) {
-    const userId = client.data.user?.sub ?? 'unknown';
+    const userId = this.getSocketUser(client)?.sub ?? 'unknown';
     this.logger.debug(`Client disconnected: ${client.id} user=${userId}`);
   }
 
@@ -110,12 +112,16 @@ export class MessagesGateway implements OnGatewayConnection, OnGatewayDisconnect
       return { ok: false, message: 'conversationId is required' };
     }
 
-    const message = await this.messagesService.sendMessage(actor, conversationId, {
-      body: payload.body,
-      messageType: payload.messageType,
-      metadata: payload.metadata,
-      attachments: payload.attachments,
-    });
+    const message = await this.messagesService.sendMessage(
+      actor,
+      conversationId,
+      {
+        body: payload.body,
+        messageType: payload.messageType,
+        metadata: payload.metadata,
+        attachments: payload.attachments,
+      },
+    );
 
     this.server.to(this.roomName(conversationId)).emit('message.created', {
       conversationId,
@@ -136,14 +142,19 @@ export class MessagesGateway implements OnGatewayConnection, OnGatewayDisconnect
       return { ok: false, message: 'conversationId is required' };
     }
 
-    const result = await this.messagesService.markConversationRead(actor, conversationId);
+    const result = await this.messagesService.markConversationRead(
+      actor,
+      conversationId,
+    );
     const summary = await this.messagesService.getUnreadSummary(actor);
 
-    this.server.to(this.roomName(conversationId)).emit('conversation.read.updated', {
-      conversationId,
-      userId: actor.sub,
-      readAt: new Date().toISOString(),
-    });
+    this.server
+      .to(this.roomName(conversationId))
+      .emit('conversation.read.updated', {
+        conversationId,
+        userId: actor.sub,
+        readAt: new Date().toISOString(),
+      });
 
     return { ok: true, result, summary };
   }
@@ -170,8 +181,8 @@ export class MessagesGateway implements OnGatewayConnection, OnGatewayDisconnect
     return { ok: true };
   }
 
-  private requireSocketUser(client: SocketWithUser) {
-    const actor = client.data.user;
+  private requireSocketUser(client: SocketWithUser): JwtPayload {
+    const actor = this.getSocketUser(client);
     if (!actor) {
       throw new Error('Unauthorized socket');
     }
@@ -183,16 +194,65 @@ export class MessagesGateway implements OnGatewayConnection, OnGatewayDisconnect
   }
 
   private extractToken(client: SocketWithUser) {
-    const authToken = client.handshake.auth?.token;
+    const rawAuth: unknown = client.handshake.auth;
+    const authToken =
+      rawAuth && typeof rawAuth === 'object'
+        ? (rawAuth as Record<string, unknown>).token
+        : undefined;
     if (typeof authToken === 'string' && authToken.length > 0) {
       return authToken;
     }
 
-    const authorization = client.handshake.headers.authorization;
-    if (typeof authorization === 'string' && authorization.startsWith('Bearer ')) {
+    const rawAuthorizationHeader: unknown =
+      client.handshake.headers.authorization;
+    const authorization = Array.isArray(rawAuthorizationHeader)
+      ? (rawAuthorizationHeader as unknown[]).find(
+          (value): value is string => typeof value === 'string',
+        )
+      : rawAuthorizationHeader;
+    if (
+      typeof authorization === 'string' &&
+      authorization.startsWith('Bearer ')
+    ) {
       return authorization.slice(7);
     }
 
     return undefined;
+  }
+
+  private setSocketUser(client: SocketWithUser, payload: JwtPayload): void {
+    const rawData: unknown = client.data;
+    if (!rawData || typeof rawData !== 'object') {
+      return;
+    }
+
+    (rawData as Record<string, unknown>).user = payload;
+  }
+
+  private getSocketUser(client: SocketWithUser): JwtPayload | undefined {
+    const rawData: unknown = client.data;
+    if (!rawData || typeof rawData !== 'object') {
+      return undefined;
+    }
+
+    const rawUser = (rawData as Record<string, unknown>).user;
+    if (!this.isJwtPayload(rawUser)) {
+      return undefined;
+    }
+
+    return rawUser;
+  }
+
+  private isJwtPayload(value: unknown): value is JwtPayload {
+    if (!value || typeof value !== 'object') {
+      return false;
+    }
+
+    const payload = value as Record<string, unknown>;
+    return (
+      typeof payload.sub === 'string' &&
+      typeof payload.email === 'string' &&
+      Array.isArray(payload.roles)
+    );
   }
 }

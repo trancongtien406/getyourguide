@@ -1,11 +1,17 @@
 import {
-    BadRequestException,
-    ConflictException,
-    ForbiddenException,
-    Injectable,
-    NotFoundException,
+  BadRequestException,
+  ConflictException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
 } from '@nestjs/common';
-import { BookingStatus, Prisma, PromoScope, PromoType, UserRole } from '@prisma/client';
+import {
+  BookingStatus,
+  Prisma,
+  PromoScope,
+  PromoType,
+  UserRole,
+} from '@prisma/client';
 import type { JwtPayload } from '../auth/interfaces/jwt-payload.interface';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreatePromotionDto } from './dto/create-promotion.dto';
@@ -39,7 +45,9 @@ export class PromotionsService {
     }
   }
 
-  private resolveAdminOrderBy(query: ListPromotionsDto): Prisma.PromotionOrderByWithRelationInput[] {
+  private resolveAdminOrderBy(
+    query: ListPromotionsDto,
+  ): Prisma.PromotionOrderByWithRelationInput[] {
     const sortOrder: Prisma.SortOrder = query.sortOrder ?? 'desc';
     switch (query.sortBy) {
       case 'code':
@@ -114,7 +122,9 @@ export class PromotionsService {
     const page = query.page ?? 1;
     const pageSize = query.pageSize ?? 20;
     const where: Prisma.PromotionWhereInput = {
-      code: query.code ? { contains: query.code, mode: 'insensitive' } : undefined,
+      code: query.code
+        ? { contains: query.code, mode: 'insensitive' }
+        : undefined,
       promoType: query.promoType,
       promoScope: query.promoScope,
       ...(query.activeOnly ? { isActive: true } : {}),
@@ -172,20 +182,27 @@ export class PromotionsService {
           startsAt: new Date(dto.startsAt),
           endsAt: dto.endsAt ? new Date(dto.endsAt) : undefined,
           isActive: dto.isActive,
-          metadata: ({
+          metadata: {
             currencyCode: dto.currencyCode,
-          } as unknown) as Prisma.JsonObject,
+          } as unknown as Prisma.JsonObject,
         },
       });
     } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+      ) {
         throw new ConflictException('Promotion code already exists');
       }
       throw error;
     }
   }
 
-  async updatePromotion(actor: JwtPayload, id: string, dto: UpdatePromotionDto) {
+  async updatePromotion(
+    actor: JwtPayload,
+    id: string,
+    dto: UpdatePromotionDto,
+  ) {
     this.ensureCanManagePromotions(actor);
     const existing = await this.ensurePromotionExists(id);
 
@@ -201,7 +218,8 @@ export class PromotionsService {
         name: dto.name,
         promoType: dto.promoType,
         promoScope: dto.promoScope,
-        value: dto.value !== undefined ? new Prisma.Decimal(dto.value) : undefined,
+        value:
+          dto.value !== undefined ? new Prisma.Decimal(dto.value) : undefined,
         maxDiscountAmount:
           dto.maxDiscountAmount !== undefined
             ? new Prisma.Decimal(dto.maxDiscountAmount)
@@ -213,13 +231,22 @@ export class PromotionsService {
         usageLimitTotal: dto.usageLimitTotal,
         usageLimitPerUser: dto.usageLimitPerUser,
         startsAt: dto.startsAt ? new Date(dto.startsAt) : undefined,
-        endsAt: dto.endsAt === null ? null : dto.endsAt ? new Date(dto.endsAt) : undefined,
+        endsAt:
+          dto.endsAt === null
+            ? null
+            : dto.endsAt
+              ? new Date(dto.endsAt)
+              : undefined,
         isActive: dto.isActive,
       },
     });
   }
 
-  async setPromotionScopes(actor: JwtPayload, id: string, dto: SetPromotionScopesDto) {
+  async setPromotionScopes(
+    actor: JwtPayload,
+    id: string,
+    dto: SetPromotionScopesDto,
+  ) {
     this.ensureCanManagePromotions(actor);
     const promotion = await this.ensurePromotionExists(id);
 
@@ -243,7 +270,9 @@ export class PromotionsService {
   }
 
   async redeemPromotion(actor: JwtPayload, dto: RedeemPromotionDto) {
-    const booking = await this.prisma.booking.findUnique({ where: { id: dto.bookingId } });
+    const booking = await this.prisma.booking.findUnique({
+      where: { id: dto.bookingId },
+    });
     if (!booking) {
       throw new NotFoundException('Booking not found');
     }
@@ -251,7 +280,9 @@ export class PromotionsService {
       throw new ForbiddenException('Cannot apply promotion to this booking');
     }
     if (booking.status !== BookingStatus.PENDING_PAYMENT) {
-      throw new BadRequestException('Promotion can only be applied to pending payment booking');
+      throw new BadRequestException(
+        'Promotion can only be applied to pending payment booking',
+      );
     }
 
     const promotion = await this.prisma.promotion.findFirst({
@@ -269,10 +300,17 @@ export class PromotionsService {
       where: { bookingId: booking.id },
     });
 
-    this.validatePromotionForBooking(promotion, booking, bookingItems, scopeEntries);
+    this.validatePromotionForBooking(
+      promotion,
+      booking,
+      bookingItems,
+      scopeEntries,
+    );
 
     const [totalUsage, userUsage] = await Promise.all([
-      this.prisma.promotionRedemption.count({ where: { promotionId: promotion.id } }),
+      this.prisma.promotionRedemption.count({
+        where: { promotionId: promotion.id },
+      }),
       this.prisma.promotionRedemption.count({
         where: {
           promotionId: promotion.id,
@@ -281,11 +319,17 @@ export class PromotionsService {
       }),
     ]);
 
-    if (promotion.usageLimitTotal !== null && totalUsage >= promotion.usageLimitTotal) {
+    if (
+      promotion.usageLimitTotal !== null &&
+      totalUsage >= promotion.usageLimitTotal
+    ) {
       throw new BadRequestException('Promotion usage limit exceeded');
     }
 
-    if (promotion.usageLimitPerUser !== null && userUsage >= promotion.usageLimitPerUser) {
+    if (
+      promotion.usageLimitPerUser !== null &&
+      userUsage >= promotion.usageLimitPerUser
+    ) {
       throw new BadRequestException('Promotion per-user limit exceeded');
     }
 
@@ -308,7 +352,9 @@ export class PromotionsService {
       });
 
       if (existingRedemption) {
-        throw new ConflictException('Promotion already applied to this booking');
+        throw new ConflictException(
+          'Promotion already applied to this booking',
+        );
       }
 
       const updatedBooking = await tx.booking.update({
@@ -335,10 +381,10 @@ export class PromotionsService {
         data: {
           bookingId: booking.id,
           eventType: 'PROMOTION_APPLIED',
-          payload: ({
+          payload: {
             code: promotion.code,
             discountAmount,
-          } as unknown) as Prisma.JsonObject,
+          } as unknown as Prisma.JsonObject,
           createdBy: actor.sub,
         },
       });
@@ -381,8 +427,13 @@ export class PromotionsService {
       throw new BadRequestException('Promotion has expired');
     }
 
-    if (promotion.minOrderAmount && booking.subtotalAmount.lt(promotion.minOrderAmount)) {
-      throw new BadRequestException('Booking subtotal does not meet minimum order amount');
+    if (
+      promotion.minOrderAmount &&
+      booking.subtotalAmount.lt(promotion.minOrderAmount)
+    ) {
+      throw new BadRequestException(
+        'Booking subtotal does not meet minimum order amount',
+      );
     }
 
     if (promotion.promoScope === PromoScope.GLOBAL) {
@@ -398,15 +449,21 @@ export class PromotionsService {
         !booking.supplierId ||
         !scopeEntries.some((entry) => entry.supplierId === booking.supplierId)
       ) {
-        throw new BadRequestException('Promotion does not apply to this supplier');
+        throw new BadRequestException(
+          'Promotion does not apply to this supplier',
+        );
       }
       return;
     }
 
     if (promotion.promoScope === PromoScope.TOUR) {
-      const tourIds = new Set(scopeEntries.map((entry) => entry.tourId).filter(Boolean));
+      const tourIds = new Set(
+        scopeEntries.map((entry) => entry.tourId).filter(Boolean),
+      );
       if (!bookingItems.some((item) => tourIds.has(item.tourId))) {
-        throw new BadRequestException('Promotion does not apply to booking tours');
+        throw new BadRequestException(
+          'Promotion does not apply to booking tours',
+        );
       }
       return;
     }
@@ -415,7 +472,9 @@ export class PromotionsService {
       scopeEntries.map((entry) => entry.tourOptionId).filter(Boolean),
     );
     if (!bookingItems.some((item) => optionIds.has(item.tourOptionId))) {
-      throw new BadRequestException('Promotion does not apply to booking options');
+      throw new BadRequestException(
+        'Promotion does not apply to booking options',
+      );
     }
   }
 
@@ -431,7 +490,9 @@ export class PromotionsService {
   ) {
     const metadata = (promotion.metadata ?? {}) as { currencyCode?: string };
     if (metadata.currencyCode && metadata.currencyCode !== bookingCurrency) {
-      throw new BadRequestException('Promotion is not valid for booking currency');
+      throw new BadRequestException(
+        'Promotion is not valid for booking currency',
+      );
     }
 
     let discount = new Prisma.Decimal(0);
@@ -441,7 +502,10 @@ export class PromotionsService {
       discount = promotion.value;
     }
 
-    if (promotion.maxDiscountAmount && discount.gt(promotion.maxDiscountAmount)) {
+    if (
+      promotion.maxDiscountAmount &&
+      discount.gt(promotion.maxDiscountAmount)
+    ) {
       discount = promotion.maxDiscountAmount;
     }
 
@@ -454,11 +518,17 @@ export class PromotionsService {
 
   private validateScopesByPromoScope(
     scope: PromoScope,
-    entries: Array<{ supplierId?: string; tourId?: string; tourOptionId?: string }>,
+    entries: Array<{
+      supplierId?: string;
+      tourId?: string;
+      tourOptionId?: string;
+    }>,
   ) {
     if (scope === PromoScope.GLOBAL) {
       if (entries.length) {
-        throw new BadRequestException('Global promotion cannot have scoped entries');
+        throw new BadRequestException(
+          'Global promotion cannot have scoped entries',
+        );
       }
       return;
     }

@@ -11,12 +11,18 @@ export class AuditLogsController {
   constructor(private readonly auditLogsService: AuditLogsService) {}
 
   @Get('admin')
-  listAuditLogsAdmin(@CurrentUser() actor: JwtPayload, @Query() query: ListAuditLogsDto) {
+  listAuditLogsAdmin(
+    @CurrentUser() actor: JwtPayload,
+    @Query() query: ListAuditLogsDto,
+  ) {
     return this.auditLogsService.listAuditLogs(actor, query);
   }
 
   @Get('me')
-  listMyAuditLogs(@CurrentUser() actor: JwtPayload, @Query() query: ListAuditLogsDto) {
+  listMyAuditLogs(
+    @CurrentUser() actor: JwtPayload,
+    @Query() query: ListAuditLogsDto,
+  ) {
     return this.auditLogsService.listMyAuditLogs(actor, query);
   }
 

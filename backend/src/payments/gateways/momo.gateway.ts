@@ -1,15 +1,15 @@
 import {
-    BadRequestException,
-    Injectable,
-    InternalServerErrorException,
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createHmac, randomBytes } from 'crypto';
 import type {
-    PayableBooking,
-    PaymentGateway,
-    PaymentInitiationResult,
-    WebhookVerificationResult,
+  PayableBooking,
+  PaymentGateway,
+  PaymentInitiationResult,
+  WebhookVerificationResult,
 } from './payment-gateway.interface';
 
 @Injectable()
@@ -23,13 +23,16 @@ export class MomoGateway implements PaymentGateway {
     options: { returnUrl?: string; locale?: string },
   ): Promise<PaymentInitiationResult> {
     const endpoint =
-      this.configService.get('MOMO_ENDPOINT') ?? 'https://test-payment.momo.vn/v2/gateway/api/create';
-    const partnerCode = this.configService.get('MOMO_PARTNER_CODE');
-    const accessKey = this.configService.get('MOMO_ACCESS_KEY');
-    const secretKey = this.configService.get('MOMO_SECRET_KEY');
-    const redirectUrl = options.returnUrl ?? this.configService.get('MOMO_REDIRECT_URL');
-    const ipnUrl = this.configService.get('MOMO_IPN_URL');
-    const requestType = this.configService.get('MOMO_REQUEST_TYPE') ?? 'captureWallet';
+      this.configService.get<string>('MOMO_ENDPOINT') ??
+      'https://test-payment.momo.vn/v2/gateway/api/create';
+    const partnerCode = this.configService.get<string>('MOMO_PARTNER_CODE');
+    const accessKey = this.configService.get<string>('MOMO_ACCESS_KEY');
+    const secretKey = this.configService.get<string>('MOMO_SECRET_KEY');
+    const redirectUrl =
+      options.returnUrl ?? this.configService.get<string>('MOMO_REDIRECT_URL');
+    const ipnUrl = this.configService.get<string>('MOMO_IPN_URL');
+    const requestType =
+      this.configService.get<string>('MOMO_REQUEST_TYPE') ?? 'captureWallet';
 
     if (!partnerCode || !accessKey || !secretKey || !redirectUrl || !ipnUrl) {
       throw new InternalServerErrorException('MoMo configuration is missing');
@@ -103,29 +106,31 @@ export class MomoGateway implements PaymentGateway {
     };
   }
 
-  async verifyWebhook(payload: Record<string, unknown>): Promise<WebhookVerificationResult> {
-    const accessKey = this.configService.get('MOMO_ACCESS_KEY');
-    const secretKey = this.configService.get('MOMO_SECRET_KEY');
+  verifyWebhook(
+    payload: Record<string, unknown>,
+  ): Promise<WebhookVerificationResult> {
+    const accessKey = this.configService.get<string>('MOMO_ACCESS_KEY');
+    const secretKey = this.configService.get<string>('MOMO_SECRET_KEY');
 
     if (!accessKey || !secretKey) {
-      return {
+      return Promise.resolve({
         valid: false,
         providerPaymentId: null,
         success: false,
         rawPayload: payload,
         gatewayResponse: { resultCode: 99, message: 'Config error' },
-      };
+      });
     }
 
     const providedSignature = this.str(payload, 'signature');
     if (!providedSignature) {
-      return {
+      return Promise.resolve({
         valid: false,
         providerPaymentId: null,
         success: false,
         rawPayload: payload,
         gatewayResponse: { resultCode: 98, message: 'Invalid signature' },
-      };
+      });
     }
 
     const rawSignature =
@@ -148,13 +153,13 @@ export class MomoGateway implements PaymentGateway {
       .digest('hex');
 
     if (expectedSignature !== providedSignature) {
-      return {
+      return Promise.resolve({
         valid: false,
         providerPaymentId: null,
         success: false,
         rawPayload: payload,
         gatewayResponse: { resultCode: 98, message: 'Invalid signature' },
-      };
+      });
     }
 
     const providerPaymentId = this.str(payload, 'orderId') || null;
@@ -163,21 +168,31 @@ export class MomoGateway implements PaymentGateway {
     const receivedAmount = Number(this.str(payload, 'amount'));
     const amount = Number.isNaN(receivedAmount) ? undefined : receivedAmount;
 
-    return {
+    return Promise.resolve({
       valid: true,
       providerPaymentId,
       success,
       amount,
       failureCode: success ? undefined : String(resultCode),
-      failureMessage: success ? undefined : this.str(payload, 'message') || 'MoMo payment failed',
+      failureMessage: success
+        ? undefined
+        : this.str(payload, 'message') || 'MoMo payment failed',
       rawPayload: payload,
       gatewayResponse: { resultCode: 0, message: 'success' },
-    };
+    });
   }
 
   private str(payload: Record<string, unknown>, key: string): string {
     const value = payload[key];
     if (value === null || value === undefined) return '';
-    return String(value);
+    if (
+      typeof value === 'string' ||
+      typeof value === 'number' ||
+      typeof value === 'boolean' ||
+      typeof value === 'bigint'
+    ) {
+      return String(value);
+    }
+    return '';
   }
 }

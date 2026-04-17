@@ -11,7 +11,11 @@ import { TransformResponseInterceptor } from './common/interceptors/transform-re
 
 // BigInt cannot be serialized to JSON by default.
 // This enables JSON.stringify() for Prisma BigInt fields (viewCount, fileSizeBytes, etc.)
-(BigInt.prototype as any).toJSON = function () {
+const bigintPrototype = BigInt.prototype as {
+  toJSON?: (this: bigint) => number;
+};
+
+bigintPrototype.toJSON = function toJSON(this: bigint) {
   return Number(this);
 };
 
@@ -22,7 +26,10 @@ async function bootstrap() {
   // CORS: allow frontend origin so cookies (refresh token) can be sent
   const corsOriginRaw = configService.get<string>('CORS_ORIGIN');
   const allowedOrigins = corsOriginRaw
-    ? corsOriginRaw.split(',').map((origin) => origin.trim()).filter(Boolean)
+    ? corsOriginRaw
+        .split(',')
+        .map((origin) => origin.trim())
+        .filter(Boolean)
     : [
         'https://getyourguide.trancongtien.io.vn',
         'http://localhost:3000',
@@ -76,4 +83,4 @@ async function bootstrap() {
     logger.log(`Swagger docs: http://localhost:${port}/api/docs`);
   }
 }
-bootstrap();
+void bootstrap();

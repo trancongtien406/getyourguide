@@ -1,9 +1,9 @@
 import {
-    BadRequestException,
-    ConflictException,
-    ForbiddenException,
-    Injectable,
-    NotFoundException,
+  BadRequestException,
+  ConflictException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
 } from '@nestjs/common';
 import { BlogPostStatus, Prisma, UserRole } from '@prisma/client';
 import type { JwtPayload } from '../auth/interfaces/jwt-payload.interface';
@@ -42,7 +42,9 @@ export class BlogService {
     }
   }
 
-  private resolveTagOrderBy(query: BlogListTaxonomyDto): Prisma.BlogTagOrderByWithRelationInput[] {
+  private resolveTagOrderBy(
+    query: BlogListTaxonomyDto,
+  ): Prisma.BlogTagOrderByWithRelationInput[] {
     const sortOrder: Prisma.SortOrder = query.sortOrder ?? 'desc';
     switch (query.sortBy) {
       case 'name':
@@ -56,7 +58,10 @@ export class BlogService {
     }
   }
 
-  private resolvePostOrderBy(query: BlogListPostsDto, isPublic: boolean): Prisma.BlogPostOrderByWithRelationInput[] {
+  private resolvePostOrderBy(
+    query: BlogListPostsDto,
+    isPublic: boolean,
+  ): Prisma.BlogPostOrderByWithRelationInput[] {
     const sortOrder: Prisma.SortOrder = query.sortOrder ?? 'desc';
     switch (query.sortBy) {
       case 'title':
@@ -100,22 +105,29 @@ export class BlogService {
       }),
     ]);
 
+    let localizedItems = items;
     if (lang && items.length > 0) {
       const ids = items.map((i) => i.id);
       const translations = await this.prisma.blogCategoryTranslation.findMany({
         where: { categoryId: { in: ids }, languageCode: lang },
       });
-      const transMap = new Map(translations.map((t) => [t.categoryId, t] as const));
-      for (const item of items) {
+      const transMap = new Map(
+        translations.map((t) => [t.categoryId, t] as const),
+      );
+      localizedItems = items.map((item) => {
         const tr = transMap.get(item.id);
-        if (tr) {
-          (item as any).name = tr.name;
-          if (tr.description) (item as any).description = tr.description;
+        if (!tr) {
+          return item;
         }
-      }
+        return {
+          ...item,
+          name: tr.name,
+          ...(tr.description ? { description: tr.description } : {}),
+        };
+      });
     }
 
-    return { page, pageSize, total, items };
+    return { page, pageSize, total, items: localizedItems };
   }
 
   async listTags(query: BlogListTaxonomyDto, lang?: string | null) {
@@ -141,21 +153,26 @@ export class BlogService {
       }),
     ]);
 
+    let localizedItems = items;
     if (lang && items.length > 0) {
       const ids = items.map((i) => i.id);
       const translations = await this.prisma.blogTagTranslation.findMany({
         where: { tagId: { in: ids }, languageCode: lang },
       });
       const transMap = new Map(translations.map((t) => [t.tagId, t] as const));
-      for (const item of items) {
+      localizedItems = items.map((item) => {
         const tr = transMap.get(item.id);
-        if (tr) {
-          (item as any).name = tr.name;
+        if (!tr) {
+          return item;
         }
-      }
+        return {
+          ...item,
+          name: tr.name,
+        };
+      });
     }
 
-    return { page, pageSize, total, items };
+    return { page, pageSize, total, items: localizedItems };
   }
 
   async listPostsPublic(query: BlogListPostsDto, lang?: string | null) {
@@ -198,27 +215,32 @@ export class BlogService {
       }),
     ]);
 
+    let localizedItems = items;
     if (lang && items.length > 0) {
       const ids = items.map((i) => i.id);
       const translations = await this.prisma.blogPostTranslation.findMany({
         where: { postId: { in: ids }, languageCode: lang },
       });
       const transMap = new Map(translations.map((t) => [t.postId, t] as const));
-      for (const item of items) {
+      localizedItems = items.map((item) => {
         const tr = transMap.get(item.id);
-        if (tr) {
-          (item as any).title = tr.title;
-          if (tr.excerpt) (item as any).excerpt = tr.excerpt;
-          if (tr.content) (item as any).content = tr.content;
+        if (!tr) {
+          return item;
         }
-      }
+        return {
+          ...item,
+          title: tr.title,
+          ...(tr.excerpt ? { excerpt: tr.excerpt } : {}),
+          ...(tr.content ? { content: tr.content } : {}),
+        };
+      });
     }
 
     return {
       page,
       pageSize,
       total,
-      items,
+      items: localizedItems,
     };
   }
 
@@ -325,7 +347,11 @@ export class BlogService {
     }
   }
 
-  async updateCategory(actor: JwtPayload, categoryId: string, dto: UpdateBlogCategoryDto) {
+  async updateCategory(
+    actor: JwtPayload,
+    categoryId: string,
+    dto: UpdateBlogCategoryDto,
+  ) {
     this.ensureCanManageContent(actor);
     await this.ensureCategoryExists(categoryId);
 
@@ -357,9 +383,13 @@ export class BlogService {
     this.ensureCanManageContent(actor);
     await this.ensureCategoryExists(categoryId);
 
-    const postCount = await this.prisma.blogPost.count({ where: { categoryId } });
+    const postCount = await this.prisma.blogPost.count({
+      where: { categoryId },
+    });
     if (postCount > 0) {
-      throw new BadRequestException('Cannot delete category used by blog posts');
+      throw new BadRequestException(
+        'Cannot delete category used by blog posts',
+      );
     }
 
     await this.prisma.blogCategory.delete({ where: { id: categoryId } });
@@ -477,7 +507,7 @@ export class BlogService {
             nextStatus === BlogPostStatus.PUBLISHED
               ? dto.publishedAt
                 ? new Date(dto.publishedAt)
-                : existing.publishedAt ?? new Date()
+                : (existing.publishedAt ?? new Date())
               : dto.status
                 ? null
                 : undefined,
@@ -502,7 +532,11 @@ export class BlogService {
     return { message: 'Blog post deleted' };
   }
 
-  async setPostTags(actor: JwtPayload, postId: string, dto: SetBlogPostTagsDto) {
+  async setPostTags(
+    actor: JwtPayload,
+    postId: string,
+    dto: SetBlogPostTagsDto,
+  ) {
     this.ensureCanManageContent(actor);
     await this.ensurePostExists(postId);
 
@@ -596,13 +630,18 @@ export class BlogService {
   }
 
   private async getPostDetailById(postId: string, lang?: string | null) {
-    const post = await this.prisma.blogPost.findUnique({ where: { id: postId } });
+    const post = await this.prisma.blogPost.findUnique({
+      where: { id: postId },
+    });
     if (!post) {
       throw new NotFoundException('Blog post not found');
     }
 
     const [tags, relatedTours, translations] = await Promise.all([
-      this.prisma.blogPostTag.findMany({ where: { postId }, orderBy: [{ tagId: 'asc' }] }),
+      this.prisma.blogPostTag.findMany({
+        where: { postId },
+        orderBy: [{ tagId: 'asc' }],
+      }),
       this.prisma.blogPostRelatedTour.findMany({
         where: { postId },
         orderBy: [{ sortOrder: 'asc' }, { tourId: 'asc' }],
@@ -772,7 +811,9 @@ export class BlogService {
   }
 
   private async ensureCategoryExists(categoryId: string) {
-    const category = await this.prisma.blogCategory.findUnique({ where: { id: categoryId } });
+    const category = await this.prisma.blogCategory.findUnique({
+      where: { id: categoryId },
+    });
     if (!category) {
       throw new NotFoundException('Blog category not found');
     }
@@ -788,7 +829,9 @@ export class BlogService {
   }
 
   private async ensurePostExists(postId: string) {
-    const post = await this.prisma.blogPost.findUnique({ where: { id: postId } });
+    const post = await this.prisma.blogPost.findUnique({
+      where: { id: postId },
+    });
     if (!post) {
       throw new NotFoundException('Blog post not found');
     }
@@ -804,8 +847,14 @@ export class BlogService {
     throw new ForbiddenException('Insufficient permissions');
   }
 
-  private handleKnownPrismaError(error: unknown, conflictMessage: string): never {
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+  private handleKnownPrismaError(
+    error: unknown,
+    conflictMessage: string,
+  ): never {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === 'P2002'
+    ) {
       throw new ConflictException(conflictMessage);
     }
 

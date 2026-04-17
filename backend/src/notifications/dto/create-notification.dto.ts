@@ -1,11 +1,11 @@
 import { NotificationChannel } from '@prisma/client';
 import {
-    IsEnum,
-    IsObject,
-    IsOptional,
-    IsString,
-    IsUUID,
-    MaxLength,
+  IsEnum,
+  IsObject,
+  IsOptional,
+  IsString,
+  IsUUID,
+  MaxLength,
 } from 'class-validator';
 
 export class CreateNotificationDto {

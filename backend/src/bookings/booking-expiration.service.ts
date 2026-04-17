@@ -27,7 +27,9 @@ export class BookingExpirationService {
 
     if (expiredBookings.length === 0) return;
 
-    this.logger.log(`Found ${expiredBookings.length} expired bookings to process`);
+    this.logger.log(
+      `Found ${expiredBookings.length} expired bookings to process`,
+    );
 
     for (const booking of expiredBookings) {
       try {
@@ -74,7 +76,10 @@ export class BookingExpirationService {
 
         this.logger.log(`Expired booking ${booking.bookingRef}`);
       } catch (error) {
-        this.logger.error(`Failed to expire booking ${booking.bookingRef}`, error instanceof Error ? error.stack : error);
+        this.logger.error(
+          `Failed to expire booking ${booking.bookingRef}`,
+          error instanceof Error ? error.stack : error,
+        );
       }
     }
 

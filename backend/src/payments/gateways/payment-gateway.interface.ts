@@ -58,5 +58,7 @@ export interface PaymentGateway {
    * Verify and parse an incoming webhook/IPN payload.
    * Returns structured result without side effects on the database.
    */
-  verifyWebhook(payload: Record<string, unknown>): Promise<WebhookVerificationResult>;
+  verifyWebhook(
+    payload: Record<string, unknown>,
+  ): Promise<WebhookVerificationResult>;
 }

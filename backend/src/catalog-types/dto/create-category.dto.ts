@@ -1,12 +1,12 @@
 import {
-    IsBoolean,
-    IsInt,
-    IsOptional,
-    IsString,
-    IsUUID,
-    Matches,
-    MaxLength,
-    Min,
+  IsBoolean,
+  IsInt,
+  IsOptional,
+  IsString,
+  IsUUID,
+  Matches,
+  MaxLength,
+  Min,
 } from 'class-validator';
 
 export class CreateCategoryDto {

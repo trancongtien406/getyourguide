@@ -1,20 +1,23 @@
 import {
-    Body,
-    Controller,
-    Delete,
-    Get,
-    Param,
-    Patch,
-    Post,
-    Put,
-    Query,
-    UseGuards,
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Put,
+  Query,
+  UseGuards,
 } from '@nestjs/common';
 import { UserRole } from '@prisma/client';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
-import { Locale, type RequestLocale } from '../common/decorators/locale.decorator';
+import {
+  Locale,
+  type RequestLocale,
+} from '../common/decorators/locale.decorator';
 import { CatalogTypesService } from './catalog-types.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { CreateTagDto } from './dto/create-tag.dto';
@@ -30,7 +33,10 @@ export class CatalogTypesController {
   constructor(private readonly catalogTypesService: CatalogTypesService) {}
 
   @Get('categories')
-  listCategories(@Query() query: ListCategoriesDto, @Locale() locale: RequestLocale) {
+  listCategories(
+    @Query() query: ListCategoriesDto,
+    @Locale() locale: RequestLocale,
+  ) {
     return this.catalogTypesService.listCategories(query, locale.language);
   }
 

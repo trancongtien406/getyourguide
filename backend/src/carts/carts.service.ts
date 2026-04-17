@@ -1,19 +1,20 @@
 import {
-    BadRequestException,
-    Injectable,
-    NotFoundException,
+  BadRequestException,
+  Injectable,
+  NotFoundException,
 } from '@nestjs/common';
 import {
-    BookingStatus,
-    DepartureSlotStatus,
-    Prisma,
-    PromoScope,
-    PromoType,
-    TourStatus,
+  BookingStatus,
+  DepartureSlotStatus,
+  Prisma,
+  PromoScope,
+  PromoType,
+  TourStatus,
 } from '@prisma/client';
 import { randomBytes } from 'crypto';
 import type { JwtPayload } from '../auth/interfaces/jwt-payload.interface';
 import { CurrencyConverterService } from '../common/services/currency-converter.service';
+import { GuestBookingTokenService } from '../common/services/guest-booking-token.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { AddCartItemDto } from './dto/add-cart-item.dto';
 import { CheckoutCartDto } from './dto/checkout-cart.dto';
@@ -40,6 +41,7 @@ export class CartsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly currencyConverter: CurrencyConverterService,
+    private readonly guestBookingToken: GuestBookingTokenService,
   ) {}
 
   async getMyCart(actor: JwtPayload) {
@@ -57,15 +59,21 @@ export class CartsService {
       orderBy: [{ addedAt: 'asc' }],
     });
 
+    const enrichedItems = await this.enrichCartItems(cart.currencyCode, items);
+
     return {
       ...cart,
-      items,
+      items: enrichedItems,
     };
   }
 
   async addItem(actor: JwtPayload, dto: AddCartItemDto) {
     const currencyCode = dto.currencyCode.toUpperCase();
-    const pricing = await this.getCurrentPricing(dto.departureSlotId, dto.quantity, currencyCode);
+    const pricing = await this.getCurrentPricing(
+      dto.departureSlotId,
+      dto.quantity,
+      currencyCode,
+    );
 
     const cart = await this.getOrCreateCart(actor.sub, currencyCode);
 
@@ -80,7 +88,9 @@ export class CartsService {
       },
     });
 
-    const nextQuantity = existing ? existing.quantity + dto.quantity : dto.quantity;
+    const nextQuantity = existing
+      ? existing.quantity + dto.quantity
+      : dto.quantity;
     const nextLineTotal = pricing.unitPrice.mul(nextQuantity);
 
     if (existing) {
@@ -90,7 +100,8 @@ export class CartsService {
           quantity: nextQuantity,
           unitPrice: pricing.unitPrice,
           totalPrice: nextLineTotal,
-          travelerMix: (dto.travelerMix ?? existing.travelerMix) as Prisma.JsonArray,
+          travelerMix: (dto.travelerMix ??
+            existing.travelerMix) as Prisma.JsonArray,
           languageCode: dto.languageCode ?? existing.languageCode ?? null,
         },
       });
@@ -205,14 +216,16 @@ export class CartsService {
         item.quantity,
         cart.currencyCode,
         item.travelerMix,
-        (item.languageCode as string | null) ?? null,
+        item.languageCode ?? null,
       );
       validatedItems.push(validated);
     }
 
     const supplierIds = new Set(validatedItems.map((item) => item.supplierId));
     if (supplierIds.size !== 1) {
-      throw new BadRequestException('Cart checkout supports a single supplier per booking');
+      throw new BadRequestException(
+        'Cart checkout supports a single supplier per booking',
+      );
     }
 
     const subtotal = validatedItems.reduce(
@@ -226,7 +239,9 @@ export class CartsService {
           where: { departureSlotId: item.departureSlotId },
         });
         if (!inventory) {
-          throw new BadRequestException('Inventory is missing for departure slot');
+          throw new BadRequestException(
+            'Inventory is missing for departure slot',
+          );
         }
 
         const available =
@@ -236,7 +251,9 @@ export class CartsService {
           inventory.bookedCapacity;
 
         if (available < item.quantity) {
-          throw new BadRequestException('Not enough available slots for checkout');
+          throw new BadRequestException(
+            'Not enough available slots for checkout',
+          );
         }
 
         await tx.inventorySlot.update({
@@ -333,7 +350,10 @@ export class CartsService {
         where: { idempotencyKey: dto.idempotencyKey },
       });
       if (existing) {
-        return existing;
+        return {
+          ...existing,
+          guestAccessToken: this.guestBookingToken.createToken(existing.id),
+        };
       }
     }
 
@@ -351,7 +371,9 @@ export class CartsService {
 
     const supplierIds = new Set(validatedItems.map((item) => item.supplierId));
     if (supplierIds.size !== 1) {
-      throw new BadRequestException('Guest checkout supports a single supplier per booking');
+      throw new BadRequestException(
+        'Guest checkout supports a single supplier per booking',
+      );
     }
 
     const subtotal = validatedItems.reduce(
@@ -359,13 +381,15 @@ export class CartsService {
       new Prisma.Decimal(0),
     );
 
-    return this.prisma.$transaction(async (tx) => {
+    const booking = await this.prisma.$transaction(async (tx) => {
       for (const item of validatedItems) {
         const inventory = await tx.inventorySlot.findUnique({
           where: { departureSlotId: item.departureSlotId },
         });
         if (!inventory) {
-          throw new BadRequestException('Inventory is missing for departure slot');
+          throw new BadRequestException(
+            'Inventory is missing for departure slot',
+          );
         }
 
         const available =
@@ -375,7 +399,9 @@ export class CartsService {
           inventory.bookedCapacity;
 
         if (available < item.quantity) {
-          throw new BadRequestException('Not enough available slots for checkout');
+          throw new BadRequestException(
+            'Not enough available slots for checkout',
+          );
         }
 
         await tx.inventorySlot.update({
@@ -440,6 +466,11 @@ export class CartsService {
 
       return booking;
     });
+
+    return {
+      ...booking,
+      guestAccessToken: this.guestBookingToken.createToken(booking.id),
+    };
   }
 
   private async applyPromotionDuringCheckout(
@@ -482,15 +513,24 @@ export class CartsService {
       }),
     ]);
 
-    if (promotion.usageLimitTotal !== null && totalUsage >= promotion.usageLimitTotal) {
+    if (
+      promotion.usageLimitTotal !== null &&
+      totalUsage >= promotion.usageLimitTotal
+    ) {
       throw new BadRequestException('Promotion usage limit exceeded');
     }
 
-    if (promotion.usageLimitPerUser !== null && userUsage >= promotion.usageLimitPerUser) {
+    if (
+      promotion.usageLimitPerUser !== null &&
+      userUsage >= promotion.usageLimitPerUser
+    ) {
       throw new BadRequestException('Promotion per-user limit exceeded');
     }
 
-    const discountAmount = this.calculatePromotionDiscount(promotion, subtotalAmount);
+    const discountAmount = this.calculatePromotionDiscount(
+      promotion,
+      subtotalAmount,
+    );
     if (discountAmount.lte(0)) {
       throw new BadRequestException('Promotion discount is not applicable');
     }
@@ -516,10 +556,10 @@ export class CartsService {
       data: {
         bookingId,
         eventType: 'PROMOTION_APPLIED',
-        payload: ({
+        payload: {
           code: promotion.code,
           discountAmount: discountAmount.toString(),
-        } as unknown) as Prisma.JsonObject,
+        } as unknown as Prisma.JsonObject,
         createdBy: userId,
       },
     });
@@ -556,13 +596,20 @@ export class CartsService {
       throw new BadRequestException('Promotion has expired');
     }
 
-    if (promotion.minOrderAmount && subtotalAmount.lt(promotion.minOrderAmount)) {
-      throw new BadRequestException('Booking subtotal does not meet minimum order amount');
+    if (
+      promotion.minOrderAmount &&
+      subtotalAmount.lt(promotion.minOrderAmount)
+    ) {
+      throw new BadRequestException(
+        'Booking subtotal does not meet minimum order amount',
+      );
     }
 
     const metadata = (promotion.metadata ?? {}) as { currencyCode?: string };
     if (metadata.currencyCode && metadata.currencyCode !== bookingCurrency) {
-      throw new BadRequestException('Promotion is not valid for booking currency');
+      throw new BadRequestException(
+        'Promotion is not valid for booking currency',
+      );
     }
 
     if (promotion.promoScope === PromoScope.GLOBAL) {
@@ -574,16 +621,25 @@ export class CartsService {
     }
 
     if (promotion.promoScope === PromoScope.SUPPLIER) {
-      if (!supplierId || !scopeEntries.some((entry) => entry.supplierId === supplierId)) {
-        throw new BadRequestException('Promotion does not apply to this supplier');
+      if (
+        !supplierId ||
+        !scopeEntries.some((entry) => entry.supplierId === supplierId)
+      ) {
+        throw new BadRequestException(
+          'Promotion does not apply to this supplier',
+        );
       }
       return;
     }
 
     if (promotion.promoScope === PromoScope.TOUR) {
-      const tourIds = new Set(scopeEntries.map((entry) => entry.tourId).filter(Boolean));
+      const tourIds = new Set(
+        scopeEntries.map((entry) => entry.tourId).filter(Boolean),
+      );
       if (!bookingItems.some((item) => tourIds.has(item.tourId))) {
-        throw new BadRequestException('Promotion does not apply to booking tours');
+        throw new BadRequestException(
+          'Promotion does not apply to booking tours',
+        );
       }
       return;
     }
@@ -592,7 +648,9 @@ export class CartsService {
       scopeEntries.map((entry) => entry.tourOptionId).filter(Boolean),
     );
     if (!bookingItems.some((item) => optionIds.has(item.optionId))) {
-      throw new BadRequestException('Promotion does not apply to booking options');
+      throw new BadRequestException(
+        'Promotion does not apply to booking options',
+      );
     }
   }
 
@@ -611,7 +669,10 @@ export class CartsService {
       discount = promotion.value;
     }
 
-    if (promotion.maxDiscountAmount && discount.gt(promotion.maxDiscountAmount)) {
+    if (
+      promotion.maxDiscountAmount &&
+      discount.gt(promotion.maxDiscountAmount)
+    ) {
       discount = promotion.maxDiscountAmount;
     }
 
@@ -644,10 +705,14 @@ export class CartsService {
     }
 
     if (option.maxParticipants && quantity > option.maxParticipants) {
-      throw new BadRequestException('Quantity exceeds option maximum participants');
+      throw new BadRequestException(
+        'Quantity exceeds option maximum participants',
+      );
     }
 
-    const tour = await this.prisma.tour.findUnique({ where: { id: option.tourId } });
+    const tour = await this.prisma.tour.findUnique({
+      where: { id: option.tourId },
+    });
     if (!tour || tour.status !== TourStatus.PUBLISHED) {
       throw new BadRequestException('Tour is not available for booking');
     }
@@ -669,7 +734,11 @@ export class CartsService {
       throw new BadRequestException('Not enough available slots');
     }
 
-    const pricing = await this.getCurrentPricing(departure.id, quantity, currencyCode);
+    const pricing = await this.getCurrentPricing(
+      departure.id,
+      quantity,
+      currencyCode,
+    );
 
     return {
       departureSlotId: departure.id,
@@ -685,6 +754,87 @@ export class CartsService {
       supplierId: tour.supplierId,
       startsAt: departure.startsAt,
     };
+  }
+
+  private async enrichCartItems(
+    currencyCode: string,
+    items: Array<{
+      id: string;
+      cartId: string;
+      departureSlotId: string;
+      quantity: number;
+      unitPrice: Prisma.Decimal;
+      totalPrice: Prisma.Decimal;
+      travelerMix: Prisma.JsonValue;
+      languageCode: string | null;
+      addedAt: Date;
+    }>,
+  ) {
+    if (!items.length) {
+      return items;
+    }
+
+    const departureSlotIds = Array.from(
+      new Set(items.map((item) => item.departureSlotId)),
+    );
+
+    const departures = await this.prisma.departureSlot.findMany({
+      where: { id: { in: departureSlotIds } },
+      select: {
+        id: true,
+        tourOptionId: true,
+        startsAt: true,
+      },
+    });
+    const departureById = new Map(
+      departures.map((departure) => [departure.id, departure]),
+    );
+
+    const optionIds = Array.from(
+      new Set(departures.map((departure) => departure.tourOptionId)),
+    );
+    const options = optionIds.length
+      ? await this.prisma.tourOption.findMany({
+          where: { id: { in: optionIds } },
+          select: {
+            id: true,
+            title: true,
+            tourId: true,
+          },
+        })
+      : [];
+    const optionById = new Map(options.map((option) => [option.id, option]));
+
+    const tourIds = Array.from(new Set(options.map((option) => option.tourId)));
+    const tours = tourIds.length
+      ? await this.prisma.tour.findMany({
+          where: { id: { in: tourIds } },
+          select: {
+            id: true,
+            title: true,
+          },
+        })
+      : [];
+    const tourById = new Map(tours.map((tour) => [tour.id, tour]));
+
+    return items.map((item) => {
+      const departure = departureById.get(item.departureSlotId);
+      const option = departure
+        ? optionById.get(departure.tourOptionId)
+        : undefined;
+      const tour = option ? tourById.get(option.tourId) : undefined;
+
+      return {
+        ...item,
+        lineTotal: item.totalPrice,
+        optionId: option?.id ?? null,
+        optionTitle: option?.title ?? null,
+        tourId: option?.tourId ?? null,
+        tourTitle: tour?.title ?? null,
+        startsAt: departure?.startsAt ?? null,
+        currencyCode,
+      };
+    });
   }
 
   private async getCurrentPricing(
@@ -731,7 +881,9 @@ export class CartsService {
     });
 
     if (!pricingRule) {
-      throw new BadRequestException('No valid pricing rule found for cart item');
+      throw new BadRequestException(
+        'No valid pricing rule found for cart item',
+      );
     }
 
     const converted = await this.currencyConverter.convert(

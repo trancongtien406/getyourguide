@@ -59,10 +59,17 @@ export class CurrencyConverterService {
 
     // Triangulation via USD
     if (from !== 'USD' && to !== 'USD') {
-      const toUsd = await this.getRate(from, 'USD') ?? (await this.getRate('USD', from).then(r => r ? 1 / r : null));
-      const fromUsd = await this.getRate('USD', to) ?? (await this.getRate(to, 'USD').then(r => r ? 1 / r : null));
+      const toUsd =
+        (await this.getRate(from, 'USD')) ??
+        (await this.getRate('USD', from).then((r) => (r ? 1 / r : null)));
+      const fromUsd =
+        (await this.getRate('USD', to)) ??
+        (await this.getRate(to, 'USD').then((r) => (r ? 1 / r : null)));
       if (toUsd !== null && fromUsd !== null) {
-        return { amount: round(numericAmount * toUsd * fromUsd, to), currencyCode: to };
+        return {
+          amount: round(numericAmount * toUsd * fromUsd, to),
+          currencyCode: to,
+        };
       }
     }
 
@@ -74,10 +81,9 @@ export class CurrencyConverterService {
    * Convert a batch of pricing rules (each has `amount` + `currencyCode`).
    * Mutates and returns the same array for convenience.
    */
-  async convertPricingRules<T extends { amount: Prisma.Decimal | number; currencyCode: string }>(
-    rules: T[],
-    targetCurrency: string,
-  ): Promise<T[]> {
+  async convertPricingRules<
+    T extends { amount: Prisma.Decimal | number; currencyCode: string },
+  >(rules: T[], targetCurrency: string): Promise<T[]> {
     if (!targetCurrency || rules.length === 0) return rules;
 
     for (const rule of rules) {
@@ -86,8 +92,8 @@ export class CurrencyConverterService {
         rule.currencyCode,
         targetCurrency,
       );
-      (rule as any).amount = amount;
-      (rule as any).currencyCode = currencyCode;
+      rule.amount = amount;
+      rule.currencyCode = currencyCode;
     }
     return rules;
   }

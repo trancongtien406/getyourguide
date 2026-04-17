@@ -19,7 +19,8 @@ export class MailService {
     const smtpUser = this.configService.get<string>('SMTP_USER');
     const smtpPass = this.configService.get<string>('SMTP_PASS');
     const smtpFrom =
-      this.configService.get<string>('SMTP_FROM') ?? 'no-reply@getyourguide.local';
+      this.configService.get<string>('SMTP_FROM') ??
+      'no-reply@getyourguide.local';
 
     if (!smtpHost || !smtpUser || !smtpPass) {
       // In non-production environments, allow missing SMTP and just log.
@@ -50,4 +51,3 @@ export class MailService {
     });
   }
 }
-

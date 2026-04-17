@@ -1,10 +1,10 @@
 import { Type } from 'class-transformer';
 import {
-    ArrayUnique,
-    IsArray,
-    IsOptional,
-    IsUUID,
-    ValidateNested,
+  ArrayUnique,
+  IsArray,
+  IsOptional,
+  IsUUID,
+  ValidateNested,
 } from 'class-validator';
 
 class PromotionScopeEntryDto {

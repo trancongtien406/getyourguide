@@ -1,14 +1,14 @@
 import { Type } from 'class-transformer';
 import {
-    IsArray,
-    IsEmail,
-    IsInt,
-    IsOptional,
-    IsString,
-    IsUUID,
-    Matches,
-    Min,
-    ValidateNested,
+  IsArray,
+  IsEmail,
+  IsInt,
+  IsOptional,
+  IsString,
+  IsUUID,
+  Matches,
+  Min,
+  ValidateNested,
 } from 'class-validator';
 
 export class GuestCheckoutItemDto {

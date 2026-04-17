@@ -7,7 +7,9 @@ import {
 } from '@nestjs/common';
 import { BookingStatus, PaymentStatus, Prisma, UserRole } from '@prisma/client';
 import type { JwtPayload } from '../auth/interfaces/jwt-payload.interface';
+import { GuestBookingTokenService } from '../common/services/guest-booking-token.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { InitiateGuestPaymentDto } from './dto/initiate-guest-payment.dto';
 import { InitiatePaymentDto } from './dto/initiate-payment.dto';
 import { PaymentOptionsQueryDto } from './dto/payment-options-query.dto';
 import { UpdatePaymentSettingsDto } from './dto/update-payment-settings.dto';
@@ -72,6 +74,7 @@ export class PaymentsService {
 
   constructor(
     private readonly prisma: PrismaService,
+    private readonly guestBookingToken: GuestBookingTokenService,
     @Inject(PAYMENT_GATEWAYS) gateways: PaymentGateway[],
   ) {
     for (const gw of gateways) {
@@ -88,68 +91,35 @@ export class PaymentsService {
     extra?: { clientIp?: string },
   ) {
     await this.assertGatewayEnabled(gatewayKey);
-
-    const gateway = this.getGateway(gatewayKey);
     const booking = await this.getPayableBooking(actor, dto.bookingId);
 
-    const result = await gateway.initiatePayment(
-      {
-        id: booking.id,
-        bookingRef: booking.bookingRef,
-        totalAmount: booking.totalAmount,
-        currencyCode: booking.currencyCode,
-      },
-      {
-        returnUrl: dto.returnUrl,
-        locale: dto.locale,
-        clientIp: extra?.clientIp,
-      },
+    return this.initiatePaymentForBooking(
+      gatewayKey,
+      booking,
+      dto,
+      extra,
+      actor.sub,
+    );
+  }
+
+  async initiateGuestPayment(
+    gatewayKey: string,
+    dto: InitiateGuestPaymentDto,
+    extra?: { clientIp?: string },
+  ) {
+    await this.assertGatewayEnabled(gatewayKey);
+    const booking = await this.getGuestPayableBooking(
+      dto.bookingId,
+      dto.guestAccessToken,
     );
 
-    const payment = await this.prisma.$transaction(async (tx) => {
-      await tx.booking.update({
-        where: { id: booking.id },
-        data: { status: BookingStatus.PENDING_PAYMENT },
-      });
-
-      const created = await tx.payment.create({
-        data: {
-          bookingId: booking.id,
-          provider: gatewayKey,
-          providerPaymentId: result.providerPaymentId,
-          status: PaymentStatus.CREATED,
-          currencyCode: booking.currencyCode,
-          amount: booking.totalAmount,
-          metadata: result.metadata as unknown as Prisma.JsonObject,
-        },
-      });
-
-      await tx.bookingEvent.create({
-        data: {
-          bookingId: booking.id,
-          eventType: 'PAYMENT_CREATED',
-          payload: {
-            provider: gatewayKey,
-            providerPaymentId: result.providerPaymentId,
-          },
-          createdBy: actor.sub,
-        },
-      });
-
-      return created;
-    });
-
-    return {
-      provider: gatewayKey,
-      bookingId: booking.id,
-      paymentId: payment.id,
-      providerPaymentId: result.providerPaymentId,
-      redirectUrl: result.redirectUrl,
-      payUrl: result.payUrl,
-      deeplink: result.deeplink,
-      qrCodeUrl: result.qrCodeUrl,
-      expiresAt: result.expiresAt,
-    };
+    return this.initiatePaymentForBooking(
+      gatewayKey,
+      booking,
+      dto,
+      extra,
+      null,
+    );
   }
 
   // ── Public: Handle Webhook ──────────────────────────────
@@ -163,7 +133,10 @@ export class PaymentsService {
     }
 
     const payment = await this.prisma.payment.findFirst({
-      where: { provider: gatewayKey, providerPaymentId: result.providerPaymentId },
+      where: {
+        provider: gatewayKey,
+        providerPaymentId: result.providerPaymentId,
+      },
     });
 
     if (!payment) {
@@ -206,12 +179,27 @@ export class PaymentsService {
 
   // ── Legacy convenience methods (keep controller backward-compatible) ──
 
-  async initiateVnpayPayment(actor: JwtPayload, dto: InitiatePaymentDto, clientIp: string) {
+  async initiateVnpayPayment(
+    actor: JwtPayload,
+    dto: InitiatePaymentDto,
+    clientIp: string,
+  ) {
     return this.initiatePayment('vnpay', actor, dto, { clientIp });
   }
 
   async initiateMomoPayment(actor: JwtPayload, dto: InitiatePaymentDto) {
     return this.initiatePayment('momo', actor, dto);
+  }
+
+  async initiateGuestVnpayPayment(
+    dto: InitiateGuestPaymentDto,
+    clientIp: string,
+  ) {
+    return this.initiateGuestPayment('vnpay', dto, { clientIp });
+  }
+
+  async initiateGuestMomoPayment(dto: InitiateGuestPaymentDto) {
+    return this.initiateGuestPayment('momo', dto);
   }
 
   async handleVnpayIpn(query: Record<string, string>) {
@@ -233,11 +221,15 @@ export class PaymentsService {
       .filter(([, cfg]) => cfg.enabled)
       .filter(([, cfg]) => {
         if (!countryCode) return true;
-        return cfg.countries.includes('*') || cfg.countries.includes(countryCode);
+        return (
+          cfg.countries.includes('*') || cfg.countries.includes(countryCode)
+        );
       })
       .filter(([, cfg]) => {
         if (!currencyCode) return true;
-        return cfg.currencies.includes('*') || cfg.currencies.includes(currencyCode);
+        return (
+          cfg.currencies.includes('*') || cfg.currencies.includes(currencyCode)
+        );
       })
       .map(([key, cfg]) => ({
         key,
@@ -283,7 +275,9 @@ export class PaymentsService {
   private getGateway(gatewayKey: string): PaymentGateway {
     const gw = this.gatewayMap.get(gatewayKey);
     if (!gw) {
-      throw new BadRequestException(`Payment gateway '${gatewayKey}' is not available`);
+      throw new BadRequestException(
+        `Payment gateway '${gatewayKey}' is not available`,
+      );
     }
     return gw;
   }
@@ -314,8 +308,12 @@ export class PaymentsService {
           enabled: next.enabled ?? current.enabled,
           displayName: next.displayName ?? current.displayName,
           domesticOnly: next.domesticOnly ?? current.domesticOnly,
-          countries: (next.countries ?? current.countries).map((c) => c.toUpperCase()),
-          currencies: (next.currencies ?? current.currencies).map((c) => c.toUpperCase()),
+          countries: (next.countries ?? current.countries).map((c) =>
+            c.toUpperCase(),
+          ),
+          currencies: (next.currencies ?? current.currencies).map((c) =>
+            c.toUpperCase(),
+          ),
           channels: next.channels ?? current.channels,
         };
       }
@@ -333,7 +331,9 @@ export class PaymentsService {
   }
 
   private async getPayableBooking(actor: JwtPayload, bookingId: string) {
-    const booking = await this.prisma.booking.findUnique({ where: { id: bookingId } });
+    const booking = await this.prisma.booking.findUnique({
+      where: { id: bookingId },
+    });
     if (!booking) {
       throw new NotFoundException('Booking not found');
     }
@@ -350,13 +350,117 @@ export class PaymentsService {
     return booking;
   }
 
+  private async getGuestPayableBooking(
+    bookingId: string,
+    guestAccessToken: string,
+  ) {
+    const booking = await this.prisma.booking.findUnique({
+      where: { id: bookingId },
+    });
+    if (!booking) {
+      throw new NotFoundException('Booking not found');
+    }
+
+    if (booking.userId !== null) {
+      throw new ForbiddenException(
+        'Only guest bookings can be paid via guest payment flow',
+      );
+    }
+
+    this.guestBookingToken.assertValidForBooking(guestAccessToken, booking.id);
+
+    if (
+      booking.status !== BookingStatus.PENDING_PAYMENT &&
+      booking.status !== BookingStatus.INITIATED
+    ) {
+      throw new BadRequestException('Booking is not payable');
+    }
+
+    return booking;
+  }
+
   private ensureCanPay(actor: JwtPayload, bookingUserId: string | null) {
     if (bookingUserId === actor.sub) return;
 
     const actorRoles = new Set(actor.roles);
-    if (actorRoles.has(UserRole.ADMIN) || actorRoles.has(UserRole.OPERATOR)) return;
+    if (actorRoles.has(UserRole.ADMIN) || actorRoles.has(UserRole.OPERATOR))
+      return;
 
     throw new ForbiddenException('Insufficient permissions');
+  }
+
+  private async initiatePaymentForBooking(
+    gatewayKey: string,
+    booking: {
+      id: string;
+      bookingRef: string;
+      totalAmount: Prisma.Decimal;
+      currencyCode: string;
+    },
+    dto: Pick<InitiatePaymentDto, 'returnUrl' | 'locale'>,
+    extra: { clientIp?: string } | undefined,
+    createdBy: string | null,
+  ) {
+    const gateway = this.getGateway(gatewayKey);
+
+    const result = await gateway.initiatePayment(
+      {
+        id: booking.id,
+        bookingRef: booking.bookingRef,
+        totalAmount: booking.totalAmount,
+        currencyCode: booking.currencyCode,
+      },
+      {
+        returnUrl: dto.returnUrl,
+        locale: dto.locale,
+        clientIp: extra?.clientIp,
+      },
+    );
+
+    const payment = await this.prisma.$transaction(async (tx) => {
+      await tx.booking.update({
+        where: { id: booking.id },
+        data: { status: BookingStatus.PENDING_PAYMENT },
+      });
+
+      const created = await tx.payment.create({
+        data: {
+          bookingId: booking.id,
+          provider: gatewayKey,
+          providerPaymentId: result.providerPaymentId,
+          status: PaymentStatus.CREATED,
+          currencyCode: booking.currencyCode,
+          amount: booking.totalAmount,
+          metadata: result.metadata as unknown as Prisma.JsonObject,
+        },
+      });
+
+      await tx.bookingEvent.create({
+        data: {
+          bookingId: booking.id,
+          eventType: 'PAYMENT_CREATED',
+          payload: {
+            provider: gatewayKey,
+            providerPaymentId: result.providerPaymentId,
+          },
+          createdBy,
+        },
+      });
+
+      return created;
+    });
+
+    return {
+      provider: gatewayKey,
+      bookingId: booking.id,
+      paymentId: payment.id,
+      providerPaymentId: result.providerPaymentId,
+      redirectUrl: result.redirectUrl,
+      payUrl: result.payUrl,
+      deeplink: result.deeplink,
+      qrCodeUrl: result.qrCodeUrl,
+      expiresAt: result.expiresAt,
+    };
   }
 
   private async saveWebhookEvent(
@@ -386,7 +490,10 @@ export class PaymentsService {
     }
   }
 
-  private async finalizeCapturedPayment(paymentId: string, providerPayload: Record<string, unknown>) {
+  private async finalizeCapturedPayment(
+    paymentId: string,
+    providerPayload: Record<string, unknown>,
+  ) {
     await this.prisma.$transaction(async (tx) => {
       const payment = await tx.payment.findUnique({ where: { id: paymentId } });
       if (!payment || payment.status === PaymentStatus.CAPTURED) return;
@@ -400,7 +507,9 @@ export class PaymentsService {
           failureCode: null,
           failureMessage: null,
           failedAt: null,
-          metadata: ({ callback: providerPayload } as unknown) as Prisma.JsonObject,
+          metadata: {
+            callback: providerPayload,
+          } as unknown as Prisma.JsonObject,
         },
       });
 
@@ -448,11 +557,15 @@ export class PaymentsService {
           failureCode,
           failureMessage,
           failedAt: new Date(),
-          metadata: ({ callback: providerPayload } as unknown) as Prisma.JsonObject,
+          metadata: {
+            callback: providerPayload,
+          } as unknown as Prisma.JsonObject,
         },
       });
 
-      const booking = await tx.booking.findUnique({ where: { id: payment.bookingId } });
+      const booking = await tx.booking.findUnique({
+        where: { id: payment.bookingId },
+      });
       if (
         booking &&
         (booking.status === BookingStatus.PENDING_PAYMENT ||
@@ -469,11 +582,11 @@ export class PaymentsService {
         data: {
           bookingId: payment.bookingId,
           eventType: 'PAYMENT_FAILED',
-          payload: ({
+          payload: {
             failureCode,
             failureMessage,
             callback: providerPayload,
-          } as unknown) as Prisma.JsonObject,
+          } as unknown as Prisma.JsonObject,
         },
       });
 
@@ -482,17 +595,20 @@ export class PaymentsService {
           aggregateType: 'booking',
           aggregateId: payment.bookingId,
           eventType: 'PAYMENT_FAILED',
-          payload: ({
+          payload: {
             failureCode,
             failureMessage,
             callback: providerPayload,
-          } as unknown) as Prisma.JsonObject,
+          } as unknown as Prisma.JsonObject,
         },
       });
     });
   }
 
-  private async releaseInventory(tx: Prisma.TransactionClient, bookingId: string) {
+  private async releaseInventory(
+    tx: Prisma.TransactionClient,
+    bookingId: string,
+  ) {
     const items = await tx.bookingItem.findMany({ where: { bookingId } });
     for (const item of items) {
       if (!item.inventorySlotId) continue;
@@ -511,7 +627,9 @@ export class PaymentsService {
 
     const gateways: Record<string, GatewayConfig> = {};
     for (const [key, current] of Object.entries(base.gateways)) {
-      const incoming = input.gateways[key] as Partial<GatewayConfig> | undefined;
+      const incoming = input.gateways[key] as
+        | Partial<GatewayConfig>
+        | undefined;
 
       gateways[key] = {
         enabled: incoming?.enabled ?? current.enabled,

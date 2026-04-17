@@ -1,12 +1,12 @@
 import {
-    Body,
-    Controller,
-    DefaultValuePipe,
-    Get,
-    ParseIntPipe,
-    Post,
-    Query,
-    UseGuards
+  Body,
+  Controller,
+  DefaultValuePipe,
+  Get,
+  ParseIntPipe,
+  Post,
+  Query,
+  UseGuards,
 } from '@nestjs/common';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -22,7 +22,10 @@ export class NewsletterController {
   @Post('subscribe')
   async subscribe(@Body() dto: SubscribeNewsletterDto) {
     const subscription = await this.newsletterService.subscribe(dto.email);
-    return { message: 'Subscribed successfully', subscriptionId: subscription.id };
+    return {
+      message: 'Subscribed successfully',
+      subscriptionId: subscription.id,
+    };
   }
 
   /** Public — unsubscribe by email */

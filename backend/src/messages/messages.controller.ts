@@ -28,7 +28,10 @@ export class MessagesController {
   constructor(private readonly messagesService: MessagesService) {}
 
   @Get('conversations')
-  listConversations(@CurrentUser() actor: JwtPayload, @Query() query: ListConversationsDto) {
+  listConversations(
+    @CurrentUser() actor: JwtPayload,
+    @Query() query: ListConversationsDto,
+  ) {
     return this.messagesService.listConversations(actor, query);
   }
 
@@ -38,12 +41,18 @@ export class MessagesController {
   }
 
   @Post('conversations')
-  createConversation(@CurrentUser() actor: JwtPayload, @Body() dto: CreateConversationDto) {
+  createConversation(
+    @CurrentUser() actor: JwtPayload,
+    @Body() dto: CreateConversationDto,
+  ) {
     return this.messagesService.createConversation(actor, dto);
   }
 
   @Get('conversations/:id')
-  getConversationById(@CurrentUser() actor: JwtPayload, @Param('id') id: string) {
+  getConversationById(
+    @CurrentUser() actor: JwtPayload,
+    @Param('id') id: string,
+  ) {
     return this.messagesService.getConversationById(actor, id);
   }
 
@@ -84,7 +93,10 @@ export class MessagesController {
   }
 
   @Post('conversations/:id/read')
-  markConversationRead(@CurrentUser() actor: JwtPayload, @Param('id') id: string) {
+  markConversationRead(
+    @CurrentUser() actor: JwtPayload,
+    @Param('id') id: string,
+  ) {
     return this.messagesService.markConversationRead(actor, id);
   }
 

@@ -1,4 +1,10 @@
-import { IsOptional, IsString, IsUUID, IsUrl, MaxLength } from 'class-validator';
+import {
+  IsOptional,
+  IsString,
+  IsUUID,
+  IsUrl,
+  MaxLength,
+} from 'class-validator';
 
 export class InitiatePaymentDto {
   @IsUUID()

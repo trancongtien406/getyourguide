@@ -1,14 +1,14 @@
 import {
-  BadRequestException,
-  ForbiddenException,
-  Injectable,
-  NotFoundException,
+    BadRequestException,
+    ForbiddenException,
+    Injectable,
+    NotFoundException,
 } from '@nestjs/common';
 import { Prisma, UserRole } from '@prisma/client';
 import { createHash, randomBytes } from 'crypto';
+import { AuditLogsService } from '../audit-logs/audit-logs.service';
 import type { JwtPayload } from '../auth/interfaces/jwt-payload.interface';
 import { PrismaService } from '../prisma/prisma.service';
-import { AuditLogsService } from '../audit-logs/audit-logs.service';
 import { CreateApiKeyDto } from './dto/create-api-key.dto';
 import { ListApiKeysDto } from './dto/list-api-keys.dto';
 import { UpdateApiKeyDto } from './dto/update-api-key.dto';
@@ -22,7 +22,9 @@ export class ApiKeysService {
     private readonly auditLogsService: AuditLogsService,
   ) {}
 
-  private resolveApiKeyOrderBy(query: ListApiKeysDto): Prisma.ApiKeyOrderByWithRelationInput[] {
+  private resolveApiKeyOrderBy(
+    query: ListApiKeysDto,
+  ): Prisma.ApiKeyOrderByWithRelationInput[] {
     const sortOrder: Prisma.SortOrder = query.sortOrder ?? 'desc';
     switch (query.sortBy) {
       case 'name':
@@ -45,7 +47,7 @@ export class ApiKeysService {
     const pageSize = query.pageSize ?? 20;
 
     const access = await this.resolveAccessibleOwners(actor);
-    const where = await this.buildListWhere(query, access);
+    const where = this.buildListWhere(query, access);
 
     const [total, rows] = await Promise.all([
       this.prisma.apiKey.count({ where }),
@@ -170,36 +172,41 @@ export class ApiKeysService {
     return this.toSafeApiKey(revoked);
   }
 
-  private async buildListWhere(
+  private buildListWhere(
     query: ListApiKeysDto,
-    access: { isAdminOrOperator: boolean; userId: string; supplierIds: string[] },
-  ): Promise<Prisma.ApiKeyWhereInput> {
+    access: {
+      isAdminOrOperator: boolean;
+      userId: string;
+      supplierIds: string[];
+    },
+  ): Prisma.ApiKeyWhereInput {
     const ownerType = query.ownerType;
     const ownerId = query.ownerId;
 
-    const accessibleOwnerClause: Prisma.ApiKeyWhereInput = access.isAdminOrOperator
-      ? {
-          ownerType,
-          ownerId,
-        }
-      : {
-          OR: [
-            {
-              ownerType: 'USER',
-              ownerId: access.userId,
-            },
-            ...(access.supplierIds.length
-              ? [
-                  {
-                    ownerType: 'SUPPLIER',
-                    ownerId: {
-                      in: access.supplierIds,
+    const accessibleOwnerClause: Prisma.ApiKeyWhereInput =
+      access.isAdminOrOperator
+        ? {
+            ownerType,
+            ownerId,
+          }
+        : {
+            OR: [
+              {
+                ownerType: 'USER',
+                ownerId: access.userId,
+              },
+              ...(access.supplierIds.length
+                ? [
+                    {
+                      ownerType: 'SUPPLIER',
+                      ownerId: {
+                        in: access.supplierIds,
+                      },
                     },
-                  },
-                ]
-              : []),
-          ],
-        };
+                  ]
+                : []),
+            ],
+          };
 
     if (!access.isAdminOrOperator && ownerType === 'SYSTEM') {
       throw new ForbiddenException('Insufficient permissions');
@@ -221,14 +228,17 @@ export class ApiKeysService {
 
   private async resolveOwnerFromDto(actor: JwtPayload, dto: CreateApiKeyDto) {
     const roles = new Set(actor.roles);
-    const isAdminOrOperator = roles.has(UserRole.ADMIN) || roles.has(UserRole.OPERATOR);
+    const isAdminOrOperator =
+      roles.has(UserRole.ADMIN) || roles.has(UserRole.OPERATOR);
 
     const ownerType: OwnerType = dto.ownerType ?? 'USER';
     const ownerId = dto.ownerId ?? actor.sub;
 
     if (ownerType === 'USER') {
       if (!isAdminOrOperator && ownerId !== actor.sub) {
-        throw new ForbiddenException('You can only create user keys for yourself');
+        throw new ForbiddenException(
+          'You can only create user keys for yourself',
+        );
       }
 
       await this.ensureUserExists(ownerId);
@@ -248,7 +258,9 @@ export class ApiKeysService {
     }
 
     if (!isAdminOrOperator) {
-      throw new ForbiddenException('Only admin/operator can create system keys');
+      throw new ForbiddenException(
+        'Only admin/operator can create system keys',
+      );
     }
 
     return { ownerType, ownerId };
@@ -280,7 +292,8 @@ export class ApiKeysService {
 
   private async resolveAccessibleOwners(actor: JwtPayload) {
     const roles = new Set(actor.roles);
-    const isAdminOrOperator = roles.has(UserRole.ADMIN) || roles.has(UserRole.OPERATOR);
+    const isAdminOrOperator =
+      roles.has(UserRole.ADMIN) || roles.has(UserRole.OPERATOR);
 
     const supplierIds = isAdminOrOperator
       ? []

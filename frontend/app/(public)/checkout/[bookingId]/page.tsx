@@ -5,7 +5,7 @@ import { useAuth } from '@/lib/auth-context';
 import { useLocaleCurrency } from '@/lib/locale-currency-context';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import {
     HiArrowLeft,
@@ -26,8 +26,10 @@ export default function CheckoutPage() {
   const { formatPrice, formatDate, formatTime, currency } = useLocaleCurrency();
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const params = useParams();
+  const searchParams = useSearchParams();
   const router = useRouter();
   const bookingId = params.bookingId as string;
+  const guestAccessToken = searchParams.get('guestToken') ?? '';
 
   const [booking, setBooking] = useState<Booking | null>(null);
   const [paymentOptions, setPaymentOptions] = useState<PaymentOption[]>([]);
@@ -46,7 +48,10 @@ export default function CheckoutPage() {
       // Use guest endpoint for unauthenticated users, authenticated endpoint otherwise
       let bookingData: Booking;
       if (isGuest) {
-        bookingData = await bookingsApi.getGuestBookingById(bookingId);
+        if (!guestAccessToken) {
+          throw new Error('Missing guest booking token');
+        }
+        bookingData = await bookingsApi.getGuestBookingById(bookingId, guestAccessToken);
       } else {
         bookingData = await bookingsApi.getBookingById(bookingId);
       }
@@ -57,7 +62,7 @@ export default function CheckoutPage() {
 
       setBooking(bookingData);
       const enabledOptions = Array.isArray(options)
-        ? options.filter((o) => o.enabled)
+        ? options.filter((o): o is PaymentOption => !!o && o.enabled)
         : [];
       setPaymentOptions(enabledOptions);
       if (enabledOptions.length > 0) {
@@ -68,7 +73,7 @@ export default function CheckoutPage() {
     } finally {
       setLoading(false);
     }
-  }, [bookingId, isGuest, t]);
+  }, [bookingId, guestAccessToken, isGuest, t]);
 
   useEffect(() => {
     if (!authLoading) {
@@ -82,15 +87,37 @@ export default function CheckoutPage() {
     setError(null);
     try {
       const returnUrl = `${window.location.origin}/checkout/result`;
+      const selectedKey = selectedMethod.toLowerCase();
+
       let result;
-      if (selectedMethod === 'VNPAY') {
+      if (isGuest) {
+        if (!guestAccessToken) {
+          throw new Error('Missing guest booking token');
+        }
+
+        if (selectedKey === 'vnpay') {
+          result = await paymentsApi.initiateGuestVnpay({
+            bookingId: booking.id,
+            guestAccessToken,
+            returnUrl,
+          });
+        } else if (selectedKey === 'momo') {
+          result = await paymentsApi.initiateGuestMomo({
+            bookingId: booking.id,
+            guestAccessToken,
+            returnUrl,
+          });
+        }
+      } else if (selectedKey === 'vnpay') {
         result = await paymentsApi.initiateVnpay({ bookingId: booking.id, returnUrl });
-      } else if (selectedMethod === 'MOMO') {
+      } else if (selectedKey === 'momo') {
         result = await paymentsApi.initiateMomo({ bookingId: booking.id, returnUrl });
       }
 
-      if (result?.paymentUrl) {
-        window.location.href = result.paymentUrl;
+      const paymentUrl = result?.redirectUrl || result?.payUrl || result?.paymentUrl;
+
+      if (paymentUrl) {
+        window.location.href = paymentUrl;
       } else {
         setError(t('checkoutPayError'));
       }

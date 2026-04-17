@@ -4,7 +4,12 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { ConversationStatus, MessageType, Prisma, UserRole } from '@prisma/client';
+import {
+  ConversationStatus,
+  MessageType,
+  Prisma,
+  UserRole,
+} from '@prisma/client';
 import type { JwtPayload } from '../auth/interfaces/jwt-payload.interface';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateConversationDto } from './dto/create-conversation.dto';
@@ -38,7 +43,9 @@ export class MessagesService {
     }
   }
 
-  private resolveMessageOrderBy(query: ListMessagesDto): Prisma.MessageOrderByWithRelationInput[] {
+  private resolveMessageOrderBy(
+    query: ListMessagesDto,
+  ): Prisma.MessageOrderByWithRelationInput[] {
     const sortOrder: Prisma.SortOrder = query.sortOrder ?? 'desc';
     switch (query.sortBy) {
       case 'editedat':
@@ -59,14 +66,19 @@ export class MessagesService {
     const page = query.page ?? 1;
     const pageSize = query.pageSize ?? 20;
     const actorRoles = new Set(actor.roles);
-    const canViewAll = actorRoles.has(UserRole.ADMIN) || actorRoles.has(UserRole.OPERATOR);
+    const canViewAll =
+      actorRoles.has(UserRole.ADMIN) || actorRoles.has(UserRole.OPERATOR);
     const includeAll = query.includeAll && canViewAll;
 
     const participantConversationIds = includeAll
       ? undefined
       : await this.getParticipantConversationIds(actor.sub);
 
-    if (!includeAll && participantConversationIds && !participantConversationIds.length) {
+    if (
+      !includeAll &&
+      participantConversationIds &&
+      !participantConversationIds.length
+    ) {
       return { page, pageSize, total: 0, items: [] };
     }
 
@@ -101,24 +113,26 @@ export class MessagesService {
     ]);
 
     const conversationIds = items.map((item) => item.id);
-    const [participants, latestMessages, actorParticipants] = await Promise.all([
-      this.prisma.conversationParticipant.findMany({
-        where: {
-          conversationId: {
-            in: conversationIds.length ? conversationIds : [''],
+    const [participants, latestMessages, actorParticipants] = await Promise.all(
+      [
+        this.prisma.conversationParticipant.findMany({
+          where: {
+            conversationId: {
+              in: conversationIds.length ? conversationIds : [''],
+            },
           },
-        },
-      }),
-      this.getLatestMessages(conversationIds),
-      this.prisma.conversationParticipant.findMany({
-        where: {
-          conversationId: {
-            in: conversationIds.length ? conversationIds : [''],
+        }),
+        this.getLatestMessages(conversationIds),
+        this.prisma.conversationParticipant.findMany({
+          where: {
+            conversationId: {
+              in: conversationIds.length ? conversationIds : [''],
+            },
+            userId: actor.sub,
           },
-          userId: actor.sub,
-        },
-      }),
-    ]);
+        }),
+      ],
+    );
 
     const actorParticipantByConversationId = new Map(
       actorParticipants.map((item) => [item.conversationId, item]),
@@ -126,7 +140,9 @@ export class MessagesService {
 
     const unreadCounts = await Promise.all(
       items.map(async (conversation) => {
-        const actorParticipant = actorParticipantByConversationId.get(conversation.id);
+        const actorParticipant = actorParticipantByConversationId.get(
+          conversation.id,
+        );
         if (!actorParticipant) {
           return [conversation.id, 0] as const;
         }
@@ -152,8 +168,13 @@ export class MessagesService {
 
     const resultItems = items.map((conversation) => ({
       ...conversation,
-      participants: participants.filter((item) => item.conversationId === conversation.id),
-      latestMessage: latestMessages.find((message) => message.conversationId === conversation.id) ?? null,
+      participants: participants.filter(
+        (item) => item.conversationId === conversation.id,
+      ),
+      latestMessage:
+        latestMessages.find(
+          (message) => message.conversationId === conversation.id,
+        ) ?? null,
       unreadCount: unreadByConversationId.get(conversation.id) ?? 0,
     }));
 
@@ -161,7 +182,10 @@ export class MessagesService {
   }
 
   async createConversation(actor: JwtPayload, dto: CreateConversationDto) {
-    const participantUserIds = new Set([actor.sub, ...(dto.participantUserIds ?? [])]);
+    const participantUserIds = new Set([
+      actor.sub,
+      ...(dto.participantUserIds ?? []),
+    ]);
     if (!participantUserIds.size) {
       throw new BadRequestException('At least one participant is required');
     }
@@ -172,7 +196,9 @@ export class MessagesService {
 
     let supplierId = dto.supplierId;
     if (dto.bookingId) {
-      const booking = await this.prisma.booking.findUnique({ where: { id: dto.bookingId } });
+      const booking = await this.prisma.booking.findUnique({
+        where: { id: dto.bookingId },
+      });
       if (!booking) {
         throw new NotFoundException('Booking not found');
       }
@@ -247,8 +273,13 @@ export class MessagesService {
       }),
     );
 
-    const unreadConversations = unreadPerConversation.filter((count) => count > 0).length;
-    const unreadMessages = unreadPerConversation.reduce((sum, count) => sum + count, 0);
+    const unreadConversations = unreadPerConversation.filter(
+      (count) => count > 0,
+    ).length;
+    const unreadMessages = unreadPerConversation.reduce(
+      (sum, count) => sum + count,
+      0,
+    );
 
     return { unreadConversations, unreadMessages };
   }
@@ -293,10 +324,18 @@ export class MessagesService {
     await this.ensureCanAccessConversation(actor, conversationId);
     const conversation = await this.ensureConversationExists(conversationId);
 
-    if (conversation.status === ConversationStatus.CLOSED || conversation.status === ConversationStatus.SPAM) {
+    if (
+      conversation.status === ConversationStatus.CLOSED ||
+      conversation.status === ConversationStatus.SPAM
+    ) {
       const actorRoles = new Set(actor.roles);
-      if (!actorRoles.has(UserRole.ADMIN) && !actorRoles.has(UserRole.OPERATOR)) {
-        throw new ForbiddenException('Only admin/operator can reopen closed or spam conversations');
+      if (
+        !actorRoles.has(UserRole.ADMIN) &&
+        !actorRoles.has(UserRole.OPERATOR)
+      ) {
+        throw new ForbiddenException(
+          'Only admin/operator can reopen closed or spam conversations',
+        );
       }
     }
 
@@ -343,7 +382,11 @@ export class MessagesService {
     });
   }
 
-  async removeParticipant(actor: JwtPayload, conversationId: string, userId: string) {
+  async removeParticipant(
+    actor: JwtPayload,
+    conversationId: string,
+    userId: string,
+  ) {
     await this.ensureCanManageConversationParticipants(actor, conversationId);
 
     const participantCount = await this.prisma.conversationParticipant.count({
@@ -364,7 +407,9 @@ export class MessagesService {
     }
 
     if (participantCount <= 1) {
-      throw new BadRequestException('Conversation must have at least one participant');
+      throw new BadRequestException(
+        'Conversation must have at least one participant',
+      );
     }
 
     await this.prisma.conversationParticipant.delete({
@@ -379,7 +424,11 @@ export class MessagesService {
     return { message: 'Participant removed' };
   }
 
-  async setConversationMute(actor: JwtPayload, conversationId: string, dto: SetConversationMuteDto) {
+  async setConversationMute(
+    actor: JwtPayload,
+    conversationId: string,
+    dto: SetConversationMuteDto,
+  ) {
     await this.ensureCanAccessConversation(actor, conversationId);
 
     const updated = await this.prisma.conversationParticipant.update({
@@ -413,7 +462,11 @@ export class MessagesService {
     return { message: 'Conversation marked as read' };
   }
 
-  async listMessages(actor: JwtPayload, conversationId: string, query: ListMessagesDto) {
+  async listMessages(
+    actor: JwtPayload,
+    conversationId: string,
+    query: ListMessagesDto,
+  ) {
     await this.ensureCanAccessConversation(actor, conversationId);
     const page = query.page ?? 1;
     const pageSize = query.pageSize ?? 30;
@@ -455,16 +508,21 @@ export class MessagesService {
 
     const normalizedRows = isDescendingCreatedAt ? rows.reverse() : rows;
 
-    const items = normalizedRows
-      .map((item) => ({
-        ...item,
-        attachments: attachments.filter((attachment) => attachment.messageId === item.id),
-      }));
+    const items = normalizedRows.map((item) => ({
+      ...item,
+      attachments: attachments.filter(
+        (attachment) => attachment.messageId === item.id,
+      ),
+    }));
 
     return { page, pageSize, total, items };
   }
 
-  async sendMessage(actor: JwtPayload, conversationId: string, dto: SendMessageDto) {
+  async sendMessage(
+    actor: JwtPayload,
+    conversationId: string,
+    dto: SendMessageDto,
+  ) {
     await this.ensureCanAccessConversation(actor, conversationId);
     await this.ensureConversationExists(conversationId);
 
@@ -499,7 +557,9 @@ export class MessagesService {
             fileName: item.fileName,
             mimeType: item.mimeType,
             fileSizeBytes:
-              item.fileSizeBytes !== undefined ? BigInt(item.fileSizeBytes) : undefined,
+              item.fileSizeBytes !== undefined
+                ? BigInt(item.fileSizeBytes)
+                : undefined,
           })),
         });
       }
@@ -534,7 +594,8 @@ export class MessagesService {
     await this.ensureCanAccessConversation(actor, message.conversationId);
 
     const actorRoles = new Set(actor.roles);
-    const canModerate = actorRoles.has(UserRole.ADMIN) || actorRoles.has(UserRole.OPERATOR);
+    const canModerate =
+      actorRoles.has(UserRole.ADMIN) || actorRoles.has(UserRole.OPERATOR);
     if (!canModerate && message.senderUserId !== actor.sub) {
       throw new ForbiddenException('Only sender can edit this message');
     }
@@ -557,7 +618,8 @@ export class MessagesService {
     await this.ensureCanAccessConversation(actor, message.conversationId);
 
     const actorRoles = new Set(actor.roles);
-    const canModerate = actorRoles.has(UserRole.ADMIN) || actorRoles.has(UserRole.OPERATOR);
+    const canModerate =
+      actorRoles.has(UserRole.ADMIN) || actorRoles.has(UserRole.OPERATOR);
     if (!canModerate && message.senderUserId !== actor.sub) {
       throw new ForbiddenException('Only sender can delete this message');
     }
@@ -615,7 +677,8 @@ export class MessagesService {
     participantIds: string[],
   ) {
     const roles = new Set(actor.roles);
-    const canModerate = roles.has(UserRole.ADMIN) || roles.has(UserRole.OPERATOR);
+    const canModerate =
+      roles.has(UserRole.ADMIN) || roles.has(UserRole.OPERATOR);
 
     if (canModerate) {
       return;
@@ -626,15 +689,21 @@ export class MessagesService {
     }
 
     if (dto.bookingId) {
-      const booking = await this.prisma.booking.findUnique({ where: { id: dto.bookingId } });
+      const booking = await this.prisma.booking.findUnique({
+        where: { id: dto.bookingId },
+      });
       if (!booking) {
         throw new NotFoundException('Booking not found');
       }
 
       if (booking.userId !== actor.sub) {
-        const isSupplierStaff = roles.has(UserRole.SUPPLIER_ADMIN) || roles.has(UserRole.SUPPLIER_STAFF);
+        const isSupplierStaff =
+          roles.has(UserRole.SUPPLIER_ADMIN) ||
+          roles.has(UserRole.SUPPLIER_STAFF);
         if (!isSupplierStaff || !booking.supplierId) {
-          throw new ForbiddenException('You cannot create conversation for this booking');
+          throw new ForbiddenException(
+            'You cannot create conversation for this booking',
+          );
         }
 
         const membership = await this.prisma.supplierUser.findFirst({
@@ -645,17 +714,24 @@ export class MessagesService {
         });
 
         if (!membership) {
-          throw new ForbiddenException('You cannot create conversation for this booking');
+          throw new ForbiddenException(
+            'You cannot create conversation for this booking',
+          );
         }
       }
     }
 
     if (participantIds.length > 2 && !canModerate) {
-      throw new ForbiddenException('Only admin/operator can create group conversations');
+      throw new ForbiddenException(
+        'Only admin/operator can create group conversations',
+      );
     }
   }
 
-  private async ensureCanManageConversationParticipants(actor: JwtPayload, conversationId: string) {
+  private async ensureCanManageConversationParticipants(
+    actor: JwtPayload,
+    conversationId: string,
+  ) {
     const roles = new Set(actor.roles);
     if (roles.has(UserRole.ADMIN) || roles.has(UserRole.OPERATOR)) {
       return;
@@ -672,15 +748,22 @@ export class MessagesService {
     });
 
     if (!participant) {
-      throw new ForbiddenException('You are not a participant of this conversation');
+      throw new ForbiddenException(
+        'You are not a participant of this conversation',
+      );
     }
 
     if (conversation.createdByUserId !== actor.sub) {
-      throw new ForbiddenException('Only conversation creator or admin/operator can manage participants');
+      throw new ForbiddenException(
+        'Only conversation creator or admin/operator can manage participants',
+      );
     }
   }
 
-  private async ensureCanAccessConversation(actor: JwtPayload, conversationId: string) {
+  private async ensureCanAccessConversation(
+    actor: JwtPayload,
+    conversationId: string,
+  ) {
     const actorRoles = new Set(actor.roles);
     if (actorRoles.has(UserRole.ADMIN) || actorRoles.has(UserRole.OPERATOR)) {
       return;
@@ -696,7 +779,9 @@ export class MessagesService {
     });
 
     if (!participant) {
-      throw new ForbiddenException('You are not a participant of this conversation');
+      throw new ForbiddenException(
+        'You are not a participant of this conversation',
+      );
     }
   }
 
@@ -743,7 +828,9 @@ export class MessagesService {
     });
 
     if (count !== userIds.length) {
-      throw new BadRequestException('One or more participant users were not found');
+      throw new BadRequestException(
+        'One or more participant users were not found',
+      );
     }
   }
 }

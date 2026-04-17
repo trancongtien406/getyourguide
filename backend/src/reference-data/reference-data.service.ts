@@ -1,8 +1,8 @@
 import {
-    BadRequestException,
-    ConflictException,
-    Injectable,
-    NotFoundException,
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  NotFoundException,
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
@@ -33,7 +33,9 @@ import { UpsertSupportFaqItemTranslationDto } from './dto/upsert-support-faq-ite
 export class ReferenceDataService {
   constructor(private readonly prisma: PrismaService) {}
 
-  private resolveCountryOrderBy(query: ListCountriesDto): Prisma.CountryOrderByWithRelationInput[] {
+  private resolveCountryOrderBy(
+    query: ListCountriesDto,
+  ): Prisma.CountryOrderByWithRelationInput[] {
     const sortOrder: Prisma.SortOrder = query.sortOrder ?? 'asc';
     switch (query.sortBy) {
       case 'iso2':
@@ -49,7 +51,9 @@ export class ReferenceDataService {
     }
   }
 
-  private resolveCityOrderBy(query: ListCitiesDto): Prisma.CityOrderByWithRelationInput[] {
+  private resolveCityOrderBy(
+    query: ListCitiesDto,
+  ): Prisma.CityOrderByWithRelationInput[] {
     const sortOrder: Prisma.SortOrder = query.sortOrder ?? 'asc';
     switch (query.sortBy) {
       case 'normalizedname':
@@ -63,7 +67,9 @@ export class ReferenceDataService {
     }
   }
 
-  private resolveLanguageOrderBy(query: ListLanguagesDto): Prisma.LanguageOrderByWithRelationInput[] {
+  private resolveLanguageOrderBy(
+    query: ListLanguagesDto,
+  ): Prisma.LanguageOrderByWithRelationInput[] {
     const sortOrder: Prisma.SortOrder = query.sortOrder ?? 'asc';
     switch (query.sortBy) {
       case 'name':
@@ -75,7 +81,9 @@ export class ReferenceDataService {
     }
   }
 
-  private resolveCurrencyOrderBy(query: ListCurrenciesDto): Prisma.CurrencyOrderByWithRelationInput[] {
+  private resolveCurrencyOrderBy(
+    query: ListCurrenciesDto,
+  ): Prisma.CurrencyOrderByWithRelationInput[] {
     const sortOrder: Prisma.SortOrder = query.sortOrder ?? 'asc';
     switch (query.sortBy) {
       case 'name':
@@ -115,8 +123,12 @@ export class ReferenceDataService {
         ? {
             OR: [
               { name: { contains: query.q, mode: 'insensitive' } },
-              { iso2: { contains: query.q.toUpperCase(), mode: 'insensitive' } },
-              { iso3: { contains: query.q.toUpperCase(), mode: 'insensitive' } },
+              {
+                iso2: { contains: query.q.toUpperCase(), mode: 'insensitive' },
+              },
+              {
+                iso3: { contains: query.q.toUpperCase(), mode: 'insensitive' },
+              },
             ],
           }
         : {}),
@@ -264,8 +276,18 @@ export class ReferenceDataService {
       ...(query.q
         ? {
             OR: [
-              { baseCurrency: { contains: query.q.toUpperCase(), mode: 'insensitive' } },
-              { quoteCurrency: { contains: query.q.toUpperCase(), mode: 'insensitive' } },
+              {
+                baseCurrency: {
+                  contains: query.q.toUpperCase(),
+                  mode: 'insensitive',
+                },
+              },
+              {
+                quoteCurrency: {
+                  contains: query.q.toUpperCase(),
+                  mode: 'insensitive',
+                },
+              },
             ],
           }
         : {}),
@@ -351,9 +373,13 @@ export class ReferenceDataService {
           name: dto.name,
           normalizedName: this.normalizeName(dto.name),
           latitude:
-            dto.latitude !== undefined ? new Prisma.Decimal(dto.latitude) : undefined,
+            dto.latitude !== undefined
+              ? new Prisma.Decimal(dto.latitude)
+              : undefined,
           longitude:
-            dto.longitude !== undefined ? new Prisma.Decimal(dto.longitude) : undefined,
+            dto.longitude !== undefined
+              ? new Prisma.Decimal(dto.longitude)
+              : undefined,
           timezone: dto.timezone,
           imageUrl: dto.imageUrl,
         },
@@ -378,9 +404,13 @@ export class ReferenceDataService {
           name: dto.name,
           normalizedName: dto.name ? this.normalizeName(dto.name) : undefined,
           latitude:
-            dto.latitude !== undefined ? new Prisma.Decimal(dto.latitude) : undefined,
+            dto.latitude !== undefined
+              ? new Prisma.Decimal(dto.latitude)
+              : undefined,
           longitude:
-            dto.longitude !== undefined ? new Prisma.Decimal(dto.longitude) : undefined,
+            dto.longitude !== undefined
+              ? new Prisma.Decimal(dto.longitude)
+              : undefined,
           timezone: dto.timezone,
           imageUrl: dto.imageUrl,
         },
@@ -448,13 +478,25 @@ export class ReferenceDataService {
       reviewCount,
       templateCount,
     ] = await Promise.all([
-      this.prisma.tourTranslation.count({ where: { languageCode: normalizedCode } }),
-      this.prisma.blogPostTranslation.count({ where: { languageCode: normalizedCode } }),
-      this.prisma.cmsPageTranslation.count({ where: { languageCode: normalizedCode } }),
-      this.prisma.supportFaqItemTranslation.count({ where: { languageCode: normalizedCode } }),
-      this.prisma.supportFaqCategoryTranslation.count({ where: { languageCode: normalizedCode } }),
+      this.prisma.tourTranslation.count({
+        where: { languageCode: normalizedCode },
+      }),
+      this.prisma.blogPostTranslation.count({
+        where: { languageCode: normalizedCode },
+      }),
+      this.prisma.cmsPageTranslation.count({
+        where: { languageCode: normalizedCode },
+      }),
+      this.prisma.supportFaqItemTranslation.count({
+        where: { languageCode: normalizedCode },
+      }),
+      this.prisma.supportFaqCategoryTranslation.count({
+        where: { languageCode: normalizedCode },
+      }),
       this.prisma.review.count({ where: { languageCode: normalizedCode } }),
-      this.prisma.notificationTemplate.count({ where: { languageCode: normalizedCode } }),
+      this.prisma.notificationTemplate.count({
+        where: { languageCode: normalizedCode },
+      }),
     ]);
 
     if (
@@ -522,14 +564,22 @@ export class ReferenceDataService {
       exchangeQuoteCount,
     ] = await Promise.all([
       this.prisma.country.count({ where: { currencyCode: normalizedCode } }),
-      this.prisma.optionPricingRule.count({ where: { currencyCode: normalizedCode } }),
+      this.prisma.optionPricingRule.count({
+        where: { currencyCode: normalizedCode },
+      }),
       this.prisma.booking.count({ where: { currencyCode: normalizedCode } }),
       this.prisma.payment.count({ where: { currencyCode: normalizedCode } }),
       this.prisma.refund.count({ where: { currencyCode: normalizedCode } }),
       this.prisma.invoice.count({ where: { currencyCode: normalizedCode } }),
-      this.prisma.supplierSettlement.count({ where: { currencyCode: normalizedCode } }),
-      this.prisma.exchangeRate.count({ where: { baseCurrency: normalizedCode } }),
-      this.prisma.exchangeRate.count({ where: { quoteCurrency: normalizedCode } }),
+      this.prisma.supplierSettlement.count({
+        where: { currencyCode: normalizedCode },
+      }),
+      this.prisma.exchangeRate.count({
+        where: { baseCurrency: normalizedCode },
+      }),
+      this.prisma.exchangeRate.count({
+        where: { quoteCurrency: normalizedCode },
+      }),
     ]);
 
     if (
@@ -552,7 +602,9 @@ export class ReferenceDataService {
 
   async createExchangeRate(dto: CreateExchangeRateDto) {
     if (dto.baseCurrency.toUpperCase() === dto.quoteCurrency.toUpperCase()) {
-      throw new BadRequestException('Base and quote currency must be different');
+      throw new BadRequestException(
+        'Base and quote currency must be different',
+      );
     }
 
     await Promise.all([
@@ -570,12 +622,17 @@ export class ReferenceDataService {
         },
       });
     } catch (error) {
-      this.handleKnownPrismaError(error, 'Exchange rate entry already exists for this timestamp');
+      this.handleKnownPrismaError(
+        error,
+        'Exchange rate entry already exists for this timestamp',
+      );
     }
   }
 
   async deleteExchangeRate(id: string) {
-    const existing = await this.prisma.exchangeRate.findUnique({ where: { id } });
+    const existing = await this.prisma.exchangeRate.findUnique({
+      where: { id },
+    });
     if (!existing) {
       throw new NotFoundException('Exchange rate not found');
     }
@@ -600,7 +657,10 @@ export class ReferenceDataService {
     });
   }
 
-  async upsertCountryTranslation(countryId: string, dto: UpsertCountryTranslationDto) {
+  async upsertCountryTranslation(
+    countryId: string,
+    dto: UpsertCountryTranslationDto,
+  ) {
     await this.ensureCountryExists(countryId);
     return this.prisma.countryTranslation.upsert({
       where: {
@@ -632,7 +692,10 @@ export class ReferenceDataService {
         },
       });
     } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2025'
+      ) {
         throw new NotFoundException('Translation not found');
       }
       throw error;
@@ -683,7 +746,10 @@ export class ReferenceDataService {
         },
       });
     } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2025'
+      ) {
         throw new NotFoundException('Translation not found');
       }
       throw error;
@@ -694,12 +760,18 @@ export class ReferenceDataService {
   // Support FAQ Categories CRUD
   // ─────────────────────────────────────────────────────────────────────
 
-  async listFaqCategories(query: { page?: string; pageSize?: string; q?: string }, lang?: string | null) {
+  async listFaqCategories(
+    query: { page?: string; pageSize?: string; q?: string },
+    lang?: string | null,
+  ) {
     const page = Math.max(1, parseInt(query.page || '1', 10));
-    const pageSize = Math.min(1000, Math.max(1, parseInt(query.pageSize || '20', 10)));
+    const pageSize = Math.min(
+      1000,
+      Math.max(1, parseInt(query.pageSize || '20', 10)),
+    );
     const skip = (page - 1) * pageSize;
 
-    const where: any = {};
+    const where: Prisma.SupportFaqCategoryWhereInput = {};
     if (query.q) {
       where.name = { contains: query.q, mode: 'insensitive' };
     }
@@ -714,30 +786,49 @@ export class ReferenceDataService {
       this.prisma.supportFaqCategory.count({ where }),
     ]);
 
+    let localizedItems = items;
     if (lang && items.length > 0) {
       const ids = items.map((i) => i.id);
-      const translations = await this.prisma.supportFaqCategoryTranslation.findMany({
-        where: { categoryId: { in: ids }, languageCode: lang },
-      });
-      const transMap = new Map(translations.map((t) => [t.categoryId, t] as const));
-      for (const item of items) {
+      const translations =
+        await this.prisma.supportFaqCategoryTranslation.findMany({
+          where: { categoryId: { in: ids }, languageCode: lang },
+        });
+      const transMap = new Map(
+        translations.map((t) => [t.categoryId, t] as const),
+      );
+      localizedItems = items.map((item) => {
         const tr = transMap.get(item.id);
-        if (tr) {
-          (item as any).name = tr.name;
-          if (tr.description) (item as any).description = tr.description;
+        if (!tr) {
+          return item;
         }
-      }
+        return {
+          ...item,
+          name: tr.name,
+          ...(tr.description ? { description: tr.description } : {}),
+        };
+      });
     }
 
-    return { page, pageSize, total, items };
+    return { page, pageSize, total, items: localizedItems };
   }
 
-  async listFaqItems(query: { page?: string; pageSize?: string; q?: string; categoryId?: string }, lang?: string | null) {
+  async listFaqItems(
+    query: {
+      page?: string;
+      pageSize?: string;
+      q?: string;
+      categoryId?: string;
+    },
+    lang?: string | null,
+  ) {
     const page = Math.max(1, parseInt(query.page || '1', 10));
-    const pageSize = Math.min(1000, Math.max(1, parseInt(query.pageSize || '20', 10)));
+    const pageSize = Math.min(
+      1000,
+      Math.max(1, parseInt(query.pageSize || '20', 10)),
+    );
     const skip = (page - 1) * pageSize;
 
-    const where: any = {};
+    const where: Prisma.SupportFaqItemWhereInput = {};
     if (query.q) {
       where.question = { contains: query.q, mode: 'insensitive' };
     }
@@ -755,22 +846,29 @@ export class ReferenceDataService {
       this.prisma.supportFaqItem.count({ where }),
     ]);
 
+    let localizedItems = items;
     if (lang && items.length > 0) {
       const ids = items.map((i) => i.id);
-      const translations = await this.prisma.supportFaqItemTranslation.findMany({
-        where: { itemId: { in: ids }, languageCode: lang },
-      });
+      const translations = await this.prisma.supportFaqItemTranslation.findMany(
+        {
+          where: { itemId: { in: ids }, languageCode: lang },
+        },
+      );
       const transMap = new Map(translations.map((t) => [t.itemId, t] as const));
-      for (const item of items) {
+      localizedItems = items.map((item) => {
         const tr = transMap.get(item.id);
-        if (tr) {
-          (item as any).question = tr.question;
-          (item as any).answer = tr.answer;
+        if (!tr) {
+          return item;
         }
-      }
+        return {
+          ...item,
+          question: tr.question,
+          answer: tr.answer,
+        };
+      });
     }
 
-    return { page, pageSize, total, items };
+    return { page, pageSize, total, items: localizedItems };
   }
 
   // ─────────────────────────────────────────────────────────────────────
@@ -788,7 +886,10 @@ export class ReferenceDataService {
         },
       });
     } catch (error) {
-      this.handleKnownPrismaError(error, 'FAQ category with this slug already exists');
+      this.handleKnownPrismaError(
+        error,
+        'FAQ category with this slug already exists',
+      );
     }
   }
 
@@ -805,7 +906,10 @@ export class ReferenceDataService {
         },
       });
     } catch (error) {
-      this.handleKnownPrismaError(error, 'FAQ category with this slug already exists');
+      this.handleKnownPrismaError(
+        error,
+        'FAQ category with this slug already exists',
+      );
     }
   }
 
@@ -813,12 +917,18 @@ export class ReferenceDataService {
     await this.ensureFaqCategoryExists(id);
 
     // Check if any FAQ items reference this category
-    const itemCount = await this.prisma.supportFaqItem.count({ where: { categoryId: id } });
+    const itemCount = await this.prisma.supportFaqItem.count({
+      where: { categoryId: id },
+    });
     if (itemCount > 0) {
-      throw new BadRequestException(`Cannot delete: ${itemCount} FAQ item(s) reference this category`);
+      throw new BadRequestException(
+        `Cannot delete: ${itemCount} FAQ item(s) reference this category`,
+      );
     }
 
-    await this.prisma.supportFaqCategoryTranslation.deleteMany({ where: { categoryId: id } });
+    await this.prisma.supportFaqCategoryTranslation.deleteMany({
+      where: { categoryId: id },
+    });
     return this.prisma.supportFaqCategory.delete({ where: { id } });
   }
 
@@ -842,7 +952,10 @@ export class ReferenceDataService {
         },
       });
     } catch (error) {
-      this.handleKnownPrismaError(error, 'FAQ item with this slug already exists');
+      this.handleKnownPrismaError(
+        error,
+        'FAQ item with this slug already exists',
+      );
     }
   }
 
@@ -855,7 +968,9 @@ export class ReferenceDataService {
       return await this.prisma.supportFaqItem.update({
         where: { id },
         data: {
-          ...(dto.categoryId !== undefined && { categoryId: dto.categoryId || null }),
+          ...(dto.categoryId !== undefined && {
+            categoryId: dto.categoryId || null,
+          }),
           ...(dto.slug !== undefined && { slug: dto.slug }),
           ...(dto.question !== undefined && { question: dto.question }),
           ...(dto.answer !== undefined && { answer: dto.answer }),
@@ -864,13 +979,18 @@ export class ReferenceDataService {
         },
       });
     } catch (error) {
-      this.handleKnownPrismaError(error, 'FAQ item with this slug already exists');
+      this.handleKnownPrismaError(
+        error,
+        'FAQ item with this slug already exists',
+      );
     }
   }
 
   async deleteFaqItem(id: string) {
     await this.ensureFaqItemExists(id);
-    await this.prisma.supportFaqItemTranslation.deleteMany({ where: { itemId: id } });
+    await this.prisma.supportFaqItemTranslation.deleteMany({
+      where: { itemId: id },
+    });
     return this.prisma.supportFaqItem.delete({ where: { id } });
   }
 
@@ -879,7 +999,9 @@ export class ReferenceDataService {
   // ─────────────────────────────────────────────────────────────────────
 
   private async ensureFaqCategoryExists(id: string) {
-    const category = await this.prisma.supportFaqCategory.findUnique({ where: { id } });
+    const category = await this.prisma.supportFaqCategory.findUnique({
+      where: { id },
+    });
     if (!category) {
       throw new NotFoundException('FAQ category not found');
     }
@@ -902,7 +1024,10 @@ export class ReferenceDataService {
     });
   }
 
-  async upsertFaqCategoryTranslation(categoryId: string, dto: UpsertSupportFaqCategoryTranslationDto) {
+  async upsertFaqCategoryTranslation(
+    categoryId: string,
+    dto: UpsertSupportFaqCategoryTranslationDto,
+  ) {
     await this.ensureFaqCategoryExists(categoryId);
     return this.prisma.supportFaqCategoryTranslation.upsert({
       where: {
@@ -936,7 +1061,10 @@ export class ReferenceDataService {
         },
       });
     } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2025'
+      ) {
         throw new NotFoundException('Translation not found');
       }
       throw error;
@@ -955,7 +1083,10 @@ export class ReferenceDataService {
     });
   }
 
-  async upsertFaqItemTranslation(itemId: string, dto: UpsertSupportFaqItemTranslationDto) {
+  async upsertFaqItemTranslation(
+    itemId: string,
+    dto: UpsertSupportFaqItemTranslationDto,
+  ) {
     await this.ensureFaqItemExists(itemId);
     return this.prisma.supportFaqItemTranslation.upsert({
       where: {
@@ -989,7 +1120,10 @@ export class ReferenceDataService {
         },
       });
     } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2025'
+      ) {
         throw new NotFoundException('Translation not found');
       }
       throw error;
@@ -1030,8 +1164,14 @@ export class ReferenceDataService {
     return currency;
   }
 
-  private handleKnownPrismaError(error: unknown, conflictMessage: string): never {
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+  private handleKnownPrismaError(
+    error: unknown,
+    conflictMessage: string,
+  ): never {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === 'P2002'
+    ) {
       throw new ConflictException(conflictMessage);
     }
 

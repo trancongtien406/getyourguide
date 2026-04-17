@@ -1,12 +1,12 @@
 import { Type } from 'class-transformer';
 import {
-    ArrayUnique,
-    IsArray,
-    IsInt,
-    IsOptional,
-    IsUUID,
-    Min,
-    ValidateNested,
+  ArrayUnique,
+  IsArray,
+  IsInt,
+  IsOptional,
+  IsUUID,
+  Min,
+  ValidateNested,
 } from 'class-validator';
 
 class RelatedTourItemDto {

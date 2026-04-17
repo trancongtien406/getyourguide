@@ -1,13 +1,13 @@
 import { MediaType } from '@prisma/client';
 import {
-    IsBoolean,
-    IsEnum,
-    IsInt,
-    IsOptional,
-    IsString,
-    IsUrl,
-    MaxLength,
-    Min,
+  IsBoolean,
+  IsEnum,
+  IsInt,
+  IsOptional,
+  IsString,
+  IsUrl,
+  MaxLength,
+  Min,
 } from 'class-validator';
 
 export class CreateTourMediaDto {

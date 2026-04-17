@@ -1,14 +1,14 @@
 import { InventoryMode, Prisma, TourStatus } from '@prisma/client';
 import {
-    IsArray,
-    IsBoolean,
-    IsEnum,
-    IsInt,
-    IsOptional,
-    IsString,
-    IsUUID,
-    MaxLength,
-    Min,
+  IsArray,
+  IsBoolean,
+  IsEnum,
+  IsInt,
+  IsOptional,
+  IsString,
+  IsUUID,
+  MaxLength,
+  Min,
 } from 'class-validator';
 
 export class UpdateTourDto {

@@ -1,13 +1,8 @@
-import {
-  BadRequestException,
-  Injectable,
-  Logger,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { PrismaService } from '../prisma/prisma.service';
-import { MailService } from '../common/services/mail.service';
 import { createHash, randomInt } from 'crypto';
+import { MailService } from '../common/services/mail.service';
+import { PrismaService } from '../prisma/prisma.service';
 
 type OtpPurpose = 'RESET_PASSWORD' | 'VERIFY_EMAIL';
 
@@ -105,9 +100,7 @@ export class OtpService {
     const { userId, email, otp, purpose } = options;
 
     const tokenKey =
-      purpose === 'VERIFY_EMAIL'
-        ? `verify:${email}:${otp}`
-        : `${email}:${otp}`;
+      purpose === 'VERIFY_EMAIL' ? `verify:${email}:${otp}` : `${email}:${otp}`;
     const tokenHash = this.hashToken(tokenKey);
 
     const token = await this.prisma.passwordResetToken.findUnique({
@@ -158,4 +151,3 @@ export class OtpService {
     }
   }
 }
-

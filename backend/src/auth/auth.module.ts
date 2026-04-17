@@ -16,7 +16,13 @@ import { UserManagementService } from './user-management.service';
     JwtModule.register({}),
   ],
   controllers: [AuthController],
-  providers: [AuthService, UserManagementService, OtpService, JwtStrategy, RolesGuard],
+  providers: [
+    AuthService,
+    UserManagementService,
+    OtpService,
+    JwtStrategy,
+    RolesGuard,
+  ],
   exports: [AuthService, UserManagementService, OtpService],
 })
 export class AuthModule {}

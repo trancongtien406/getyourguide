@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import type { JwtPayload } from '../auth/interfaces/jwt-payload.interface';
@@ -13,7 +22,10 @@ export class ApiKeysController {
   constructor(private readonly apiKeysService: ApiKeysService) {}
 
   @Get()
-  listApiKeys(@CurrentUser() actor: JwtPayload, @Query() query: ListApiKeysDto) {
+  listApiKeys(
+    @CurrentUser() actor: JwtPayload,
+    @Query() query: ListApiKeysDto,
+  ) {
     return this.apiKeysService.listApiKeys(actor, query);
   }
 
