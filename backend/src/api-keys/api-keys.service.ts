@@ -1,8 +1,8 @@
 import {
-    BadRequestException,
-    ForbiddenException,
-    Injectable,
-    NotFoundException,
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
 } from '@nestjs/common';
 import { Prisma, UserRole } from '@prisma/client';
 import { createHash, randomBytes } from 'crypto';

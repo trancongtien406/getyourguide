@@ -1,14 +1,14 @@
 import {
-    CallHandler,
-    ExecutionContext,
-    Injectable,
-    NestInterceptor,
+  CallHandler,
+  ExecutionContext,
+  Injectable,
+  NestInterceptor,
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import {
-    ApiResponse,
-    PaginatedResult,
+  ApiResponse,
+  PaginatedResult,
 } from '../interfaces/api-response.interface';
 
 @Injectable()
