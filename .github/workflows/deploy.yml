@@ -1,0 +1,94 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-getyourguide
+  cancel-in-progress: false
+
+env:
+  # Prisma generate only needs a syntactically valid URL in CI
+  DATABASE_URL: postgresql://ci:ci@localhost:5432/ci?schema=public
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Prisma generate
+        run: npx prisma generate
+
+      - name: Build
+        run: npm run build
+
+      - name: Prune to production deps
+        run: npm prune --omit=dev
+
+      - name: Pack artifact
+        run: |
+          set -euo pipefail
+          tar -czf /tmp/app.tar.gz \
+            dist \
+            package.json \
+            package-lock.json \
+            prisma \
+            prisma.config.ts \
+            node_modules
+          mkdir -p dist-artifact
+          mv /tmp/app.tar.gz dist-artifact/app.tar.gz
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: getyourguide-release
+          path: dist-artifact/app.tar.gz
+          retention-days: 14
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: getyourguide-release
+          path: artifact
+
+      - name: Upload tarball to VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT || 22 }}
+          source: artifact/app.tar.gz
+          target: /tmp/getyourguide-release
+          strip_components: 1
+
+      - name: Deploy release
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT || 22 }}
+          script: |
+            set -euo pipefail
+            APP_ROOT=/home/tiendev/getyourguide \
+            PM2_NAME=getyourguide \
+            RELEASE_ID="${{ github.sha }}" \
+            TARBALL=/tmp/getyourguide-release/app.tar.gz \
+            PM2_SCRIPT=dist/src/main.js \
+            PORT=4001 \
+            bash /home/tiendev/bin/deploy-release.sh
+            rm -f /tmp/getyourguide-release/app.tar.gz
